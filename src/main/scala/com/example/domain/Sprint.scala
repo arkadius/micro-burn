@@ -12,23 +12,31 @@ class Sprint(userStories: Seq[UserStory], events: Seq[TaskEvent]) {
 
   def storyPointsChanges: Seq[DateWithStoryPoints] = {
     val currentTaskIds = flattenTasks(userStories).map(_.taskId).toSet
-    val currentEventsSorted = events.filter { event => currentTaskIds.contains(event.taskId) }.sortBy(_.date)
+    val currentEventsSortedAndGrouped = events
+      .filter { event => currentTaskIds.contains(event.taskId) }
+      .groupBy(_.date)
+      .toSeq
+      .sortBy { case (date, group) => date }
+      .map { case (date, group) => group }
+
     lazy val storyPointsStream: Stream[DateWithStoryPoints] =
-      currentEventsSorted.head.toDateWithStoryPoints #::
-      storyPointsStream.tail.zip(currentEventsSorted).map {
-        case (prevSum, currEvent) =>
-          prevSum.accumulateWithEvent(currEvent)
+      DateWithStoryPoints.zero #::
+      storyPointsStream.zip(currentEventsSortedAndGrouped).map {
+        case (prevSum, currEventsGroup) =>
+          currEventsGroup.foldLeft(prevSum) { (sum, event) =>
+            sum.accumulateWithEvent(event)
+          }
       }
-    storyPointsStream.toSeq
+
+    storyPointsStream.drop(1).take(currentEventsSortedAndGrouped.size).toSeq
   }
 
-  def userStoriesUpdated(userStoriesUpdate: Seq[UserStory])
-                        (implicit timestamp: Date): Sprint = {
+  def userStoriesUpdated(userStoriesUpdate: Seq[UserStory])(timestamp: Date): Sprint = {
     val currentTasksById = flattenTasks(userStories).groupBy(_.taskId).mapValues(_.head)
     // interesują nas tylko zdarzenia dla nowych zadań, stare które zostały usunięte ze sprintu olewamy
     val eventsAfterUpdate = for {
       taskUpdate <- flattenTasks(userStoriesUpdate)
-      event <- eventsForTaskUpdate(currentTasksById.get(taskUpdate.taskId), taskUpdate)
+      event <- eventsForTaskUpdate(currentTasksById.get(taskUpdate.taskId), taskUpdate)(timestamp)
     } yield  event
     // nie czyścimy zdarzeń z tych dotyczących nieistniejących już tasków, bo jest możliwość, że wrócą -
     // odfiltujemy je przy wychiąganiu zmian
@@ -44,10 +52,11 @@ class Sprint(userStories: Seq[UserStory], events: Seq[TaskEvent]) {
 
   private def eventsForTaskUpdate(optionalCurrentTask: Option[Task], taskUpdate: Task)
                                  (implicit timestamp: Date): Option[TaskEvent] = optionalCurrentTask match {
-    case Some(currentTask) if currentTask.isOpened && taskUpdate.isCompleted => Some(currentTask.finish)
-    case Some(currentTask) if currentTask.isCompleted && taskUpdate.isOpened => Some(currentTask.reopen)
+    case Some(currentTask) if currentTask.isOpened && taskUpdate.isCompleted => currentTask.finish
+    case Some(currentTask) if currentTask.isCompleted && taskUpdate.isOpened => currentTask.reopen
     // jeśli nowe zadanie jest od razu zakończone to zaliczamy mu punkty
-    case None if taskUpdate.isCompleted => taskUpdate.optionalStoryPoints.map(TaskCompleted(taskUpdate.taskId, timestamp, _))
+    case None if taskUpdate.isCompleted && !taskUpdate.isUserStoryContainingEstimatedTechnicalTasks =>
+      taskUpdate.optionalStoryPoints.map(TaskCompleted(taskUpdate.taskId, timestamp, _))
     // jeśli nowe zadanie natomiast jest otwarta to nie traktujemy go jako ponownie otwarte
     // (bo jest mała szansa że było zamknięte, znikło z tablicy i wróciło jako otwarte, zazwyczaj jest dobierane)
     case _ => None

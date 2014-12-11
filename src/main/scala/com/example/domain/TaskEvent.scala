@@ -28,3 +28,7 @@ case class DateWithStoryPoints(date: Date, storyPoints: Int) {
     DateWithStoryPoints(maxDate, accumulatedStoryPoints)
   }
 }
+
+object DateWithStoryPoints {
+  def zero: DateWithStoryPoints = DateWithStoryPoints(new Date(0L), 0)
+}
