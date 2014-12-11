@@ -15,7 +15,8 @@ libraryDependencies ++= {
     "io.spray"            %%  "spray-testkit" % sprayV  % "test",
     "com.typesafe.akka"   %%  "akka-actor"    % akkaV,
     "com.typesafe.akka"   %%  "akka-testkit"  % akkaV   % "test",
-    "org.scalatest"       %% "scalatest" % "2.2.2"
+    "net.liftweb"         %%  "lift-json"     % "2.6-RC2",
+    "org.scalatest"       %%  "scalatest"     % "2.2.2" % "test"
   )
 }
 

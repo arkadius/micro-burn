@@ -36,7 +36,7 @@ sealed trait Task {
 
 case class UserStory(taskId: String,
                      optionalStoryPoints: Option[Int],
-                     private val technicalTasksWithoutParentId: Seq[TechnicalTask],
+                     private val technicalTasksWithoutParentId: List[TechnicalTask],
                      state: TaskState) extends Task {
 
   def technicalTasks = technicalTasksWithoutParentId.map(TechnicalTaskWithParentId(_, taskId))
@@ -63,7 +63,7 @@ case class TechnicalTask(taskId: String, optionalStoryPoints: Option[Int], state
 
 object UserStory {
   def apply(taskId: String, optionalStoryPoints: Option[Int], technicalTasks: Seq[TechnicalTask]): UserStory = {
-    new UserStory(taskId, optionalStoryPoints, technicalTasks, Opened)
+    new UserStory(taskId, optionalStoryPoints, technicalTasks.toList, Opened)
   }
 }
 

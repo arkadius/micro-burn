@@ -2,7 +2,7 @@ package com.example.domain
 
 import java.util.Date
 
-case class Sprint(initialUserStories: Seq[UserStory], currentUserStories: Seq[UserStory], events: Seq[TaskEvent]) { 
+case class Sprint(id: String, initialUserStories: Seq[UserStory], currentUserStories: Seq[UserStory], events: Seq[TaskEvent]) {
   def summedInitialStoryPoints: Int = {
     initialUserStories.flatMap { userStory =>
       userStory.optionalStoryPoints
@@ -43,8 +43,8 @@ case class UserStoriesUpdateResult(updatedSprint: Sprint, newAddedEvents: Seq[Ta
 }
 
 object Sprint {
-  def withEmptyEvents(userStories: Seq[UserStory]): Sprint =
-    new Sprint(initialUserStories = userStories, currentUserStories = userStories, Nil)
+  def withEmptyEvents(id: String, userStories: Seq[UserStory]): Sprint =
+    new Sprint(id, initialUserStories = userStories, currentUserStories = userStories, Nil)
   
   private[domain] def storyPointsChanges(events: Seq[TaskEvent])(sprint: Sprint): Seq[DateWithStoryPoints] = {
     val initialAndCurrentUserStoriesIds = (sprint.initialUserStories ++ sprint.currentUserStories).map(_.taskId).toSet
