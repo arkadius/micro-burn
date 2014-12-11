@@ -2,18 +2,56 @@ package com.example.domain
 
 import java.util.Date
 
-case class Sprint(initialStories: Seq[UserStory], currentUserStories: Seq[UserStory], events: Seq[TaskEvent]) {
+case class Sprint(initialUserStories: Seq[UserStory], currentUserStories: Seq[UserStory], events: Seq[TaskEvent]) { 
   def summedInitialStoryPoints: Int = {
-    initialStories.flatMap { userStory =>
+    initialUserStories.flatMap { userStory =>
       userStory.optionalStoryPoints
     }.sum
   }
 
-  def storyPointsChanges: Seq[DateWithStoryPoints] = {
-    val initialAndCurrentTaskIds = tasksById(initialStories ++ currentUserStories).keySet
+  def storyPointsChanges: Seq[DateWithStoryPoints] = Sprint.storyPointsChanges(events)(this)
 
+  def userStoriesUpdated(updatedUserStories: Seq[UserStory])(timestamp: Date): UserStoriesUpdateResult = {
+    val initialUserStoriesIds = initialUserStories.map(_.taskId).toSet
+    val currentTasksById = Sprint.flattenTasks(currentUserStories).groupBy(_.taskId).mapValues(_.head)
+    // interesują nas tylko zdarzenia dla nowych zadań, stare które zostały usunięte ze sprintu olewamy
+    // nowe, które nie były dostępne ostatnio też olewamy, bo interesują nast tylko zmiany a nie stan bieżący
+    val newAddedEvents = for {
+      updatedTask <- Sprint.flattenTasks(updatedUserStories)
+      currentTask <- currentTasksById.get(updatedTask.taskId)
+      parentUserStoryFromInitialScope = initialUserStoriesIds.contains(updatedTask.parentUserStoryId)
+      event <- eventsForTaskUpdate(currentTask, updatedTask, parentUserStoryFromInitialScope)(timestamp)
+    } yield event
+    
+    val updatedSprint = copy(currentUserStories = updatedUserStories, events = events ++ newAddedEvents)
+    UserStoriesUpdateResult(updatedSprint, newAddedEvents)
+  }
+
+  private def eventsForTaskUpdate(currentTask: Task, updatedTask: Task, parentUserStoryFromInitialScope: Boolean)
+                                 (implicit timestamp: Date): Option[TaskEvent] = {
+    if (currentTask.isOpened && updatedTask.isCompleted)
+      currentTask.finish(parentUserStoryFromInitialScope)
+    else if (currentTask.isCompleted && updatedTask.isOpened)
+      currentTask.reopen(parentUserStoryFromInitialScope)
+    else
+      None
+  }
+}
+
+case class UserStoriesUpdateResult(updatedSprint: Sprint, newAddedEvents: Seq[TaskEvent]) {
+  def importantChange: Boolean = Sprint.storyPointsChanges(newAddedEvents)(updatedSprint).exists(_.storyPoints > 0)
+}
+
+object Sprint {
+  def withEmptyEvents(userStories: Seq[UserStory]): Sprint =
+    new Sprint(initialUserStories = userStories, currentUserStories = userStories, Nil)
+  
+  private[domain] def storyPointsChanges(events: Seq[TaskEvent])(sprint: Sprint): Seq[DateWithStoryPoints] = {
+    val initialAndCurrentUserStoriesIds = (sprint.initialUserStories ++ sprint.currentUserStories).map(_.taskId).toSet
+
+    // odfiltrujemy tylko inicjalnie dodane zadania
     val initialAndCurrentEventsSortedAndGrouped = events
-      .filter { event => initialAndCurrentTaskIds.contains(event.taskId) }
+      .filter { event => initialAndCurrentUserStoriesIds.contains(event.parentTaskId) }
       .groupBy(_.date)
       .toSeq
       .sortBy { case (date, group) => date }
@@ -21,51 +59,19 @@ case class Sprint(initialStories: Seq[UserStory], currentUserStories: Seq[UserSt
 
     lazy val storyPointsStream: Stream[DateWithStoryPoints] =
       DateWithStoryPoints.zero #::
-      storyPointsStream.zip(initialAndCurrentEventsSortedAndGrouped).map {
-        case (prevSum, currEventsGroup) =>
-          currEventsGroup.foldLeft(prevSum) { (sum, event) =>
-            sum.accumulateWithEvent(event)
-          }
-      }
+        storyPointsStream.zip(initialAndCurrentEventsSortedAndGrouped).map {
+          case (prevSum, currEventsGroup) =>
+            currEventsGroup.foldLeft(prevSum) { (sum, event) =>
+              sum.accumulateWithEvent(event)
+            }
+        }
 
     storyPointsStream.drop(1).take(initialAndCurrentEventsSortedAndGrouped.size)
   }
 
-  def userStoriesUpdated(userStoriesUpdate: Seq[UserStory])(timestamp: Date): Sprint = {
-    val initialUserStoriesIds = initialStories.map(_.taskId).toSet
-    val currentTasksById = tasksById(currentUserStories)
-    // interesują nas tylko zdarzenia dla nowych zadań, stare które zostały usunięte ze sprintu olewamy
-    // nowe, które nie były dostępne ostatnio też olewamy, bo interesują nast tylko zmiany a nie stan bieżący
-    val eventsAfterUpdate = for {
-      userStory <- userStoriesUpdate
-      taskUpdate <- userStory.flattenTasks
-      currentTask <- currentTasksById.get(taskUpdate.taskId)
-      parentUserStoryFromInitialScope = initialUserStoriesIds.contains(userStory.taskId)
-      event <- eventsForTaskUpdate(currentTask, taskUpdate, parentUserStoryFromInitialScope)(timestamp)
-    } yield  event
-    copy(currentUserStories = userStoriesUpdate, events = events ++ eventsAfterUpdate)
-  }
-
-  private def tasksById(userStories: Seq[UserStory]): Map[String, Task] = {
-    val tasks = for {
+  private def flattenTasks(userStories: Seq[UserStory]): Seq[Task] =
+    for {
       userStory <- userStories
-      task <- userStory.flattenTasks
-    } yield task
-    tasks.groupBy(_.taskId).mapValues(_.head)
-  }
-
-  private def eventsForTaskUpdate(currentTask: Task, taskUpdate: Task, parentUserStoryFromInitialScope: Boolean)
-                                 (implicit timestamp: Date): Option[TaskEvent] = {
-    if (currentTask.isOpened && taskUpdate.isCompleted)
-      currentTask.finish(parentUserStoryFromInitialScope)
-    else if (currentTask.isCompleted && taskUpdate.isOpened)
-      currentTask.reopen(parentUserStoryFromInitialScope)
-    else
-      None
-  }
-}
-
-object Sprint {
-  def withEmptyEvents(userStories: Seq[UserStory]): Sprint =
-    new Sprint(initialStories = userStories, currentUserStories = userStories, Nil)
+      task <- userStory.technicalTasks :+ userStory
+    } yield task  
 }
