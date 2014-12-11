@@ -12,7 +12,7 @@ class SprintTest extends FlatSpec with Matchers {
       TaskGenerator.completedUserStory(2)
     ))
 
-    sprint.summedStoryPoints shouldBe 3
+    sprint.summedInitialStoryPoints shouldBe 3
   }
 
   it should "produce correct events for update" in {
@@ -23,17 +23,17 @@ class SprintTest extends FlatSpec with Matchers {
 
     val firstTaskAfterFinish = taskInitiallyOpened.copy(state = Completed)
     val sprintAfterFirstFinish = sprintBeforeUpdate.userStoriesUpdated(Seq(firstTaskAfterFinish, taskInitiallyCompleted))(new Date(100))
-    sprintAfterFirstFinish.summedStoryPoints shouldBe 3
+    sprintAfterFirstFinish.summedInitialStoryPoints shouldBe 3
     sprintAfterFirstFinish.storyPointsChanges.map(_.storyPoints) shouldEqual Seq(-1)
 
     val secTaskAfterReopen = taskInitiallyCompleted.copy(state = Opened)
     val sprintAfterSecReopen = sprintAfterFirstFinish.userStoriesUpdated(Seq(firstTaskAfterFinish, secTaskAfterReopen))(new Date(200))
-    sprintAfterSecReopen.summedStoryPoints shouldBe 3
+    sprintAfterSecReopen.summedInitialStoryPoints shouldBe 3
     sprintAfterSecReopen.storyPointsChanges.map(_.storyPoints) shouldEqual Seq(-1, 1)
   }
 
   it should "generate empty events for not estimated technical tasks and non empty for parent user stories" in {
-    val technical = TaskGenerator.openedTechnicalTask(sp = None)
+    val technical = TaskGenerator.openedTechnicalTask(optionalSP = None)
     val userStory = TaskGenerator.openedUserStory(1, Seq(technical))
     val sprint = Sprint.withEmptyEvents(Seq(userStory))
 
@@ -46,8 +46,8 @@ class SprintTest extends FlatSpec with Matchers {
   }
 
   it should "generate non empty events for estimated technical tasks and empty for parent user stories" in {
-    val firstTechnical = TaskGenerator.openedTechnicalTask(sp = Some(1))
-    val secTechnical = TaskGenerator.openedTechnicalTask(sp = Some(2))
+    val firstTechnical = TaskGenerator.openedTechnicalTask(optionalSP = Some(1))
+    val secTechnical = TaskGenerator.openedTechnicalTask(optionalSP = Some(2))
     val userStory = TaskGenerator.openedUserStory(3, Seq(firstTechnical, secTechnical))
     val sprint = Sprint.withEmptyEvents(Seq(userStory))
 
@@ -72,13 +72,15 @@ object TaskGenerator {
     currentId.toString
   }
 
-  def openedUserStory(sp: Int, technical: Seq[TechnicalTask] = Nil) = UserStory(nextId, Some(sp), Opened, technical)
+  def openedUserStory(sp: Int, technical: Seq[TechnicalTask] = Nil) =
+    UserStory(nextId, Some(sp), technical, Opened)
 
-  def completedUserStory(sp: Int, technical: Seq[TechnicalTask] = Nil) = UserStory(nextId, Some(sp), Completed, technical)
+  def completedUserStory(sp: Int, technical: Seq[TechnicalTask] = Nil) =
+    UserStory(nextId, Some(sp), technical, Completed)
 
 
-  def openedTechnicalTask(sp: Option[Int]) = TechnicalTask(nextId, sp, Opened)
+  def openedTechnicalTask(optionalSP: Option[Int]) = TechnicalTask(nextId, optionalSP, Opened)
   
-  def completedTechnicalTask(sp: Option[Int]) = TechnicalTask(nextId, sp, Completed)
+  def completedTechnicalTask(optionalSP: Option[Int]) = TechnicalTask(nextId, optionalSP, Completed)
 
 }

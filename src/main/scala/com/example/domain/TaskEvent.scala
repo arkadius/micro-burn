@@ -6,13 +6,14 @@ sealed trait TaskEvent {
   def taskId: String
   def date: Date
   def storyPoints: Int
+  def taskFromInitialScope: Boolean
 
   def toDateWithStoryPoints = DateWithStoryPoints(date, storyPoints)
 }
 
-case class TaskReopened(taskId: String, date: Date, storyPoints: Int) extends TaskEvent
+case class TaskReopened(taskId: String, taskFromInitialScope: Boolean, date: Date, storyPoints: Int) extends TaskEvent
 
-case class TaskCompleted(taskId: String, date: Date, storyPoints: Int) extends TaskEvent
+case class TaskCompleted(taskId: String, taskFromInitialScope: Boolean, date: Date, storyPoints: Int) extends TaskEvent
 
 case class DateWithStoryPoints(date: Date, storyPoints: Int) {
   def accumulateWithEvent(event: TaskEvent) = {
@@ -22,8 +23,8 @@ case class DateWithStoryPoints(date: Date, storyPoints: Int) {
       date
     }
     val accumulatedStoryPoints = event match {
-      case TaskCompleted(_, _, esp) => storyPoints - esp
-      case TaskReopened(_, _, esp)    => storyPoints + esp
+      case TaskCompleted(_, _, _, esp) => storyPoints - esp
+      case TaskReopened(_, _, _, esp)  => storyPoints + esp
     }
     DateWithStoryPoints(maxDate, accumulatedStoryPoints)
   }

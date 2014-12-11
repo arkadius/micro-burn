@@ -2,18 +2,18 @@ package com.example.domain
 
 import java.util.Date
 
-class Sprint(userStories: Seq[UserStory], events: Seq[TaskEvent]) {
-
-  def summedStoryPoints: Int = {
-    userStories.flatMap { userStory =>
+case class Sprint(initialStories: Seq[UserStory], currentUserStories: Seq[UserStory], events: Seq[TaskEvent]) {
+  def summedInitialStoryPoints: Int = {
+    initialStories.flatMap { userStory =>
       userStory.optionalStoryPoints
     }.sum
   }
 
   def storyPointsChanges: Seq[DateWithStoryPoints] = {
-    val currentTaskIds = flattenTasks(userStories).map(_.taskId).toSet
-    val currentEventsSortedAndGrouped = events
-      .filter { event => currentTaskIds.contains(event.taskId) }
+    val initialAndCurrentTaskIds = tasksById(initialStories ++ currentUserStories).keySet
+
+    val initialAndCurrentEventsSortedAndGrouped = events
+      .filter { event => initialAndCurrentTaskIds.contains(event.taskId) }
       .groupBy(_.date)
       .toSeq
       .sortBy { case (date, group) => date }
@@ -21,48 +21,51 @@ class Sprint(userStories: Seq[UserStory], events: Seq[TaskEvent]) {
 
     lazy val storyPointsStream: Stream[DateWithStoryPoints] =
       DateWithStoryPoints.zero #::
-      storyPointsStream.zip(currentEventsSortedAndGrouped).map {
+      storyPointsStream.zip(initialAndCurrentEventsSortedAndGrouped).map {
         case (prevSum, currEventsGroup) =>
           currEventsGroup.foldLeft(prevSum) { (sum, event) =>
             sum.accumulateWithEvent(event)
           }
       }
 
-    storyPointsStream.drop(1).take(currentEventsSortedAndGrouped.size).toSeq
+    storyPointsStream.drop(1).take(initialAndCurrentEventsSortedAndGrouped.size)
   }
 
   def userStoriesUpdated(userStoriesUpdate: Seq[UserStory])(timestamp: Date): Sprint = {
-    val currentTasksById = flattenTasks(userStories).groupBy(_.taskId).mapValues(_.head)
+    val initialUserStoriesIds = initialStories.map(_.taskId).toSet
+    val currentTasksById = tasksById(currentUserStories)
     // interesują nas tylko zdarzenia dla nowych zadań, stare które zostały usunięte ze sprintu olewamy
+    // nowe, które nie były dostępne ostatnio też olewamy, bo interesują nast tylko zmiany a nie stan bieżący
     val eventsAfterUpdate = for {
-      taskUpdate <- flattenTasks(userStoriesUpdate)
+      userStory <- userStoriesUpdate
+      taskUpdate <- userStory.flattenTasks
       currentTask <- currentTasksById.get(taskUpdate.taskId)
-      event <- eventsForTaskUpdate(currentTask, taskUpdate)(timestamp)
+      parentUserStoryFromInitialScope = initialUserStoriesIds.contains(userStory.taskId)
+      event <- eventsForTaskUpdate(currentTask, taskUpdate, parentUserStoryFromInitialScope)(timestamp)
     } yield  event
-    // nie czyścimy zdarzeń z tych dotyczących nieistniejących już tasków, bo jest możliwość, że wrócą -
-    // odfiltujemy je przy wychiąganiu zmian
-    new Sprint(userStoriesUpdate, events ++ eventsAfterUpdate)
+    copy(currentUserStories = userStoriesUpdate, events = events ++ eventsAfterUpdate)
   }
 
-  private def flattenTasks(userStories: Seq[UserStory]): Seq[Task] = {
-    for {
+  private def tasksById(userStories: Seq[UserStory]): Map[String, Task] = {
+    val tasks = for {
       userStory <- userStories
-      task <- userStory.technicalTasks :+ userStory
+      task <- userStory.flattenTasks
     } yield task
+    tasks.groupBy(_.taskId).mapValues(_.head)
   }
 
-  private def eventsForTaskUpdate(currentTask: Task, taskUpdate: Task)
+  private def eventsForTaskUpdate(currentTask: Task, taskUpdate: Task, parentUserStoryFromInitialScope: Boolean)
                                  (implicit timestamp: Date): Option[TaskEvent] = {
     if (currentTask.isOpened && taskUpdate.isCompleted)
-      currentTask.finish
+      currentTask.finish(parentUserStoryFromInitialScope)
     else if (currentTask.isCompleted && taskUpdate.isOpened)
-      currentTask.reopen
+      currentTask.reopen(parentUserStoryFromInitialScope)
     else
       None
   }
-
 }
 
 object Sprint {
-  def withEmptyEvents(userStories: Seq[UserStory]): Sprint = new Sprint(userStories, Nil)
+  def withEmptyEvents(userStories: Seq[UserStory]): Sprint =
+    new Sprint(initialStories = userStories, currentUserStories = userStories, Nil)
 }
