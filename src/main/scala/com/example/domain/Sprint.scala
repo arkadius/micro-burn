@@ -36,7 +36,8 @@ class Sprint(userStories: Seq[UserStory], events: Seq[TaskEvent]) {
     // interesują nas tylko zdarzenia dla nowych zadań, stare które zostały usunięte ze sprintu olewamy
     val eventsAfterUpdate = for {
       taskUpdate <- flattenTasks(userStoriesUpdate)
-      event <- eventsForTaskUpdate(currentTasksById.get(taskUpdate.taskId), taskUpdate)(timestamp)
+      currentTask <- currentTasksById.get(taskUpdate.taskId)
+      event <- eventsForTaskUpdate(currentTask, taskUpdate)(timestamp)
     } yield  event
     // nie czyścimy zdarzeń z tych dotyczących nieistniejących już tasków, bo jest możliwość, że wrócą -
     // odfiltujemy je przy wychiąganiu zmian
@@ -50,16 +51,14 @@ class Sprint(userStories: Seq[UserStory], events: Seq[TaskEvent]) {
     } yield task
   }
 
-  private def eventsForTaskUpdate(optionalCurrentTask: Option[Task], taskUpdate: Task)
-                                 (implicit timestamp: Date): Option[TaskEvent] = optionalCurrentTask match {
-    case Some(currentTask) if currentTask.isOpened && taskUpdate.isCompleted => currentTask.finish
-    case Some(currentTask) if currentTask.isCompleted && taskUpdate.isOpened => currentTask.reopen
-    // jeśli nowe zadanie jest od razu zakończone to zaliczamy mu punkty
-    case None if taskUpdate.isCompleted && !taskUpdate.isUserStoryContainingEstimatedTechnicalTasks =>
-      taskUpdate.optionalStoryPoints.map(TaskCompleted(taskUpdate.taskId, timestamp, _))
-    // jeśli nowe zadanie natomiast jest otwarta to nie traktujemy go jako ponownie otwarte
-    // (bo jest mała szansa że było zamknięte, znikło z tablicy i wróciło jako otwarte, zazwyczaj jest dobierane)
-    case _ => None
+  private def eventsForTaskUpdate(currentTask: Task, taskUpdate: Task)
+                                 (implicit timestamp: Date): Option[TaskEvent] = {
+    if (currentTask.isOpened && taskUpdate.isCompleted)
+      currentTask.finish
+    else if (currentTask.isCompleted && taskUpdate.isOpened)
+      currentTask.reopen
+    else
+      None
   }
 
 }
