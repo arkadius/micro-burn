@@ -1,10 +1,14 @@
 package com.example.repository
 
-import com.example.domain.{FooSprint, Sprint, TaskGenerator}
-import com.typesafe.config.{ConfigFactory, Config}
-import org.scalatest.{Matchers, FlatSpec}
+import java.util.Date
+
+import com.example.domain.{FooSprint, TaskGenerator}
+import com.typesafe.config.ConfigFactory
+import org.scalatest.{FlatSpec, Matchers}
 
 class SprintScopeRepositoryTest extends FlatSpec with Matchers {
+
+  import org.scalatest.OptionValues._
 
   it should "work round trip" in {
     val firstTechnical = TaskGenerator.openedTechnicalTask(Some(2))
@@ -13,9 +17,9 @@ class SprintScopeRepositoryTest extends FlatSpec with Matchers {
     val sprint = FooSprint.withEmptyEvents(userStories)
     val repo = SprintScopeRepository(ConfigFactory.load())
 
-    repo.saveUserStories(sprint)
+    repo.saveUserStories(sprint)(new Date)
 
-    val loaded = repo.loadUserStories(sprint.id)
+    val loaded = repo.loadCurrentUserStories(sprint.id).value
 
     loaded shouldEqual userStories
   }
