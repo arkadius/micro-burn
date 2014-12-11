@@ -24,7 +24,9 @@ class SprintScopeFSRepository(sprintsRoot: File) extends SprintScopeRepository {
   import net.liftweb.json.Extraction._
   import net.liftweb.json._
 
-  implicit val formats = DefaultFormats.withHints(FullTypeHints(List(classOf[Task], classOf[TechnicalTask], classOf[TaskState])))
+  implicit val formats = DefaultFormats
+    .withHints(FullTypeHints(List(classOf[Task], classOf[TechnicalTask]))) ++
+    CaseObjectSerializer.sequence(Opened, Completed)
 
   override def saveUserStories(sprint: Sprint): Unit = {
     sprintsRoot.mkdir()
