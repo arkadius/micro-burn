@@ -1,5 +1,9 @@
 package com.example.repository
 
-object TaskEventsRepository {
+import com.example.domain.TaskEvent
 
+trait TaskEventsRepository {
+  def appendTaskEvents(events: TaskEvent): Unit
+
+  def loadTaskEvents: Seq[TaskEvent]
 }

@@ -17,7 +17,7 @@ class SprintScopeRepositoryTest extends FlatSpec with Matchers {
     val sprint = FooSprint.withEmptyEvents(userStories)
     val repo = SprintScopeRepository(ConfigFactory.load())
 
-    repo.saveUserStories(sprint)(new Date)
+    repo.saveUserStories(sprint)(new Date(1000))
 
     val loaded = repo.loadCurrentUserStories(sprint.id).value
 

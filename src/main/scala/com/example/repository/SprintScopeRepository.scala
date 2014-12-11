@@ -14,6 +14,8 @@ trait SprintScopeRepository {
 
   def loadInitialUserStories(sprintId: String): Option[Seq[UserStory]]
   def loadCurrentUserStories(sprintId: String): Option[Seq[UserStory]]
+
+  def cleanUnnecessaryStates(sprintId: String): Unit
 }
 
 object SprintScopeRepository {
@@ -47,15 +49,29 @@ class SprintScopeFSRepository(sprintsRoot: File) extends SprintScopeRepository {
   private def jsonFileName(date: Date) = dateFormat.format(date) + ".json"
 
   def loadInitialUserStories(sprintId: String): Option[Seq[UserStory]] = {
-    sortedFiles(sprintId).headOption.map(loadUserStories)
+    sortedJsonFiles(sprintId).headOption.map(loadUserStories)
   }
 
   def loadCurrentUserStories(sprintId: String): Option[Seq[UserStory]] = {
-    sortedFiles(sprintId).lastOption.map(loadUserStories)
+    sortedJsonFiles(sprintId).lastOption.map(loadUserStories)
   }
 
-  private def sortedFiles(sprintId: String): Seq[File] = {
-    sprintRoot(sprintId).listFiles().filter(_.getName.endsWith(".json")).sortBy(parseFileName)
+  private def loadUserStories(sprintJsonFile: File): Seq[UserStory] = {
+    val content = Source.fromFile(sprintJsonFile).mkString
+    extract[Array[UserStory]](parse(content))
+  }
+
+  override def cleanUnnecessaryStates(sprintId: String): Unit = {
+    sortedJsonFiles(sprintId).drop(1).dropRight(1).foreach(_.delete())
+  }
+
+  private def sortedJsonFiles(sprintId: String): Seq[File] = {
+    val jsonFiles = for {
+      files <- Option(sprintRoot(sprintId).listFiles()).toSeq
+      file <- files
+      if file.getName.endsWith(".json")
+    } yield file
+    jsonFiles.sortBy(parseFileName)
   }
 
   private def parseFileName(file: File): Date = {
@@ -68,8 +84,4 @@ class SprintScopeFSRepository(sprintsRoot: File) extends SprintScopeRepository {
     new File(sprintsRoot, sprintId)
   }
 
-  private def loadUserStories(sprintJsonFile: File): Seq[UserStory] = {
-    val content = Source.fromFile(sprintJsonFile).mkString
-    extract[Array[UserStory]](parse(content))
-  }
 }
