@@ -16,6 +16,7 @@ libraryDependencies ++= {
     "com.typesafe.akka"   %%  "akka-actor"    % akkaV,
     "com.typesafe.akka"   %%  "akka-testkit"  % akkaV   % "test",
     "net.liftweb"         %%  "lift-json"     % "2.6-RC2",
+    "com.github.tototoshi" %% "scala-csv"     % "1.1.2",
     "org.scalatest"       %%  "scalatest"     % "2.2.2" % "test"
   )
 }
