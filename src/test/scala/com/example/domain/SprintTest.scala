@@ -25,12 +25,12 @@ class SprintTest extends FlatSpec with Matchers {
     val sprintBeforeUpdate = FooSprint.withEmptyEvents(Seq(taskInitiallyOpened, taskInitiallyCompleted))
 
     val firstTaskAfterFinish = taskInitiallyOpened.copy(state = Completed)
-    val UserStoriesUpdateResult(sprintAfterFirstFinish, _) = sprintBeforeUpdate.userStoriesUpdated(Seq(firstTaskAfterFinish, taskInitiallyCompleted))(new Date(100))
+    val UserStoriesUpdateResult(sprintAfterFirstFinish, _, _) = sprintBeforeUpdate.userStoriesUpdated(Seq(firstTaskAfterFinish, taskInitiallyCompleted))(new Date(100))
     sprintAfterFirstFinish.summedInitialStoryPoints shouldBe 3
     sprintAfterFirstFinish.storyPointsChanges.map(_.storyPoints) shouldEqual Seq(-1)
 
     val secTaskAfterReopen = taskInitiallyCompleted.copy(state = Opened)
-    val UserStoriesUpdateResult(sprintAfterSecReopen, _) = sprintAfterFirstFinish.userStoriesUpdated(Seq(firstTaskAfterFinish, secTaskAfterReopen))(new Date(200))
+    val UserStoriesUpdateResult(sprintAfterSecReopen, _, _) = sprintAfterFirstFinish.userStoriesUpdated(Seq(firstTaskAfterFinish, secTaskAfterReopen))(new Date(200))
     sprintAfterSecReopen.summedInitialStoryPoints shouldBe 3
     sprintAfterSecReopen.storyPointsChanges.map(_.storyPoints) shouldEqual Seq(-1, 1)
   }
@@ -43,7 +43,7 @@ class SprintTest extends FlatSpec with Matchers {
     val completedTechnical = technical.copy(state = Completed)
     val completedUserStory = userStory.copy(state = Completed, technicalTasksWithoutParentId = List(completedTechnical))
 
-    val UserStoriesUpdateResult(afterUpdate, _) = sprint.userStoriesUpdated(Seq(completedUserStory))(new Date)
+    val UserStoriesUpdateResult(afterUpdate, _, _) = sprint.userStoriesUpdated(Seq(completedUserStory))(new Date)
 
     afterUpdate.storyPointsChanges.map(_.storyPoints) shouldEqual Seq(-1)
   }
@@ -56,12 +56,12 @@ class SprintTest extends FlatSpec with Matchers {
 
     val completedFirstTechnical = firstTechnical.copy(state = Completed)
     val completedFirstUserStory = userStory.copy(technicalTasksWithoutParentId = List(completedFirstTechnical, secTechnical))
-    val UserStoriesUpdateResult(afterFirstFinish, _) = sprint.userStoriesUpdated(Seq(completedFirstUserStory))(new Date(100))
+    val UserStoriesUpdateResult(afterFirstFinish, _, _) = sprint.userStoriesUpdated(Seq(completedFirstUserStory))(new Date(100))
     afterFirstFinish.storyPointsChanges.map(_.storyPoints) shouldEqual Seq(-1)
 
     val completedSecTechnical = secTechnical.copy(state = Completed)
     val completedAllUserStory = completedFirstUserStory.copy(state = Completed, technicalTasksWithoutParentId = List(completedFirstTechnical, completedSecTechnical))
-    val UserStoriesUpdateResult(afterAllFinish, _) = afterFirstFinish.userStoriesUpdated(Seq(completedAllUserStory))(new Date(200))
+    val UserStoriesUpdateResult(afterAllFinish, _, _) = afterFirstFinish.userStoriesUpdated(Seq(completedAllUserStory))(new Date(200))
     afterAllFinish.storyPointsChanges.map(_.storyPoints) shouldEqual Seq(-1, -3)
   }
 }

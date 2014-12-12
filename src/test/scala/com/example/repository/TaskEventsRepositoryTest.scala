@@ -21,7 +21,7 @@ class TaskEventsRepositoryTest extends FlatSpec with Matchers {
     )
     val repo = TaskEventsRepository(config)
 
-    repo.appendTaskEvents(events)
+    repo.appendTasksEvents(events)
 
     repo.loadTaskEvents shouldEqual events
   }

@@ -10,7 +10,7 @@ import com.typesafe.config.Config
 import scala.io.Source
 
 trait SprintScopeRepository {
-  def saveUserStories(sprint: Sprint)(timestamp: Date): Unit
+  def saveCurrentUserStories(sprint: Sprint)(timestamp: Date): Unit
 
   def loadInitialUserStories(sprintId: String): Option[Seq[UserStory]]
   def loadCurrentUserStories(sprintId: String): Option[Seq[UserStory]]
@@ -33,7 +33,7 @@ class SprintScopeFSRepository(sprintsRoot: File) extends SprintScopeRepository {
     .withHints(FullTypeHints(List(classOf[Task], classOf[TechnicalTask]))) ++
     CaseObjectSerializer.sequence(Opened, Completed)
 
-  override def saveUserStories(sprint: Sprint)(timestamp: Date): Unit = {
+  override def saveCurrentUserStories(sprint: Sprint)(timestamp: Date): Unit = {
     val sprintRootDir = sprintRoot(sprint.id)
     sprintRootDir.mkdirs()
     val sprintJsonFile = new File(sprintRootDir, jsonFileName(timestamp))

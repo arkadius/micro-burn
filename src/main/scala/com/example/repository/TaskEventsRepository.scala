@@ -11,7 +11,7 @@ import com.typesafe.config.Config
 import scala.util.control.NonFatal
 
 trait TaskEventsRepository {
-  def appendTaskEvents(events: Seq[TaskEvent]): Unit
+  def appendTasksEvents(events: Seq[TaskEvent]): Unit
 
   def loadTaskEvents: Seq[TaskEvent]
 }
@@ -34,7 +34,7 @@ class TaskEventsCsvRepository(taskEventsFile: File) extends TaskEventsRepository
     override val quoting: Quoting = QUOTE_ALL
   }
 
-  override def appendTaskEvents(events: Seq[TaskEvent]): Unit = {
+  override def appendTasksEvents(events: Seq[TaskEvent]): Unit = {
     val csv = prepareWriter()
     try {
       events.foreach { event =>

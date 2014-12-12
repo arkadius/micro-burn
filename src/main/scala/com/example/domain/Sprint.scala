@@ -24,7 +24,7 @@ case class Sprint(id: String, initialUserStories: Seq[UserStory], currentUserSto
     } yield event
     
     val updatedSprint = copy(currentUserStories = updatedUserStories, events = events ++ newAddedEvents)
-    UserStoriesUpdateResult(updatedSprint, newAddedEvents)
+    UserStoriesUpdateResult(updatedSprint, newAddedEvents, timestamp)
   }
 
   private def eventsForTaskUpdate(currentTask: Task, updatedTask: Task, parentUserStoryFromInitialScope: Boolean)
@@ -38,7 +38,7 @@ case class Sprint(id: String, initialUserStories: Seq[UserStory], currentUserSto
   }
 }
 
-case class UserStoriesUpdateResult(updatedSprint: Sprint, newAddedEvents: Seq[TaskEvent]) {
+case class UserStoriesUpdateResult(updatedSprint: Sprint, newAddedEvents: Seq[TaskEvent], timestamp: Date) {
   def importantChange: Boolean = Sprint.storyPointsChanges(newAddedEvents)(updatedSprint).exists(_.storyPoints > 0)
 }
 
