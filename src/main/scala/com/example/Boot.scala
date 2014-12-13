@@ -1,21 +1,50 @@
 package com.example
 
-import akka.actor.{ActorSystem, Props}
-import akka.io.IO
-import spray.can.Http
-import akka.pattern.ask
-import akka.util.Timeout
+import akka.actor.ActorSystem
+import akka.http.Http
+import akka.http.client.RequestBuilding
+import akka.http.marshallers.xml.ScalaXmlSupport
+import akka.http.model.HttpEntity
+import akka.http.server._
+import akka.stream.FlowMaterializer
+import akka.stream.scaladsl.{Sink, Source}
+
 import scala.concurrent.duration._
 
-object Boot extends App {
+object Boot extends App with RequestBuilding with ScalaXmlSupport {
+  import akka.http.server.Directives._
+  import akka.http.server.RouteResult._
 
-  // we need an ActorSystem to host our application in
-  implicit val system = ActorSystem("on-spray-can")
+  implicit val system = ActorSystem()
+  implicit val materializer = FlowMaterializer()
 
-  // create and start our service actor
-  val service = system.actorOf(Props[MyServiceActor], "demo-service")
+  implicit val routingSetup: RoutingSetup = RoutingSetup(
+    routingSettings = RoutingSettings.default,
+    executionContext = system.dispatcher,
+    flowMaterializer = materializer,
+    routingLog = RoutingLog(system.log)
+  )
 
-  implicit val timeout = Timeout(5.seconds)
-  // start a new HTTP server on port 8080 with our service actor as the handler
-  IO(Http) ? Http.Bind(service, interface = "localhost", port = 8080)
+  val serverBinding = Http(system).bind(interface = "localhost", port = 8080)
+
+  serverBinding.startHandlingWith {
+    get {
+      pathPrefix("") {
+        getFromDirectory("src/main/webapp")
+      }
+    }
+  }
+
+  val outgoingFlow = Http(system)
+    .outgoingConnection("google.com", 80).flow
+    .mapAsyncUnordered(_.entity.toStrict(5 seconds))
+
+  val printingSink = Sink.foreach[HttpEntity.Strict] { response =>
+    println("got response: " + response.data.decodeString("utf-8"))
+  }
+
+  Source.singleton(Get("/test"))
+    .via(outgoingFlow)
+    .to(printingSink).run()
+
 }
