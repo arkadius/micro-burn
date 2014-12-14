@@ -2,7 +2,7 @@ package com.example.repository
 
 import java.io.File
 
-import com.example.domain.{Sprint, TaskEvent, UserStoriesUpdateResult}
+import com.example.domain.{Sprint, TaskEvent, SprintUpdateResult}
 
 case class SprintRepository private(private val sprintRoot: File,
                                     private val sprintId: String,
@@ -19,27 +19,38 @@ case class SprintRepository private(private val sprintRoot: File,
       events = eventsRepo.loadTaskEvents    
     } yield Sprint(sprintId, details, initial, current, events)
 
-  def saveUpdateResult(updateResult: UserStoriesUpdateResult): SprintRepository = {
+  def saveUpdateResult(updateResult: SprintUpdateResult): SprintRepository = {
     require(updateResult.updatedSprint.id == sprintId)
-    saveCurrentUserStories(updateResult)
-    appendTasksEventsIfNecessary(updateResult)
+    saveDetails(updateResult)
+      .saveCurrentUserStories(updateResult)
+      .appendTasksEventsIfNecessary(updateResult)
   }
 
-  private def saveCurrentUserStories(updateResult: UserStoriesUpdateResult): SprintRepository = {
+  private def saveDetails(updateResult: SprintUpdateResult): SprintRepository = {
+    if (updateResult.importantDetailsChange)
+      detailsRepo.saveDetails(updateResult.updatedSprint)
+    this
+  }
+
+  private def saveCurrentUserStories(updateResult: SprintUpdateResult): SprintRepository = {
     storiesRepo.saveCurrentUserStories(updateResult.updatedSprint)(updateResult.timestamp)
     storiesRepo.cleanUnnecessaryStates()
     this
   }
 
-  private def appendTasksEventsIfNecessary(updateResult: UserStoriesUpdateResult): SprintRepository = {
+  private def appendTasksEventsIfNecessary(updateResult: SprintUpdateResult): SprintRepository = {
     val updatedRepo = copy(cachedEvents = cachedEvents ++ updateResult.newAddedEvents)
-    if (updateResult.importantChange)
+    if (updateResult.importantEventsChange)
       updatedRepo.flushTaskEvents()
     else
       updatedRepo
   }
 
-  def flushTaskEvents(): SprintRepository = {
+  def flush(): SprintRepository = {
+    flushTaskEvents()
+  }
+
+  private def flushTaskEvents(): SprintRepository = {
     eventsRepo.appendTasksEvents(cachedEvents)
     copy(cachedEvents = IndexedSeq())
   }

@@ -8,6 +8,8 @@ case class Sprint(id: String,
                   currentUserStories: Seq[UserStory],
                   private val events: Seq[TaskEvent]) {
 
+  def isActive = details.isActive
+
   def initialStoryPoints: Int = {
     sumStoryPoints(initialUserStories)
   }
@@ -20,7 +22,7 @@ case class Sprint(id: String,
 
   def storyPointsChanges: Seq[DateWithStoryPoints] = Sprint.storyPointsChanges(events)(this)
 
-  def userStoriesUpdated(updatedUserStories: Seq[UserStory])(timestamp: Date): UserStoriesUpdateResult = {
+  def update(updatedUserStories: Seq[UserStory], finishSprint: Boolean)(timestamp: Date): SprintUpdateResult = {
     val initialUserStoriesIds = initialUserStories.map(_.taskId).toSet
     val currentTasksById = Sprint.flattenTasks(currentUserStories).groupBy(_.taskId).mapValues(_.head)
     // interesują nas tylko zdarzenia dla nowych zadań, stare które zostały usunięte ze sprintu olewamy
@@ -31,12 +33,14 @@ case class Sprint(id: String,
       parentUserStoryFromInitialScope = initialUserStoriesIds.contains(updatedTask.parentUserStoryId)
       event <- eventsForTaskUpdate(currentTask, updatedTask, parentUserStoryFromInitialScope)(timestamp)
     } yield event
+    val finished = isActive && finishSprint
     
     val updatedSprint = copy(
-      currentUserStories = updatedUserStories,
-      events = events ++ newAddedEvents
+      details = if (finished) details.finish else details,
+      currentUserStories = updatedUserStories,    
+      events = events ++ newAddedEvents      
     )
-    UserStoriesUpdateResult(updatedSprint, newAddedEvents, timestamp)
+    SprintUpdateResult(updatedSprint, newAddedEvents, finished, timestamp)
   }
 
   private def eventsForTaskUpdate(currentTask: Task, updatedTask: Task, parentUserStoryFromInitialScope: Boolean)
@@ -50,10 +54,21 @@ case class Sprint(id: String,
   }
 }
 
-case class SprintDetails(name: String, from: Date, to: Date, isActive: Boolean)
+case class SprintDetails(name: String, from: Date, to: Date, isActive: Boolean) {
+  def finish = copy(isActive = false)
+}
 
-case class UserStoriesUpdateResult(updatedSprint: Sprint, newAddedEvents: Seq[TaskEvent], timestamp: Date) {
-  def importantChange: Boolean = Sprint.storyPointsChanges(newAddedEvents)(updatedSprint).exists(_.storyPoints > 0)
+object SprintDetails {
+  def apply(name: String, from: Date, to: Date): SprintDetails = SprintDetails(name, from, to, isActive = true)
+}
+
+case class SprintUpdateResult(updatedSprint: Sprint, newAddedEvents: Seq[TaskEvent], sprintFinished: Boolean, timestamp: Date) {
+  def importantChange: Boolean =  importantDetailsChange || importantEventsChange
+
+  def importantDetailsChange: Boolean = sprintFinished
+
+  def importantEventsChange: Boolean =
+    Sprint.storyPointsChanges(newAddedEvents)(updatedSprint).exists(_.storyPoints > 0)
 }
 
 object Sprint {

@@ -12,8 +12,8 @@ class SprintActor(var sprint: Sprint,
                  (changeNotifyingActor: LiftActor) extends LiftActor {
 
   override protected def messageHandler: PartialFunction[Any, Unit] = {
-    case UserStoriesUpdate(userStories, timestamp) =>
-      val result = sprint.userStoriesUpdated(userStories)(timestamp)
+    case UpdateSprint(userStories, finishSprint, timestamp) =>
+      val result = sprint.update(userStories, finishSprint)(timestamp)
       sprint = result.updatedSprint
       repo = repo.saveUpdateResult(result)
       if (result.importantChange)
@@ -21,9 +21,11 @@ class SprintActor(var sprint: Sprint,
     case GetStoryPointsHistory =>
       reply(StoryPointsHistory(sprint.initialStoryPoints, sprint.storyPointsChanges))
   }
+  
+  //TODO: repo.flush() on exit
 }
 
-case class UserStoriesUpdate(userStories: Seq[UserStory], timestamp: Date)
+case class UpdateSprint(userStories: Seq[UserStory], finishSprint: Boolean, timestamp: Date)
 
 case object GetStoryPointsHistory
 

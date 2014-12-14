@@ -8,8 +8,7 @@ object FooSprint {
     val details = SprintDetails(
       name = "fooName",
       from = new Date(1000),
-      to = new Date(2000),
-      isActive = true
+      to = new Date(2000)
     )
     Sprint.withEmptyEvents("foo", details, userStories)
   }
