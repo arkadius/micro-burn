@@ -7,15 +7,14 @@ import org.scalatest.{Matchers, FlatSpec}
 class SprintTest extends FlatSpec with Matchers {
 
   it should "give correct story points sum" in {
-    val sprint = Sprint.withEmptyEvents(
-      "foo",
+    val sprint = FooSprint.withEmptyEvents(
       Seq(
         TaskGenerator.openedUserStory(1),
         TaskGenerator.completedUserStory(2)
       )
     )
 
-    sprint.summedInitialStoryPoints shouldBe 3
+    sprint.initialStoryPoints shouldBe 3
   }
 
   it should "produce correct events for update" in {
@@ -26,12 +25,12 @@ class SprintTest extends FlatSpec with Matchers {
 
     val firstTaskAfterFinish = taskInitiallyOpened.copy(state = Completed)
     val UserStoriesUpdateResult(sprintAfterFirstFinish, _, _) = sprintBeforeUpdate.userStoriesUpdated(Seq(firstTaskAfterFinish, taskInitiallyCompleted))(new Date(100))
-    sprintAfterFirstFinish.summedInitialStoryPoints shouldBe 3
+    sprintAfterFirstFinish.initialStoryPoints shouldBe 3
     sprintAfterFirstFinish.storyPointsChanges.map(_.storyPoints) shouldEqual Seq(-1)
 
     val secTaskAfterReopen = taskInitiallyCompleted.copy(state = Opened)
     val UserStoriesUpdateResult(sprintAfterSecReopen, _, _) = sprintAfterFirstFinish.userStoriesUpdated(Seq(firstTaskAfterFinish, secTaskAfterReopen))(new Date(200))
-    sprintAfterSecReopen.summedInitialStoryPoints shouldBe 3
+    sprintAfterSecReopen.initialStoryPoints shouldBe 3
     sprintAfterSecReopen.storyPointsChanges.map(_.storyPoints) shouldEqual Seq(-1, 1)
   }
 

@@ -4,6 +4,7 @@ import java.util.Date
 
 sealed trait Task {
   def taskId: String
+  def taskName: String
   def storyPointsWithoutSubTasks: Int
   def parentUserStoryId: String
   protected def state: TaskState
@@ -35,11 +36,12 @@ sealed trait Task {
 }
 
 case class UserStory(taskId: String,
+                     taskName: String,
                      optionalStoryPoints: Option[Int],
-                     private val technicalTasksWithoutParentId: List[TechnicalTask],
+                     /*private val */technicalTasksWithoutParentId: List[TechnicalTask],
                      state: TaskState) extends Task {
 
-  def technicalTasks = technicalTasksWithoutParentId.map(TechnicalTaskWithParentId(_, taskId))
+  def technicalTasks: Seq[Task] = technicalTasksWithoutParentId.map(TechnicalTaskWithParentId(_, taskId))
   
   override def storyPointsWithoutSubTasks: Int = {
     val storyPointsOfMine = optionalStoryPoints.getOrElse(0)
@@ -54,21 +56,28 @@ case class UserStory(taskId: String,
 case class TechnicalTaskWithParentId(technical: TechnicalTask, parentUserStoryId: String) extends Task {
   override def taskId: String = technical.taskId
 
+  override def taskName: String = technical.taskName
+
   override def storyPointsWithoutSubTasks: Int = technical.optionalStoryPoints.getOrElse(0)
 
   override protected def state: TaskState = technical.state
 }
 
-case class TechnicalTask(taskId: String, optionalStoryPoints: Option[Int], state: TaskState)
+case class TechnicalTask(taskId: String, taskName: String, optionalStoryPoints: Option[Int], state: TaskState)
 
 object UserStory {
-  def apply(taskId: String, optionalStoryPoints: Option[Int], technicalTasks: Seq[TechnicalTask]): UserStory = {
-    new UserStory(taskId, optionalStoryPoints, technicalTasks.toList, Opened)
+  def apply(taskId: String,
+            taskName: String,
+            optionalStoryPoints: Option[Int],
+            technicalTasks: Seq[TechnicalTask]): UserStory = {
+    new UserStory(taskId, taskName, optionalStoryPoints, technicalTasks.toList, Opened)
   }
 }
 
 object TechnicalTask {
-  def apply(taskId: String, optionalStoryPoints: Option[Int]): TechnicalTask = {
-    new TechnicalTask(taskId, optionalStoryPoints, Opened)
+  def apply(taskId: String,
+            taskName: String,
+            optionalStoryPoints: Option[Int]): TechnicalTask = {
+    new TechnicalTask(taskId, taskName, optionalStoryPoints, Opened)
   }
 }

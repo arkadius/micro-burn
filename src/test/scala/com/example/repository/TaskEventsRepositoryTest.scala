@@ -9,8 +9,8 @@ import org.scalatest.{Matchers, FlatSpec}
 class TaskEventsRepositoryTest extends FlatSpec with Matchers {
 
   it should "do correct round trip" in {
-    val config = ConfigFactory.load()
-    val file = new File(config.getString("data.events"))
+    val sprintRoot = new File(s"target/sprints/foo")
+    val file = new File(sprintRoot, "taskEvents.csv")
     if (file.exists())
       file.delete()
 
@@ -19,7 +19,7 @@ class TaskEventsRepositoryTest extends FlatSpec with Matchers {
       TaskEventsGenerator.completedEvent,
       TaskEventsGenerator.reopenedEvent
     )
-    val repo = TaskEventsRepository(config)
+    val repo = TaskEventsRepository(sprintRoot)
 
     repo.appendTasksEvents(events)
 

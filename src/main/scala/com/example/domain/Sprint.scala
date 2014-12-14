@@ -2,9 +2,18 @@ package com.example.domain
 
 import java.util.Date
 
-case class Sprint(id: String, initialUserStories: Seq[UserStory], currentUserStories: Seq[UserStory], events: Seq[TaskEvent]) {
-  def summedInitialStoryPoints: Int = {
-    initialUserStories.flatMap { userStory =>
+case class Sprint(id: String,
+                  details: SprintDetails,
+                  private val initialUserStories: Seq[UserStory],
+                  currentUserStories: Seq[UserStory],
+                  private val events: Seq[TaskEvent]) {
+
+  def initialStoryPoints: Int = {
+    sumStoryPoints(initialUserStories)
+  }
+
+  private def sumStoryPoints(userStories: Seq[UserStory]): Int = {
+    userStories.flatMap { userStory =>
       userStory.optionalStoryPoints
     }.sum
   }
@@ -23,7 +32,10 @@ case class Sprint(id: String, initialUserStories: Seq[UserStory], currentUserSto
       event <- eventsForTaskUpdate(currentTask, updatedTask, parentUserStoryFromInitialScope)(timestamp)
     } yield event
     
-    val updatedSprint = copy(currentUserStories = updatedUserStories, events = events ++ newAddedEvents)
+    val updatedSprint = copy(
+      currentUserStories = updatedUserStories,
+      events = events ++ newAddedEvents
+    )
     UserStoriesUpdateResult(updatedSprint, newAddedEvents, timestamp)
   }
 
@@ -38,13 +50,15 @@ case class Sprint(id: String, initialUserStories: Seq[UserStory], currentUserSto
   }
 }
 
+case class SprintDetails(name: String, from: Date, to: Date, isActive: Boolean)
+
 case class UserStoriesUpdateResult(updatedSprint: Sprint, newAddedEvents: Seq[TaskEvent], timestamp: Date) {
   def importantChange: Boolean = Sprint.storyPointsChanges(newAddedEvents)(updatedSprint).exists(_.storyPoints > 0)
 }
 
 object Sprint {
-  def withEmptyEvents(id: String, userStories: Seq[UserStory]): Sprint =
-    new Sprint(id, initialUserStories = userStories, currentUserStories = userStories, Nil)
+  def withEmptyEvents(id: String, details: SprintDetails, userStories: Seq[UserStory]): Sprint =
+    Sprint(id, details, initialUserStories = userStories, currentUserStories = userStories, Nil)
   
   private[domain] def storyPointsChanges(events: Seq[TaskEvent])(sprint: Sprint): Seq[DateWithStoryPoints] = {
     val initialAndCurrentUserStoriesIds = (sprint.initialUserStories ++ sprint.currentUserStories).map(_.taskId).toSet

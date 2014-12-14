@@ -1,43 +1,50 @@
 package com.example.repository
 
-import java.util.Date
+import java.io.File
 
 import com.example.domain.{Sprint, TaskEvent, UserStoriesUpdateResult}
-import com.typesafe.config.{ConfigFactory, Config}
 
-class SprintRepository(config: Config) {
-
-  private var cachedEvents: Seq[TaskEvent] = IndexedSeq()
-
-  private val storiesRepo = SprintScopeRepository(config)
-  private val eventsRepo = TaskEventsRepository(config)
+case class SprintRepository private(private val sprintRoot: File,
+                                    private val sprintId: String,
+                                    private val cachedEvents: Seq[TaskEvent]) {
+  private val detailsRepo: SprintDetailsRepository = SprintDetailsRepository(sprintRoot)
+  private val storiesRepo = SprintScopeRepository(sprintRoot)
+  private val eventsRepo = TaskEventsRepository(sprintRoot)
   
-  def loadSprint(sprintId: String): Option[Sprint] =
+  def loadSprint: Option[Sprint] =
     for {
-      initial <- storiesRepo.loadInitialUserStories(sprintId)
-      current <- storiesRepo.loadCurrentUserStories(sprintId)
+      details <- detailsRepo.loadDetails
+      initial <- storiesRepo.loadInitialUserStories
+      current <- storiesRepo.loadCurrentUserStories
       events = eventsRepo.loadTaskEvents    
-    } yield Sprint(sprintId, initial, current, events) 
+    } yield Sprint(sprintId, details, initial, current, events)
 
-  def saveUpdateResult(updateResult: UserStoriesUpdateResult): Unit = {
+  def saveUpdateResult(updateResult: UserStoriesUpdateResult): SprintRepository = {
+    require(updateResult.updatedSprint.id == sprintId)
     saveCurrentUserStories(updateResult)
     appendTasksEventsIfNecessary(updateResult)
   }
 
-  private def saveCurrentUserStories(updateResult: UserStoriesUpdateResult): Unit = {
+  private def saveCurrentUserStories(updateResult: UserStoriesUpdateResult): SprintRepository = {
     storiesRepo.saveCurrentUserStories(updateResult.updatedSprint)(updateResult.timestamp)
-    storiesRepo.cleanUnnecessaryStates(updateResult.updatedSprint.id)
+    storiesRepo.cleanUnnecessaryStates()
+    this
   }
 
-  def appendTasksEventsIfNecessary(updateResult: UserStoriesUpdateResult): Unit = {
-    cachedEvents ++= updateResult.newAddedEvents
+  private def appendTasksEventsIfNecessary(updateResult: UserStoriesUpdateResult): SprintRepository = {
+    val updatedRepo = copy(cachedEvents = cachedEvents ++ updateResult.newAddedEvents)
     if (updateResult.importantChange)
-      flushTaskEvents()
+      updatedRepo.flushTaskEvents()
+    else
+      updatedRepo
   }
 
-  def flushTaskEvents(): Unit = {
+  def flushTaskEvents(): SprintRepository = {
     eventsRepo.appendTasksEvents(cachedEvents)
-    cachedEvents = IndexedSeq()
+    copy(cachedEvents = IndexedSeq())
   }
+}
 
+object SprintRepository {
+  def apply(sprintRoot: File, sprintId: String) = new SprintRepository(sprintRoot, sprintId, IndexedSeq())
 }

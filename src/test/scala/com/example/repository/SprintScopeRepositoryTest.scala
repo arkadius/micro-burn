@@ -1,9 +1,9 @@
 package com.example.repository
 
+import java.io.File
 import java.util.Date
 
 import com.example.domain.{FooSprint, TaskGenerator}
-import com.typesafe.config.ConfigFactory
 import org.scalatest.{FlatSpec, Matchers}
 
 class SprintScopeRepositoryTest extends FlatSpec with Matchers {
@@ -15,11 +15,11 @@ class SprintScopeRepositoryTest extends FlatSpec with Matchers {
     val secTechnical = TaskGenerator.openedTechnicalTask(None)
     val userStories = Seq(TaskGenerator.openedUserStory(3, Seq(firstTechnical, secTechnical)))
     val sprint = FooSprint.withEmptyEvents(userStories)
-    val repo = SprintScopeRepository(ConfigFactory.load())
+    val repo = SprintScopeRepository(new File(s"target/sprints/${sprint.id}"))
 
     repo.saveCurrentUserStories(sprint)(new Date(1000))
 
-    val loaded = repo.loadCurrentUserStories(sprint.id).value
+    val loaded = repo.loadCurrentUserStories.value
 
     loaded shouldEqual userStories
   }

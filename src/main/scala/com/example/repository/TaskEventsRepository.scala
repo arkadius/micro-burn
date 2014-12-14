@@ -17,9 +17,8 @@ trait TaskEventsRepository {
 }
 
 object TaskEventsRepository {
-  def apply(config: Config): TaskEventsRepository = {
-    val eventsPath = config.getString("data.events")
-    new TaskEventsCsvRepository(new File(eventsPath))
+  def apply(sprintRoot: File): TaskEventsRepository = {
+    new TaskEventsCsvRepository(new File(sprintRoot, "taskEvents.csv"))
   }
 }
 

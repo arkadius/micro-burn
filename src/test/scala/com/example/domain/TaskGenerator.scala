@@ -9,15 +9,24 @@ object TaskGenerator {
     currentId.toString
   }
 
-  def openedUserStory(sp: Int, technical: Seq[TechnicalTask] = Nil) =
-    UserStory(nextId, Some(sp), technical.toList, Opened)
+  def openedUserStory(sp: Int, technical: Seq[TechnicalTask] = Nil) = {
+    val id = nextId
+    UserStory(id, s"User Story $id", Some(sp), technical.toList, Opened)
+  }
 
-  def completedUserStory(sp: Int, technical: Seq[TechnicalTask] = Nil) =
-    UserStory(nextId, Some(sp), technical.toList, Completed)
+  def completedUserStory(sp: Int, technical: Seq[TechnicalTask] = Nil) = {
+    val id = nextId
+    UserStory(id, s"User Story $id", Some(sp), technical.toList, Completed)
+  }
 
+  def openedTechnicalTask(optionalSP: Option[Int]) = {
+    val id = nextId
+    TechnicalTask(id, s"Technical Task $id", optionalSP, Opened)
+  }
 
-  def openedTechnicalTask(optionalSP: Option[Int]) = TechnicalTask(nextId, optionalSP, Opened)
-
-  def completedTechnicalTask(optionalSP: Option[Int]) = TechnicalTask(nextId, optionalSP, Completed)
+  def completedTechnicalTask(optionalSP: Option[Int]) = {
+    val id = nextId
+    TechnicalTask(id, s"Technical Task $id", optionalSP, Completed)
+  }
 
 }

@@ -7,12 +7,12 @@ scalaVersion  := "2.11.4"
 scalacOptions := Seq("-unchecked", "-deprecation", "-encoding", "utf8")
 
 libraryDependencies ++= {
-  val akkaV = "2.3.6"
-  val sprayV = "1.3.2"
+  val liftV = "3.0-M2"
   Seq(
-    "com.typesafe.akka" %% "akka-http-experimental" % "0.11-SNAPSHOT",
-    "com.typesafe.akka" %% "akka-http-xml-experimental" % "0.11-SNAPSHOT",
-    "net.liftweb"         %%  "lift-json"     % "2.6-RC2",
+    "com.typesafe" % "config" % "1.2.1",
+    "net.databinder.dispatch" %% "dispatch-core" % "0.11.2",
+    "net.liftweb"         %%  "lift-actor"    % liftV,
+    "net.liftweb"         %%  "lift-json"     % liftV,
     "com.github.tototoshi" %% "scala-csv"     % "1.1.2",
     "org.scalatest"       %%  "scalatest"     % "2.2.2" % "test"
   )
