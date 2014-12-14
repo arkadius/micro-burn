@@ -12,24 +12,24 @@ class SprintActor(var sprint: Sprint,
                  (changeNotifyingActor: LiftActor) extends LiftActor {
 
   override protected def messageHandler: PartialFunction[Any, Unit] = {
-    case UpdateSprint(userStories, finishSprint, timestamp) =>
+    case IsActive =>
+      reply(sprint.isActive)
+    case UpdateSprint(sprintId, userStories, finishSprint, timestamp) =>
+      require(sprintId == sprint.id)
       val result = sprint.update(userStories, finishSprint)(timestamp)
       sprint = result.updatedSprint
       repo = repo.saveUpdateResult(result)
       if (result.importantChange)
         changeNotifyingActor ! SprintChanged(sprint.id)
-    case GetStoryPointsHistory =>
+    case GetStoryPointsHistory(sprintId: String) =>
+      require(sprintId == sprint.id)
       reply(StoryPointsHistory(sprint.initialStoryPoints, sprint.storyPointsChanges))
   }
   
   //TODO: repo.flush() on exit
 }
 
-case class UpdateSprint(userStories: Seq[UserStory], finishSprint: Boolean, timestamp: Date)
-
-case object GetStoryPointsHistory
-
-case class StoryPointsHistory(initialStoryPoints: Int, history: Seq[DateWithStoryPoints])
+case object IsActive
 
 case class SprintChanged(sprintId: String)
 

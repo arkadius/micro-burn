@@ -1,6 +1,7 @@
 package com.example.repository
 
 import java.io.File
+import java.util.Date
 
 import com.example.domain.{Sprint, TaskEvent, SprintUpdateResult}
 
@@ -18,6 +19,13 @@ case class SprintRepository private(private val sprintRoot: File,
       current <- storiesRepo.loadCurrentUserStories
       events = eventsRepo.loadTaskEvents    
     } yield Sprint(sprintId, details, initial, current, events)
+
+  def saveSprint(sprint: Sprint)(timestamp: Date): SprintRepository = {
+    require(sprint.id == sprintId)
+    detailsRepo.saveDetails(sprint)
+    storiesRepo.saveCurrentUserStories(sprint)(timestamp)
+    this
+  }
 
   def saveUpdateResult(updateResult: SprintUpdateResult): SprintRepository = {
     require(updateResult.updatedSprint.id == sprintId)
