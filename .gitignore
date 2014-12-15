@@ -1,10 +1,10 @@
-target
+target/
 target/**
 *.class
 *.iml
 *.ipr
 *.iws
-.idea
+.idea/
 .idea/**
 out
 tags
