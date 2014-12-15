@@ -4,6 +4,7 @@ target
 *.ipr
 *.iws
 .idea
+**/.idea/workspace.xml
 out
 tags
 .*.swp
