@@ -12,8 +12,8 @@ class SprintActor(var sprint: Sprint,
                  (changeNotifyingActor: LiftActor) extends LiftActor {
 
   override protected def messageHandler: PartialFunction[Any, Unit] = {
-    case IsActive =>
-      reply(sprint.isActive)
+//    case IsActive =>
+//      reply(sprint.isActive)
     case UpdateSprint(sprintId, userStories, finishSprint, timestamp) =>
       require(sprintId == sprint.id)
       val result = sprint.update(userStories, finishSprint)(timestamp)

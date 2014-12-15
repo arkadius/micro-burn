@@ -5,7 +5,8 @@ import java.util.Date
 
 import com.example.domain._
 import com.example.repository.SprintRepository
-import net.liftweb.actor.MockLiftActor
+import net.liftweb.actor.{LAFuture, MockLiftActor}
+import net.liftweb.common.Failure
 import org.scalatest.{FlatSpec, Matchers}
 
 import scala.concurrent.{Await, Future}
@@ -14,13 +15,14 @@ import scala.reflect.io.Path
 class ProjectActorTest extends FlatSpec with Matchers {
   import scala.concurrent.ExecutionContext.Implicits.global
   import scala.concurrent.duration._
+  import FutureEnrichments._
 
   it should "reply with correct active actors" in {
     val sprint = FooSprint.withEmptyEvents(Nil)
     val projectActor = actorWithInitialSprint(sprint)
     def sprintIsActive = sprintActivenessCheck(sprint.id, projectActor)
 
-    Await.result(for {
+   (for {
       beforeUpdateActiveness <- sprintIsActive
       _ = {
         beforeUpdateActiveness shouldBe true
@@ -29,7 +31,7 @@ class ProjectActorTest extends FlatSpec with Matchers {
       afterUpdateActiveness <- sprintIsActive
     } yield {
       afterUpdateActiveness shouldBe false
-    }, 5 seconds)
+    }).get(5 seconds)
   }
 
   it should "reply with correct history" in {
@@ -39,12 +41,12 @@ class ProjectActorTest extends FlatSpec with Matchers {
 
     projectActor ! UpdateSprint(sprint.id, Seq(userStory.copy(state = Completed)), finishSprint = false, new Date)
 
-    val historyFuture = (projectActor ?? (GetStoryPointsHistory(sprint.id), 5 seconds)).mapTo[StoryPointsHistory]
+    val historyFuture = (projectActor ?? (GetStoryPointsHistory(sprint.id), timeout = 5 seconds)).mapTo[StoryPointsHistory]
 
-    Await.result(historyFuture.mapOrFail { history =>
+    historyFuture.mapOrFail { history =>
       history.initialStoryPoints shouldEqual 1
       history.history.map(_.storyPoints) shouldEqual Seq(-1)
-    }, 5 seconds)
+    }.get(5 seconds)
   }
 
   private def actorWithInitialSprint(sprint: Sprint): ProjectActor = {
@@ -56,7 +58,7 @@ class ProjectActorTest extends FlatSpec with Matchers {
     projectActor
   }
 
-  private def sprintActivenessCheck(sprintId: String, projectActor: ProjectActor): Future[Boolean] = {
+  private def sprintActivenessCheck(sprintId: String, projectActor: ProjectActor): LAFuture[Boolean] = {
     val sprintWithStatesFuture = (projectActor ?? (GetSprintsWithStates, timeout = 5 seconds)).mapTo[Seq[SprintWithState]]
     sprintWithStatesFuture.mapOrFail { sprintWithStates =>
       sprintWithStates should have length 1
@@ -65,10 +67,11 @@ class ProjectActorTest extends FlatSpec with Matchers {
     }
   }
 
-  implicit class FutureTestEnrichment[T](future: Future[T]) {
-    def mapOrFail[TT](f: T => TT): Future[TT] = {
-      future.onFailure {
-        case ex => fail(ex)
+  implicit class FutureTestEnrichment[T](future: LAFuture[T]) {
+    def mapOrFail[TT](f: T => TT): LAFuture[TT] = {
+      future.onFail {
+        case Failure(msg, ex, _) => fail(ex.openOr(new Exception(s"Failure without exception but with message: $msg")))
+        case other => fail(s"Unexpected box in onFail: $other")
       }
       future.map(f)
     }
