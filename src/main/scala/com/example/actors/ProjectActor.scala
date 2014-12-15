@@ -3,16 +3,13 @@ package com.example.actors
 import java.io.File
 import java.util.Date
 
-import com.example.domain.{DateWithStoryPoints, UserStory, SprintDetails, Sprint}
+import com.example.domain.{DateWithStoryPoints, SprintDetails, UserStory}
 import com.example.repository.ProjectRepository
 import com.typesafe.config.ConfigFactory
 import net.liftweb.actor.{LAFuture, LiftActor}
 
-import scala.concurrent.Future
-
-class ProjectActor(projectRoot: File, sprintChangeNotifyingActor: LiftActor) extends LiftActor with AskEnrichment {
-  import FutureEnrichments._
-  import scala.concurrent.ExecutionContext.Implicits.global
+class ProjectActor(projectRoot: File, sprintChangeNotifyingActor: LiftActor) extends LiftActor {
+  import com.example.actors.FutureEnrichments._
 
   private val sprintFactory = new SprintActorFactory(projectRoot, sprintChangeNotifyingActor)
   private val projectRepo = ProjectRepository(projectRoot)

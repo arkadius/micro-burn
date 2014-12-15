@@ -9,13 +9,12 @@ import net.liftweb.actor.{LAFuture, MockLiftActor}
 import net.liftweb.common.Failure
 import org.scalatest.{FlatSpec, Matchers}
 
-import scala.concurrent.{Await, Future}
 import scala.reflect.io.Path
 
 class ProjectActorTest extends FlatSpec with Matchers {
-  import scala.concurrent.ExecutionContext.Implicits.global
+  import com.example.actors.FutureEnrichments._
+  import com.example.actors.LiftActorEnrichments._
   import scala.concurrent.duration._
-  import FutureEnrichments._
 
   it should "reply with correct active actors" in {
     val sprint = FooSprint.withEmptyEvents(Nil)
@@ -31,7 +30,7 @@ class ProjectActorTest extends FlatSpec with Matchers {
       afterUpdateActiveness <- sprintIsActive
     } yield {
       afterUpdateActiveness shouldBe false
-    }).get(5 seconds)
+    }).await(5 seconds)
   }
 
   it should "reply with correct history" in {
@@ -41,12 +40,12 @@ class ProjectActorTest extends FlatSpec with Matchers {
 
     projectActor ! UpdateSprint(sprint.id, Seq(userStory.copy(state = Completed)), finishSprint = false, new Date)
 
-    val historyFuture = (projectActor ?? (GetStoryPointsHistory(sprint.id), timeout = 5 seconds)).mapTo[StoryPointsHistory]
+    val historyFuture = (projectActor ?? GetStoryPointsHistory(sprint.id)).mapTo[StoryPointsHistory]
 
     historyFuture.mapOrFail { history =>
       history.initialStoryPoints shouldEqual 1
       history.history.map(_.storyPoints) shouldEqual Seq(-1)
-    }.get(5 seconds)
+    }.await(5 seconds)
   }
 
   private def actorWithInitialSprint(sprint: Sprint): ProjectActor = {
@@ -59,7 +58,7 @@ class ProjectActorTest extends FlatSpec with Matchers {
   }
 
   private def sprintActivenessCheck(sprintId: String, projectActor: ProjectActor): LAFuture[Boolean] = {
-    val sprintWithStatesFuture = (projectActor ?? (GetSprintsWithStates, timeout = 5 seconds)).mapTo[Seq[SprintWithState]]
+    val sprintWithStatesFuture = (projectActor ?? GetSprintsWithStates).mapTo[Seq[SprintWithState]]
     sprintWithStatesFuture.mapOrFail { sprintWithStates =>
       sprintWithStates should have length 1
       sprintWithStates.head.sprintId shouldEqual sprintId
