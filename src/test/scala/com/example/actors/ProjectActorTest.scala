@@ -6,7 +6,6 @@ import java.util.Date
 import com.example.domain._
 import com.example.repository.SprintRepository
 import net.liftweb.actor.{LAFuture, MockLiftActor}
-import net.liftweb.common.Failure
 import org.scalatest.{FlatSpec, Matchers}
 
 import scala.reflect.io.Path
@@ -14,7 +13,8 @@ import scala.reflect.io.Path
 class ProjectActorTest extends FlatSpec with Matchers {
   import com.example.actors.FutureEnrichments._
   import com.example.actors.LiftActorEnrichments._
-  import scala.concurrent.duration._
+
+import scala.concurrent.duration._
 
   it should "reply with correct active actors" in {
     val sprint = FooSprint.withEmptyEvents(Nil)
@@ -42,7 +42,7 @@ class ProjectActorTest extends FlatSpec with Matchers {
 
     val historyFuture = (projectActor ?? GetStoryPointsHistory(sprint.id)).mapTo[StoryPointsHistory]
 
-    historyFuture.mapOrFail { history =>
+    historyFuture.map { history =>
       history.initialStoryPoints shouldEqual 1
       history.history.map(_.storyPoints) shouldEqual Seq(-1)
     }.await(5 seconds)
@@ -59,20 +59,10 @@ class ProjectActorTest extends FlatSpec with Matchers {
 
   private def sprintActivenessCheck(sprintId: String, projectActor: ProjectActor): LAFuture[Boolean] = {
     val sprintWithStatesFuture = (projectActor ?? GetSprintsWithStates).mapTo[Seq[SprintWithState]]
-    sprintWithStatesFuture.mapOrFail { sprintWithStates =>
+    sprintWithStatesFuture.map { sprintWithStates =>
       sprintWithStates should have length 1
       sprintWithStates.head.sprintId shouldEqual sprintId
       sprintWithStates.head.isActive
-    }
-  }
-
-  implicit class FutureTestEnrichment[T](future: LAFuture[T]) {
-    def mapOrFail[TT](f: T => TT): LAFuture[TT] = {
-      future.onFail {
-        case Failure(msg, ex, _) => fail(ex.openOr(new Exception(s"Failure without exception but with message: $msg")))
-        case other => fail(s"Unexpected box in onFail: $other")
-      }
-      future.map(f)
     }
   }
 }
