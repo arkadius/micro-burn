@@ -1,9 +1,8 @@
 package com.example.actors
 
 import java.io.File
-import java.util.Date
 
-import com.example.domain.{SprintDetails, DateWithStoryPoints, Sprint, UserStory}
+import com.example.domain.{Sprint, SprintDetails, UserStory}
 import com.example.repository.SprintRepository
 import net.liftweb.actor.LiftActor
 

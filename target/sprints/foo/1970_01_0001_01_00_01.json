@@ -1,0 +1,25 @@
+[{
+  "jsonClass":"com.example.domain.UserStory",
+  "taskId":"3",
+  "taskName":"User Story 3",
+  "optionalStoryPoints":3,
+  "technicalTasksWithoutParentId":[{
+    "jsonClass":"com.example.domain.TechnicalTask",
+    "taskId":"1",
+    "taskName":"Technical Task 1",
+    "optionalStoryPoints":2,
+    "state":{
+      "jsonObject":"com.example.domain.Opened$"
+    }
+  },{
+    "jsonClass":"com.example.domain.TechnicalTask",
+    "taskId":"2",
+    "taskName":"Technical Task 2",
+    "state":{
+      "jsonObject":"com.example.domain.Opened$"
+    }
+  }],
+  "state":{
+    "jsonObject":"com.example.domain.Opened$"
+  }
+}]

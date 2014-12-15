@@ -1,0 +1,13 @@
+<component name="libraryTable">
+  <library name="SBT: com.github.tototoshi:scala-csv_2.11:1.1.2">
+    <CLASSES>
+      <root url="jar://$USER_HOME$/.ivy2/cache/com.github.tototoshi/scala-csv_2.11/jars/scala-csv_2.11-1.1.2.jar!/" />
+    </CLASSES>
+    <JAVADOC>
+      <root url="jar://$USER_HOME$/.ivy2/cache/com.github.tototoshi/scala-csv_2.11/docs/scala-csv_2.11-1.1.2-javadoc.jar!/" />
+    </JAVADOC>
+    <SOURCES>
+      <root url="jar://$USER_HOME$/.ivy2/cache/com.github.tototoshi/scala-csv_2.11/srcs/scala-csv_2.11-1.1.2-sources.jar!/" />
+    </SOURCES>
+  </library>
+</component>

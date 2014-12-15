@@ -1,0 +1,10 @@
+[{
+  "jsonClass":"com.example.domain.UserStory",
+  "taskId":"13",
+  "taskName":"User Story 13",
+  "optionalStoryPoints":1,
+  "technicalTasksWithoutParentId":[],
+  "state":{
+    "jsonObject":"com.example.domain.Completed$"
+  }
+}]

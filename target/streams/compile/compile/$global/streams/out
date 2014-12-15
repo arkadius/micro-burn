@@ -1,0 +1,60 @@
+[0m[[0mdebug[0m] [0m[0m
+[0m[[0mdebug[0m] [0mInitial source changes: [0m
+[0m[[0mdebug[0m] [0m	removed:Set()[0m
+[0m[[0mdebug[0m] [0m	added: Set(/home/arkadius/src/github/jira-better-burndownchart/src/main/scala/com/example/domain/Task.scala, /home/arkadius/src/github/jira-better-burndownchart/src/main/scala/com/example/domain/TaskState.scala)[0m
+[0m[[0mdebug[0m] [0m	modified: Set(/home/arkadius/src/github/jira-better-burndownchart/src/main/scala/com/example/domain/TaskEvent.scala, /home/arkadius/src/github/jira-better-burndownchart/src/main/scala/com/example/domain/Sprint.scala)[0m
+[0m[[0mdebug[0m] [0mRemoved products: Set()[0m
+[0m[[0mdebug[0m] [0mExternal API changes: API Changes: Set()[0m
+[0m[[0mdebug[0m] [0mModified binary dependencies: Set()[0m
+[0m[[0mdebug[0m] [0mInitial directly invalidated sources: Set(/home/arkadius/src/github/jira-better-burndownchart/src/main/scala/com/example/domain/Task.scala, /home/arkadius/src/github/jira-better-burndownchart/src/main/scala/com/example/domain/TaskState.scala, /home/arkadius/src/github/jira-better-burndownchart/src/main/scala/com/example/domain/TaskEvent.scala, /home/arkadius/src/github/jira-better-burndownchart/src/main/scala/com/example/domain/Sprint.scala)[0m
+[0m[[0mdebug[0m] [0m[0m
+[0m[[0mdebug[0m] [0mSources indirectly invalidated by:[0m
+[0m[[0mdebug[0m] [0m	product: Set()[0m
+[0m[[0mdebug[0m] [0m	binary dep: Set()[0m
+[0m[[0mdebug[0m] [0m	external source: Set()[0m
+[0m[[0mdebug[0m] [0mAll initially invalidated sources: Set(/home/arkadius/src/github/jira-better-burndownchart/src/main/scala/com/example/domain/Task.scala, /home/arkadius/src/github/jira-better-burndownchart/src/main/scala/com/example/domain/TaskState.scala, /home/arkadius/src/github/jira-better-burndownchart/src/main/scala/com/example/domain/TaskEvent.scala, /home/arkadius/src/github/jira-better-burndownchart/src/main/scala/com/example/domain/Sprint.scala)[0m
+[0m[[0mdebug[0m] [0mRecompiling all 6 sources: invalidated sources (4) exceeded 50.0% of all sources[0m
+[0m[[0minfo[0m] [0mCompiling 6 Scala sources to /home/arkadius/src/github/jira-better-burndownchart/target/scala-2.11/classes...[0m
+[0m[[0mdebug[0m] [0mGetting compiler-interface from component compiler for Scala 2.11.4[0m
+[0m[[0mdebug[0m] [0mGetting compiler-interface from component compiler for Scala 2.11.4[0m
+[0m[[0mdebug[0m] [0mRunning cached compiler 6cf593c9, interfacing (CompilerInterface) with Scala compiler version 2.11.4[0m
+[0m[[0mdebug[0m] [0mCalling Scala compiler with arguments  (CompilerInterface):[0m
+[0m[[0mdebug[0m] [0m	-unchecked[0m
+[0m[[0mdebug[0m] [0m	-deprecation[0m
+[0m[[0mdebug[0m] [0m	-encoding[0m
+[0m[[0mdebug[0m] [0m	utf8[0m
+[0m[[0mdebug[0m] [0m	-bootclasspath[0m
+[0m[[0mdebug[0m] [0m	/usr/lib/jvm/java-7-oracle/jre/lib/resources.jar:/usr/lib/jvm/java-7-oracle/jre/lib/rt.jar:/usr/lib/jvm/java-7-oracle/jre/lib/sunrsasign.jar:/usr/lib/jvm/java-7-oracle/jre/lib/jsse.jar:/usr/lib/jvm/java-7-oracle/jre/lib/jce.jar:/usr/lib/jvm/java-7-oracle/jre/lib/charsets.jar:/usr/lib/jvm/java-7-oracle/jre/lib/jfr.jar:/usr/lib/jvm/java-7-oracle/jre/classes:/home/arkadius/.ivy2/cache/org.scala-lang/scala-library/jars/scala-library-2.11.4.jar[0m
+[0m[[0mdebug[0m] [0m	-classpath[0m
+[0m[[0mdebug[0m] [0m	/home/arkadius/src/github/jira-better-burndownchart/target/scala-2.11/classes:/home/arkadius/.ivy2/cache/io.spray/spray-can_2.11/bundles/spray-can_2.11-1.3.2.jar:/home/arkadius/.ivy2/cache/io.spray/spray-io_2.11/bundles/spray-io_2.11-1.3.2.jar:/home/arkadius/.ivy2/cache/io.spray/spray-util_2.11/bundles/spray-util_2.11-1.3.2.jar:/home/arkadius/.ivy2/cache/io.spray/spray-http_2.11/bundles/spray-http_2.11-1.3.2.jar:/home/arkadius/.ivy2/cache/org.parboiled/parboiled-scala_2.11/bundles/parboiled-scala_2.11-1.1.6.jar:/home/arkadius/.ivy2/cache/org.parboiled/parboiled-core/bundles/parboiled-core-1.1.6.jar:/home/arkadius/.ivy2/cache/io.spray/spray-routing_2.11/bundles/spray-routing_2.11-1.3.2.jar:/home/arkadius/.ivy2/cache/io.spray/spray-httpx_2.11/bundles/spray-httpx_2.11-1.3.2.jar:/home/arkadius/.ivy2/cache/org.scala-lang.modules/scala-xml_2.11/bundles/scala-xml_2.11-1.0.2.jar:/home/arkadius/.ivy2/cache/org.jvnet.mimepull/mimepull/jars/mimepull-1.9.4.jar:/home/arkadius/.ivy2/cache/com.chuusai/shapeless_2.11/jars/shapeless_2.11-1.2.4.jar:/home/arkadius/.ivy2/cache/com.typesafe.akka/akka-actor_2.11/jars/akka-actor_2.11-2.3.6.jar:/home/arkadius/.ivy2/cache/com.typesafe/config/bundles/config-1.2.1.jar[0m
+[0m[[31merror[0m] [0m/home/arkadius/src/github/jira-better-burndownchart/src/main/scala/com/example/domain/TaskEvent.scala:25: constructor cannot be instantiated to expected type;[0m
+[0m[[31merror[0m] [0m found   : com.example.domain.TaskCompleted[0m
+[0m[[31merror[0m] [0m required: com.example.domain.TaskEvent[0m
+[0m[[31merror[0m] [0m      case TaskCompleted(_, _, esp) => storyPoints - esp[0m
+[0m[[31merror[0m] [0m           ^[0m
+[0m[[31merror[0m] [0m/home/arkadius/src/github/jira-better-burndownchart/src/main/scala/com/example/domain/TaskEvent.scala:26: constructor cannot be instantiated to expected type;[0m
+[0m[[31merror[0m] [0m found   : com.example.domain.TaskOpened[0m
+[0m[[31merror[0m] [0m required: com.example.domain.TaskEvent[0m
+[0m[[31merror[0m] [0m      case TaskOpened(_, _, esp)    => storyPoints + esp[0m
+[0m[[31merror[0m] [0m           ^[0m
+[0m[[31merror[0m] [0m/home/arkadius/src/github/jira-better-burndownchart/src/main/scala/com/example/domain/Task.scala:16: method open is defined twice[0m
+[0m[[31merror[0m] [0m  conflicting symbols both originated in file '/home/arkadius/src/github/jira-better-burndownchart/src/main/scala/com/example/domain/Task.scala'[0m
+[0m[[31merror[0m] [0m  protected def open(timestamp: Date): TaskOpened = TaskOpened(taskId, timestamp, optionalStoryPoints.getOrElse(0))[0m
+[0m[[31merror[0m] [0m                ^[0m
+[0m[[31merror[0m] [0m/home/arkadius/src/github/jira-better-burndownchart/src/main/scala/com/example/domain/Task.scala:14: method complete is defined twice[0m
+[0m[[31merror[0m] [0m  conflicting symbols both originated in file '/home/arkadius/src/github/jira-better-burndownchart/src/main/scala/com/example/domain/Task.scala'[0m
+[0m[[31merror[0m] [0m  protected def complete(timestamp: Date): TaskCompleted = TaskCompleted(taskId, timestamp, optionalStoryPoints.getOrElse(0))[0m
+[0m[[31merror[0m] [0m                ^[0m
+[0m[[31merror[0m] [0m/home/arkadius/src/github/jira-better-burndownchart/src/main/scala/com/example/domain/Task.scala:20: type mismatch;[0m
+[0m[[31merror[0m] [0m found   : Unit[0m
+[0m[[31merror[0m] [0m required: com.example.domain.TaskCompleted[0m
+[0m[[31merror[0m] [0m  override def complete(timestamp: Date): TaskCompleted = {[0m
+[0m[[31merror[0m] [0m                                                          ^[0m
+[0m[[31merror[0m] [0m/home/arkadius/src/github/jira-better-burndownchart/src/main/scala/com/example/domain/Task.scala:24: type mismatch;[0m
+[0m[[31merror[0m] [0m found   : Unit[0m
+[0m[[31merror[0m] [0m required: com.example.domain.TaskOpened[0m
+[0m[[31merror[0m] [0m  override def open(timestamp: Date): TaskOpened = {[0m
+[0m[[31merror[0m] [0m                                                   ^[0m
+[0m[[31merror[0m] [0m6 errors found[0m
+[0m[[0mdebug[0m] [0mCompilation failed (CompilerInterface)[0m
+[0m[[31merror[0m] [0m(compile:[31mcompile[0m) Compilation failed[0m

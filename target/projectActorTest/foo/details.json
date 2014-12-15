@@ -1,0 +1,7 @@
+{
+  "jsonClass":"com.example.domain.SprintDetails",
+  "name":"fooName",
+  "from":"1970-01-01T00:00:01Z",
+  "to":"1970-01-01T00:00:02Z",
+  "isActive":true
+}
