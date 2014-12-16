@@ -1,4 +1,4 @@
-organization  := "com.example"
+organization  := "org"
 
 version       := "0.1"
 
@@ -8,13 +8,21 @@ scalacOptions := Seq("-unchecked", "-deprecation", "-encoding", "utf8")
 
 libraryDependencies ++= {
   val liftV = "3.0-M2"
+  val liftEdition = liftV.substring(0,3)
+  val jettyV = "9.3.0.M1"
   Seq(
     "com.typesafe" % "config" % "1.2.1",
-    "net.databinder.dispatch" %% "dispatch-core" % "0.11.2",
-    "net.liftweb"         %%  "lift-actor"    % liftV,
-    "net.liftweb"         %%  "lift-json"     % liftV,
-    "com.github.tototoshi" %% "scala-csv"     % "1.1.2",
-    "org.scalatest"       %%  "scalatest"     % "2.2.2" % "test"
+    "net.databinder.dispatch" %% "dispatch-json4s-native" % "0.11.2",
+    "net.liftmodules"      %%   s"ng_${liftEdition}" % "0.6.1",
+    "net.liftmodules"      %%   s"ng-js_${liftEdition}" % "0.2_1.3.6",
+    "net.liftweb"          %%  "lift-actor"       % liftV,
+    "net.liftweb"          %%  "lift-json"        % liftV,
+    "net.liftweb"          %%  "lift-webkit"      % liftV,
+    "org.eclipse.jetty"     %  "jetty-server"     % jettyV,
+    "org.eclipse.jetty"     %  "jetty-webapp"     % jettyV,
+    "com.github.tototoshi" %%  "scala-csv"        % "1.1.2",
+    "ch.qos.logback"        %  "logback-classic"  % "1.1.2",
+    "org.scalatest"        %%  "scalatest"        % "2.2.2" % "test"
   )
 }
 

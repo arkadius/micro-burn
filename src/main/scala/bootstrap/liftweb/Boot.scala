@@ -42,5 +42,7 @@ class Boot {
     // Force the request to be UTF-8
     LiftRules.early.append(_.setCharacterEncoding("UTF-8"))
 
+    net.liftmodules.ng.Angular.init()
+    net.liftmodules.ng.AngularJS.init()
   }
 }

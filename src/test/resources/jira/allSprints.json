@@ -1,0 +1,12 @@
+{"sprints": [
+    {
+        "id": 21,
+        "name": "Sprint 1",
+        "closed": true
+    },
+    {
+        "id": 22,
+        "name": "Sprint 2",
+        "closed": true
+    }
+], "rapidViewId": 56}
