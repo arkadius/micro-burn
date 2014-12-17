@@ -1,6 +1,7 @@
 package org.github.jiraburn.actors
 
 import java.io.File
+import java.util.Date
 
 import org.github.jiraburn.domain.{ProjectConfig, Sprint, SprintDetails, UserStory}
 import org.github.jiraburn.repository.SprintRepository
@@ -44,10 +45,10 @@ class SprintActorFactory(projectRoot: File, config: ProjectConfig, changeNotifyi
     }
   }
 
-  def createSprint(sprintId: String, details: SprintDetails, userStories: Seq[UserStory]): SprintActor = {
+  def createSprint(sprintId: String, details: SprintDetails, userStories: Seq[UserStory], timestamp: Date): SprintActor = {
     val sprint = Sprint.withEmptyEvents(sprintId, details, userStories)
     val repo = createRepo(sprintId)
-    repo.saveSprint(sprint)
+    repo.saveSprint(sprint)(timestamp)
     new SprintActor(sprint, repo)(config, changeNotifyingActor)
   }
 

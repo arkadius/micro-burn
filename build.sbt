@@ -23,6 +23,7 @@ libraryDependencies ++= {
     "com.github.tototoshi" %%  "scala-csv"        % "1.1.2",
     "ch.qos.logback"        %  "logback-classic"  % "1.1.2",
     "org.scalatest"        %%  "scalatest"        % "2.2.2" % "test",
+    "joda-time"             % "joda-time"         % "2.6" % "test",
     // http mocks:
     "io.spray"             %% "spray-routing"     % "1.3.2" % "test",
     "io.spray"             %% "spray-can"         % "1.3.2" % "test",

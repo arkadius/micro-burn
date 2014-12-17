@@ -1,0 +1,29 @@
+{"contents": {
+    "completedIssues": [],
+    "incompletedIssues": [],
+    "puntedIssues": [],
+    "completedIssuesEstimateSum": {
+        "value": 26.0,
+        "text": "26.0"
+    },
+    "incompletedIssuesEstimateSum": {
+        "value": 13.0,
+        "text": "13.0"
+    },
+    "allIssuesEstimateSum": {
+        "value": 39.0,
+        "text": "39.0"
+    },
+    "puntedIssuesEstimateSum": {
+        "value": 0.0,
+        "text": "0.0"
+    },
+    "issueKeysAddedDuringSprint": {}
+}, "sprint": {
+    "id": 21,
+    "name": "Sprint 1",
+    "closed": true,
+    "startDate": "20/lis/13 14:30",
+    "endDate": "27/lis/13 14:30",
+    "completeDate": "27/lis/13 16:01"
+}}

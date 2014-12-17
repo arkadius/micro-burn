@@ -31,8 +31,8 @@ class ProjectActor(projectRoot: File, config: ProjectConfig, sprintChangeNotifyi
           }
       }.toSeq
       reply(LAFuture.collect(sprintWithStateFutures : _*))
-    case CreateNewSprint(sprintId, details, userStories) =>
-      sprintActors += sprintId -> sprintFactory.createSprint(sprintId, details, userStories)
+    case CreateNewSprint(sprintId, details, userStories, timestamp) =>
+      sprintActors += sprintId -> sprintFactory.createSprint(sprintId, details, userStories, timestamp)
     case update: UpdateSprint =>
       sprintActors(update.sprintId) ! update
     case getHistory: GetStoryPointsHistory =>
@@ -49,7 +49,7 @@ case object GetSprintsWithStates
 
 case class SprintWithState(sprintId: String, isActive: Boolean)
 
-case class CreateNewSprint(sprintId: String, details: SprintDetails, userStories: Seq[UserStory])
+case class CreateNewSprint(sprintId: String, details: SprintDetails, userStories: Seq[UserStory], timestamp: Date)
 
 case class UpdateSprint(sprintId: String, userStories: Seq[UserStory], finishSprint: Boolean, timestamp: Date)
 

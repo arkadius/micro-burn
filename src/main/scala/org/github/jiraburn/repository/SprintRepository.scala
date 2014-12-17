@@ -30,12 +30,12 @@ case class SprintRepository private(private val sprintRoot: File,
   def saveUpdateResult(updateResult: SprintUpdateResult)
                       (implicit config: ProjectConfig): SprintRepository = {
     require(updateResult.updatedSprint.id == sprintId)
-    saveDetails(updateResult)
+    saveDetailsIfNecessary(updateResult)
       .saveCurrentUserStories(updateResult)
       .appendTasksEventsIfNecessary(updateResult)
   }
 
-  private def saveDetails(updateResult: SprintUpdateResult): SprintRepository = {
+  private def saveDetailsIfNecessary(updateResult: SprintUpdateResult): SprintRepository = {
     if (updateResult.importantDetailsChange)
       detailsRepo.saveDetails(updateResult.updatedSprint)
     this

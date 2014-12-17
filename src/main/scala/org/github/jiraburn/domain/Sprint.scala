@@ -56,7 +56,7 @@ object SprintDetails {
 case class SprintUpdateResult(updatedSprint: Sprint, newAddedEvents: Seq[TaskChanged], sprintFinished: Boolean, timestamp: Date) {
   def importantChange(implicit config: ProjectConfig): Boolean =  importantDetailsChange || importantEventsChange
 
-  def importantDetailsChange: Boolean = sprintFinished
+  def importantDetailsChange: Boolean = sprintFinished // TODO: co ze zmianą nazwy/dat?
 
   def importantEventsChange(implicit config: ProjectConfig): Boolean =
     Sprint.storyPointsChanges(newAddedEvents)(updatedSprint).exists(_.storyPoints > 0)
