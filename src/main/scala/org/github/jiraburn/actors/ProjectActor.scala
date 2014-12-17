@@ -37,6 +37,11 @@ class ProjectActor(projectRoot: File, config: ProjectConfig, sprintChangeNotifyi
       sprintActors(update.sprintId) ! update
     case getHistory: GetStoryPointsHistory =>
       reply(sprintActors(getHistory.sprintId) !< getHistory)
+    case Close =>
+      val sprintClosedFutures = sprintActors.values.map { sprintActor =>
+        (sprintActor !< Close).mapTo[Unit]
+      }.toSeq
+      reply(LAFuture.collect(sprintClosedFutures : _*))
   }
 }
 
@@ -51,6 +56,8 @@ case class UpdateSprint(sprintId: String, userStories: Seq[UserStory], finishSpr
 case class GetStoryPointsHistory(sprintId: String)
 
 case class StoryPointsHistory(initialStoryPoints: Int, history: Seq[DateWithStoryPoints])
+
+case object Close
 
 object ProjectActor {
   def apply(sprintChangeNotifyingActor: LiftActor): ProjectActor = {

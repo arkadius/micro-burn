@@ -25,9 +25,11 @@ class SprintActor(var sprint: Sprint,
     case GetStoryPointsHistory(sprintId: String) =>
       require(sprintId == sprint.id)
       reply(StoryPointsHistory(sprint.initialStoryPoints, sprint.storyPointsChanges))
+    case Close =>
+      repo.flush()
+      reply(Unit)
   }
-  
-  //TODO: repo.flush() on exit
+
 }
 
 case object IsActive
@@ -45,6 +47,7 @@ class SprintActorFactory(projectRoot: File, config: ProjectConfig, changeNotifyi
   def createSprint(sprintId: String, details: SprintDetails, userStories: Seq[UserStory]): SprintActor = {
     val sprint = Sprint.withEmptyEvents(sprintId, details, userStories)
     val repo = createRepo(sprintId)
+    repo.saveSprint(sprint)
     new SprintActor(sprint, repo)(config, changeNotifyingActor)
   }
 
