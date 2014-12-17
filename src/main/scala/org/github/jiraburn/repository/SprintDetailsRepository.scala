@@ -20,9 +20,7 @@ class SprintDetailsJsonRepository(sprintRoot: File) extends SprintDetailsReposit
   import net.liftweb.json.Extraction._
   import net.liftweb.json._
 
-  implicit val formats = DefaultFormats
-    .withHints(FullTypeHints(List(classOf[SprintDetails])))
-
+  implicit val formats = DefaultFormats.withHints(FullTypeHints(List(classOf[SprintDetails])))
 
   override def saveDetails(sprint: Sprint): Unit = {
     sprintRoot.mkdirs()
