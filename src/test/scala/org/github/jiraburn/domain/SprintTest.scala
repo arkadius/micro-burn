@@ -31,7 +31,7 @@ class SprintTest extends FlatSpec with Matchers {
     sprintAfterFirstFinish.initialStoryPoints shouldBe 3
     sprintAfterFirstFinish.storyPointsChanges.map(_.storyPoints) shouldEqual Seq(-1)
 
-    val secTaskAfterReopen = taskInitiallyCompleted.copy(status = config.firstOpeningStatus)
+    val secTaskAfterReopen = taskInitiallyCompleted.copy(status = config.firstNotClosingStatus)
     val sprintAfterSecReopen = sprintAfterFirstFinish.update(Seq(firstTaskAfterFinish, secTaskAfterReopen), finishSprint = false)(new Date(200)).updatedSprint
     sprintAfterSecReopen.initialStoryPoints shouldBe 3
     sprintAfterSecReopen.storyPointsChanges.map(_.storyPoints) shouldEqual Seq(-1, 1)

@@ -3,11 +3,11 @@ package org.github.jiraburn.repository
 import java.io.File
 import java.util.Date
 
-import org.github.jiraburn.domain.{Sprint, TaskEvent, SprintUpdateResult}
+import org.github.jiraburn.domain.{ProjectConfig, Sprint, SprintUpdateResult, TaskChanged}
 
 case class SprintRepository private(private val sprintRoot: File,
                                     private val sprintId: String,
-                                    private val cachedEvents: Seq[TaskEvent]) {
+                                    private val cachedEvents: Seq[TaskChanged]) {
   private val detailsRepo: SprintDetailsRepository = SprintDetailsRepository(sprintRoot)
   private val storiesRepo = SprintScopeRepository(sprintRoot)
   private val eventsRepo = TaskEventsRepository(sprintRoot)
@@ -27,7 +27,8 @@ case class SprintRepository private(private val sprintRoot: File,
     this
   }
 
-  def saveUpdateResult(updateResult: SprintUpdateResult): SprintRepository = {
+  def saveUpdateResult(updateResult: SprintUpdateResult)
+                      (implicit config: ProjectConfig): SprintRepository = {
     require(updateResult.updatedSprint.id == sprintId)
     saveDetails(updateResult)
       .saveCurrentUserStories(updateResult)
@@ -46,7 +47,8 @@ case class SprintRepository private(private val sprintRoot: File,
     this
   }
 
-  private def appendTasksEventsIfNecessary(updateResult: SprintUpdateResult): SprintRepository = {
+  private def appendTasksEventsIfNecessary(updateResult: SprintUpdateResult)
+                                          (implicit config: ProjectConfig): SprintRepository = {
     val updatedRepo = copy(cachedEvents = cachedEvents ++ updateResult.newAddedEvents)
     if (updateResult.importantEventsChange)
       updatedRepo.flushTaskEvents()

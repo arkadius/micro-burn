@@ -1,6 +1,8 @@
 package org.github.jiraburn.domain
 
 import java.util.Date
+import scalaz._
+import Scalaz._
 
 sealed trait Task {
   def taskId: String
@@ -9,30 +11,23 @@ sealed trait Task {
   def parentUserStoryId: String
   protected def status: Int
 
-  def isOpened(implicit config: ProjectConfig) = config.isOpening(status)
-  def isCompleted(implicit config: ProjectConfig) = config.isClosing(status)
+  def delta(nextState: Task)
+           (implicit timestamp: Date): Option[TaskChanged] = {
+    require(nextState.taskId == taskId)
+    val statusChanged = nextState.status != status
+    val storyPointsWithoutSubTasksChanged = nextState.storyPointsWithoutSubTasks != storyPointsWithoutSubTasks
+    (statusChanged || storyPointsWithoutSubTasksChanged).option(prepareDelta(nextState))
+  }
 
-  def finish(parentUserStoryFromInitialScope: Boolean)
-            (implicit config: ProjectConfig, timestamp: Date): Option[TaskCompleted] =
-    if (isOpened)
-      Some(doFinish(parentUserStoryFromInitialScope))
-    else
-      None
-  
-  def reopen(parentUserStoryFromInitialScope: Boolean)
-            (implicit config: ProjectConfig, timestamp: Date): Option[TaskReopened] =
-    if (isCompleted)
-      Some(doReopen(parentUserStoryFromInitialScope))
-    else
-      None
-
-  private def doFinish(parentUserStoryFromInitialScope: Boolean)
-                      (implicit timestamp: Date): TaskCompleted =
-    TaskCompleted(taskId, parentUserStoryId, parentUserStoryFromInitialScope, timestamp, storyPointsWithoutSubTasks)
-  
-  private def doReopen(parentUserStoryFromInitialScope: Boolean)
-                      (implicit timestamp: Date): TaskReopened =
-    TaskReopened(taskId, parentUserStoryId, parentUserStoryFromInitialScope, timestamp, storyPointsWithoutSubTasks)
+  protected def prepareDelta(nextState: Task)
+                            (implicit timestamp: Date): TaskChanged = {
+    TaskChanged(
+      taskId, parentUserStoryId,
+      status, nextState.status,
+      storyPointsWithoutSubTasks, nextState.storyPointsWithoutSubTasks,
+      timestamp
+    )
+  }
 }
 
 case class UserStory(taskId: String,
@@ -80,6 +75,6 @@ object TechnicalTask {
             taskName: String,
             optionalStoryPoints: Option[Int])
            (implicit config: ProjectConfig): TechnicalTask = {
-    new TechnicalTask(taskId, taskName, optionalStoryPoints, config.firstOpeningStatus)
+    new TechnicalTask(taskId, taskName, optionalStoryPoints, config.firstNotClosingStatus)
   }
 }

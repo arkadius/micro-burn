@@ -4,16 +4,15 @@ import java.io.File
 import java.text.SimpleDateFormat
 import java.util.Date
 
-import org.github.jiraburn.domain.{TaskCompleted, TaskEvent, TaskReopened}
 import com.github.tototoshi.csv._
-import com.typesafe.config.Config
+import org.github.jiraburn.domain.TaskChanged
 
 import scala.util.control.NonFatal
 
 trait TaskEventsRepository {
-  def appendTasksEvents(events: Seq[TaskEvent]): Unit
+  def appendTasksEvents(events: Seq[TaskChanged]): Unit
 
-  def loadTaskEvents: Seq[TaskEvent]
+  def loadTaskEvents: Seq[TaskChanged]
 }
 
 object TaskEventsRepository {
@@ -33,15 +32,11 @@ class TaskEventsCsvRepository(taskEventsFile: File) extends TaskEventsRepository
     override val quoting: Quoting = QUOTE_ALL
   }
 
-  override def appendTasksEvents(events: Seq[TaskEvent]): Unit = {
+  override def appendTasksEvents(events: Seq[TaskChanged]): Unit = {
     val csv = prepareWriter()
     try {
       events.foreach { event =>
-        val fields = event match {
-          case completed: TaskCompleted => true  :: TaskCompleted.unapply(completed).get.productIterator.toList
-          case reopened: TaskReopened   => false :: TaskReopened.unapply(reopened).get.productIterator.toList
-        }
-        csv.writeRow(prepareFields(fields))
+        csv.writeRow(prepareFields(event.productIterator.toList))
       }
     } finally {
       csv.close()
@@ -54,7 +49,7 @@ class TaskEventsCsvRepository(taskEventsFile: File) extends TaskEventsRepository
       taskEventsFile.createNewFile()
       val csv = CSVWriter.open(taskEventsFile)(csvFormat)
       try {
-        csv.writeRow(Seq("completed", "taskId", "parentTaskId", "taskFromInitialScope", "date", "storyPoints"))
+        csv.writeRow(Seq("taskId", "parentTaskId", "fromStatus", "toStatus", "fromStoryPoints", "toStoryPoints", "date"))
         csv
       } catch {
         case NonFatal(ex) =>
@@ -71,25 +66,22 @@ class TaskEventsCsvRepository(taskEventsFile: File) extends TaskEventsRepository
     case other => other
   }
 
-  override def loadTaskEvents: Seq[TaskEvent] =
+  override def loadTaskEvents: Seq[TaskChanged] =
     if (!taskEventsFile.exists()) {
       Nil
     } else {
       val csv = CSVReader.open(taskEventsFile)(csvFormat)
       try {
         csv.toStream().drop(1).map { rawFields =>
-          val completedEvent = rawFields(0).toBoolean
-          val t = (
-            rawFields(1),
-            rawFields(2),
-            rawFields(3).toBoolean,
-            dateFormat.parse(rawFields(4)),
-            rawFields(5).toInt
-            )
-          if (completedEvent)
-            (TaskCompleted.apply _ tupled)(t)
-          else
-            (TaskReopened.apply _ tupled)(t)
+          TaskChanged(
+            taskId          = rawFields(0),
+            parentTaskId    = rawFields(1),
+            fromStatus      = rawFields(2).toInt,
+            toStatus        = rawFields(3).toInt,
+            fromStoryPoints = rawFields(4).toInt,
+            toStoryPoints   = rawFields(5).toInt,
+            date            = dateFormat.parse(rawFields(6))
+          )
         }.toIndexedSeq
       } finally {
         csv.close()

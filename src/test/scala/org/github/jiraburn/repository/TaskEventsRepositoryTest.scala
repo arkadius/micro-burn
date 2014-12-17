@@ -2,11 +2,13 @@ package org.github.jiraburn.repository
 
 import java.io.File
 
-import org.github.jiraburn.domain.{TaskEvent, TaskEventsGenerator}
 import com.typesafe.config.ConfigFactory
-import org.scalatest.{Matchers, FlatSpec}
+import org.github.jiraburn.domain.{TaskChanged, ProjectConfig, TaskEventsGenerator}
+import org.scalatest.{FlatSpec, Matchers}
 
 class TaskEventsRepositoryTest extends FlatSpec with Matchers {
+
+  implicit val config = ProjectConfig(ConfigFactory.load())
 
   it should "do correct round trip" in {
     val sprintRoot = new File(s"target/sprints/foo")
@@ -23,7 +25,10 @@ class TaskEventsRepositoryTest extends FlatSpec with Matchers {
 
     repo.appendTasksEvents(events)
 
-    repo.loadTaskEvents shouldEqual events
+    val loaded = repo.loadTaskEvents
+    loaded.size shouldEqual events.size
+    loaded.head shouldEqual events.head
+    loaded shouldEqual events
   }
 
 }
