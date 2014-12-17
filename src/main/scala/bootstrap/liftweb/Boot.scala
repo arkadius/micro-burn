@@ -4,6 +4,7 @@ import net.liftweb.common._
 import net.liftweb.http._
 import net.liftweb.sitemap.Loc._
 import net.liftweb.sitemap._
+import org.github.jiraburn.RestRoutes
 
 
 /**
@@ -41,6 +42,8 @@ class Boot {
 
     // Force the request to be UTF-8
     LiftRules.early.append(_.setCharacterEncoding("UTF-8"))
+
+    LiftRules.statelessDispatch.append(RestRoutes)
 
     net.liftmodules.ng.Angular.init()
     net.liftmodules.ng.AngularJS.init()
