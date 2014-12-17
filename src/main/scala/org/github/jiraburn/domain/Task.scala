@@ -7,20 +7,20 @@ sealed trait Task {
   def taskName: String
   def storyPointsWithoutSubTasks: Int
   def parentUserStoryId: String
-  protected def state: TaskState
+  protected def status: Int
 
-  def isOpened = state == Opened
-  def isCompleted = state == Completed
+  def isOpened(implicit config: ProjectConfig) = config.isOpening(status)
+  def isCompleted(implicit config: ProjectConfig) = config.isClosing(status)
 
   def finish(parentUserStoryFromInitialScope: Boolean)
-            (implicit timestamp: Date): Option[TaskCompleted] =
+            (implicit config: ProjectConfig, timestamp: Date): Option[TaskCompleted] =
     if (isOpened)
       Some(doFinish(parentUserStoryFromInitialScope))
     else
       None
   
   def reopen(parentUserStoryFromInitialScope: Boolean)
-            (implicit timestamp: Date): Option[TaskReopened] =
+            (implicit config: ProjectConfig, timestamp: Date): Option[TaskReopened] =
     if (isCompleted)
       Some(doReopen(parentUserStoryFromInitialScope))
     else
@@ -38,8 +38,8 @@ sealed trait Task {
 case class UserStory(taskId: String,
                      taskName: String,
                      optionalStoryPoints: Option[Int],
-                     /*private val */technicalTasksWithoutParentId: List[TechnicalTask],
-                     state: TaskState) extends Task {
+                     technicalTasksWithoutParentId: List[TechnicalTask],
+                     status: Int) extends Task {
 
   def technicalTasks: Seq[Task] = technicalTasksWithoutParentId.map(TechnicalTaskWithParentId(_, taskId))
   
@@ -60,24 +60,26 @@ case class TechnicalTaskWithParentId(technical: TechnicalTask, parentUserStoryId
 
   override def storyPointsWithoutSubTasks: Int = technical.optionalStoryPoints.getOrElse(0)
 
-  override protected def state: TaskState = technical.state
+  override protected def status: Int = technical.status
 }
 
-case class TechnicalTask(taskId: String, taskName: String, optionalStoryPoints: Option[Int], state: TaskState)
+case class TechnicalTask(taskId: String, taskName: String, optionalStoryPoints: Option[Int], status: Int)
 
 object UserStory {
   def apply(taskId: String,
             taskName: String,
             optionalStoryPoints: Option[Int],
-            technicalTasks: Seq[TechnicalTask]): UserStory = {
-    new UserStory(taskId, taskName, optionalStoryPoints, technicalTasks.toList, Opened)
+            technicalTasks: Seq[TechnicalTask])
+           (implicit config: ProjectConfig): UserStory = {
+    new UserStory(taskId, taskName, optionalStoryPoints, technicalTasks.toList, config.firstClosingStatus)
   }
 }
 
 object TechnicalTask {
   def apply(taskId: String,
             taskName: String,
-            optionalStoryPoints: Option[Int]): TechnicalTask = {
-    new TechnicalTask(taskId, taskName, optionalStoryPoints, Opened)
+            optionalStoryPoints: Option[Int])
+           (implicit config: ProjectConfig): TechnicalTask = {
+    new TechnicalTask(taskId, taskName, optionalStoryPoints, config.firstOpeningStatus)
   }
 }

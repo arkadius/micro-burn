@@ -9,24 +9,24 @@ object TaskGenerator {
     currentId.toString
   }
 
-  def openedUserStory(sp: Int, technical: Seq[TechnicalTask] = Nil) = {
+  def openedUserStory(sp: Int, technical: Seq[TechnicalTask] = Nil)(implicit config: ProjectConfig) = {
     val id = nextId
-    UserStory(id, s"User Story $id", Some(sp), technical.toList, Opened)
+    UserStory(id, s"User Story $id", Some(sp), technical.toList, config.firstOpeningStatus)
   }
 
-  def completedUserStory(sp: Int, technical: Seq[TechnicalTask] = Nil) = {
+  def completedUserStory(sp: Int, technical: Seq[TechnicalTask] = Nil)(implicit config: ProjectConfig) = {
     val id = nextId
-    UserStory(id, s"User Story $id", Some(sp), technical.toList, Completed)
+    UserStory(id, s"User Story $id", Some(sp), technical.toList, config.firstClosingStatus)
   }
 
-  def openedTechnicalTask(optionalSP: Option[Int]) = {
+  def openedTechnicalTask(optionalSP: Option[Int])(implicit config: ProjectConfig) = {
     val id = nextId
-    TechnicalTask(id, s"Technical Task $id", optionalSP, Opened)
+    TechnicalTask(id, s"Technical Task $id", optionalSP, config.firstOpeningStatus)
   }
 
-  def completedTechnicalTask(optionalSP: Option[Int]) = {
+  def completedTechnicalTask(optionalSP: Option[Int])(implicit config: ProjectConfig) = {
     val id = nextId
-    TechnicalTask(id, s"Technical Task $id", optionalSP, Completed)
+    TechnicalTask(id, s"Technical Task $id", optionalSP, config.firstClosingStatus)
   }
 
 }

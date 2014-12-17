@@ -3,12 +3,15 @@ package org.github.jiraburn.repository
 import java.io.File
 import java.util.Date
 
-import org.github.jiraburn.domain.{FooSprint, TaskGenerator}
+import com.typesafe.config.ConfigFactory
+import org.github.jiraburn.domain.{ProjectConfig, FooSprint, TaskGenerator}
 import org.scalatest.{FlatSpec, Matchers}
 
 class SprintScopeRepositoryTest extends FlatSpec with Matchers {
 
   import org.scalatest.OptionValues._
+
+  implicit val config = ProjectConfig(ConfigFactory.load())
 
   it should "work round trip" in {
     val firstTechnical = TaskGenerator.openedTechnicalTask(Some(2))

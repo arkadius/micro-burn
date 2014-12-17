@@ -3,15 +3,15 @@ package org.github.jiraburn.actors
 import java.io.File
 import java.util.Date
 
-import org.github.jiraburn.domain.{DateWithStoryPoints, SprintDetails, UserStory}
+import org.github.jiraburn.domain.{ProjectConfig, DateWithStoryPoints, SprintDetails, UserStory}
 import org.github.jiraburn.repository.ProjectRepository
 import com.typesafe.config.ConfigFactory
 import net.liftweb.actor.{LAFuture, LiftActor}
 
-class ProjectActor(projectRoot: File, sprintChangeNotifyingActor: LiftActor) extends LiftActor {
+class ProjectActor(projectRoot: File, config: ProjectConfig, sprintChangeNotifyingActor: LiftActor) extends LiftActor {
   import org.github.jiraburn.actors.FutureEnrichments._
 
-  private val sprintFactory = new SprintActorFactory(projectRoot, sprintChangeNotifyingActor)
+  private val sprintFactory = new SprintActorFactory(projectRoot, config, sprintChangeNotifyingActor)
   private val projectRepo = ProjectRepository(projectRoot)
 
   private var sprintActors: Map[String, SprintActor] = (
@@ -56,6 +56,7 @@ object ProjectActor {
   def apply(sprintChangeNotifyingActor: LiftActor): ProjectActor = {
     val config = ConfigFactory.load()
     val projectRoot = new File(config.getString("data.project.root"))
-    new ProjectActor(projectRoot, sprintChangeNotifyingActor)
+    val projectConfig = ProjectConfig(config)
+    new ProjectActor(projectRoot, projectConfig, sprintChangeNotifyingActor)
   }
 }

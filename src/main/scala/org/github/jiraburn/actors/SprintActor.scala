@@ -2,13 +2,15 @@ package org.github.jiraburn.actors
 
 import java.io.File
 
-import org.github.jiraburn.domain.{Sprint, SprintDetails, UserStory}
+import org.github.jiraburn.domain.{ProjectConfig, Sprint, SprintDetails, UserStory}
 import org.github.jiraburn.repository.SprintRepository
 import net.liftweb.actor.LiftActor
 
 class SprintActor(var sprint: Sprint,
                   var repo: SprintRepository)
-                 (changeNotifyingActor: LiftActor) extends LiftActor {
+                 (config: ProjectConfig, changeNotifyingActor: LiftActor) extends LiftActor {
+
+  implicit val configImplicit = config
 
   override protected def messageHandler: PartialFunction[Any, Unit] = {
     case IsActive =>
@@ -32,18 +34,18 @@ case object IsActive
 
 case class SprintChanged(sprintId: String)
 
-class SprintActorFactory(projectRoot: File, changeNotifyingActor: LiftActor) {
+class SprintActorFactory(projectRoot: File, config: ProjectConfig, changeNotifyingActor: LiftActor) {
   def fromRepo(sprintId: String): Option[SprintActor] = {
     val repo = createRepo(sprintId)
     repo.loadSprint.map { sprint =>
-      new SprintActor(sprint, repo)(changeNotifyingActor)
+      new SprintActor(sprint, repo)(config, changeNotifyingActor)
     }
   }
 
   def createSprint(sprintId: String, details: SprintDetails, userStories: Seq[UserStory]): SprintActor = {
     val sprint = Sprint.withEmptyEvents(sprintId, details, userStories)
     val repo = createRepo(sprintId)
-    new SprintActor(sprint, repo)(changeNotifyingActor)
+    new SprintActor(sprint, repo)(config, changeNotifyingActor)
   }
 
   private def createRepo(sprintId: String): SprintRepository = {

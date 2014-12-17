@@ -22,7 +22,8 @@ case class Sprint(id: String,
 
   def storyPointsChanges: Seq[DateWithStoryPoints] = Sprint.storyPointsChanges(events)(this)
 
-  def update(updatedUserStories: Seq[UserStory], finishSprint: Boolean)(timestamp: Date): SprintUpdateResult = {
+  def update(updatedUserStories: Seq[UserStory], finishSprint: Boolean)(timestamp: Date)(implicit config: ProjectConfig): SprintUpdateResult = {
+    implicit val timestampImplicit = timestamp
     val initialUserStoriesIds = initialUserStories.map(_.taskId).toSet
     val currentTasksById = Sprint.flattenTasks(currentUserStories).groupBy(_.taskId).mapValues(_.head)
     // interesują nas tylko zdarzenia dla nowych zadań, stare które zostały usunięte ze sprintu olewamy
@@ -31,7 +32,7 @@ case class Sprint(id: String,
       updatedTask <- Sprint.flattenTasks(updatedUserStories)
       currentTask <- currentTasksById.get(updatedTask.taskId)
       parentUserStoryFromInitialScope = initialUserStoriesIds.contains(updatedTask.parentUserStoryId)
-      event <- eventsForTaskUpdate(currentTask, updatedTask, parentUserStoryFromInitialScope)(timestamp)
+      event <- eventsForTaskUpdate(currentTask, updatedTask, parentUserStoryFromInitialScope)
     } yield event
     val finished = isActive && finishSprint
     
@@ -44,7 +45,7 @@ case class Sprint(id: String,
   }
 
   private def eventsForTaskUpdate(currentTask: Task, updatedTask: Task, parentUserStoryFromInitialScope: Boolean)
-                                 (implicit timestamp: Date): Option[TaskEvent] = {
+                                 (implicit config: ProjectConfig, timestamp: Date): Option[TaskEvent] = {
     if (currentTask.isOpened && updatedTask.isCompleted)
       currentTask.finish(parentUserStoryFromInitialScope)
     else if (currentTask.isCompleted && updatedTask.isOpened)

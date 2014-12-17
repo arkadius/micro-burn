@@ -26,11 +26,11 @@ object SprintScopeRepository {
 class SprintScopeFSRepository(sprintRoot: File) extends SprintScopeRepository {
   import net.liftweb.json.Extraction._
   import net.liftweb.json._
-  import scala.util.control.Exception._
+
+import scala.util.control.Exception._
 
   implicit val formats = DefaultFormats
-    .withHints(FullTypeHints(List(classOf[Task], classOf[TechnicalTask]))) ++
-    CaseObjectSerializer.sequence(Opened, Completed)
+    .withHints(FullTypeHints(List(classOf[Task], classOf[TechnicalTask])))
 
   override def saveCurrentUserStories(sprint: Sprint)(timestamp: Date): Unit = {
     sprintRoot.mkdirs()

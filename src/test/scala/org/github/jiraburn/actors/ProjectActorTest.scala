@@ -3,18 +3,20 @@ package org.github.jiraburn.actors
 import java.io.File
 import java.util.Date
 
+import com.typesafe.config.ConfigFactory
 import org.github.jiraburn.domain._
 import org.github.jiraburn.repository.SprintRepository
 import net.liftweb.actor.{LAFuture, MockLiftActor}
 import org.scalatest.{FlatSpec, Matchers}
 
 import scala.reflect.io.Path
+import scala.concurrent.duration._
 
 class ProjectActorTest extends FlatSpec with Matchers {
   import org.github.jiraburn.actors.FutureEnrichments._
   import org.github.jiraburn.actors.LiftActorEnrichments._
 
-import scala.concurrent.duration._
+  implicit val config = ProjectConfig(ConfigFactory.load())
 
   it should "reply with correct active actors" in {
     val sprint = FooSprint.withEmptyEvents(Nil)
@@ -38,7 +40,7 @@ import scala.concurrent.duration._
     val sprint = FooSprint.withEmptyEvents(Seq(userStory))
     val projectActor = actorWithInitialSprint(sprint)
 
-    projectActor ! UpdateSprint(sprint.id, Seq(userStory.copy(state = Completed)), finishSprint = false, new Date)
+    projectActor ! UpdateSprint(sprint.id, Seq(userStory.copy(status = config.firstClosingStatus)), finishSprint = false, new Date)
 
     val historyFuture = (projectActor ?? GetStoryPointsHistory(sprint.id)).mapTo[StoryPointsHistory]
 
@@ -53,7 +55,7 @@ import scala.concurrent.duration._
     Path(projectRoot).deleteRecursively()
     SprintRepository(new File(projectRoot, sprint.id), sprint.id).saveSprint(sprint)(new Date)
 
-    val projectActor = new ProjectActor(projectRoot, new MockLiftActor)
+    val projectActor = new ProjectActor(projectRoot, config, new MockLiftActor)
     projectActor
   }
 
