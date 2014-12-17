@@ -24,7 +24,6 @@ libraryDependencies ++= {
     "ch.qos.logback"        %  "logback-classic"  % "1.1.2",
     "org.scalatest"        %%  "scalatest"        % "2.2.2" % "test",
     // http mocks:
-    "org.specs2"           %%  "specs2"           % "2.3.11" % "test",
     "io.spray"             %% "spray-routing"     % "1.3.2" % "test",
     "io.spray"             %% "spray-can"         % "1.3.2" % "test",
     "com.typesafe.akka"    %% "akka-actor"        % "2.3.6" % "test",
