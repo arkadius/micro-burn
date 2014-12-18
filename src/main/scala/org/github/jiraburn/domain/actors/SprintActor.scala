@@ -1,4 +1,4 @@
-package org.github.jiraburn.actors
+package org.github.jiraburn.domain.actors
 
 import java.io.File
 import java.util.Date

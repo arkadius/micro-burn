@@ -1,4 +1,4 @@
-package org.github.jiraburn.actors
+package org.github.jiraburn.domain.actors
 
 import java.io.File
 import java.util.Date
@@ -7,9 +7,10 @@ import org.github.jiraburn.domain.{ProjectConfig, DateWithStoryPoints, SprintDet
 import org.github.jiraburn.repository.ProjectRepository
 import com.typesafe.config.ConfigFactory
 import net.liftweb.actor.{LAFuture, LiftActor}
+import org.github.jiraburn.util.concurrent.FutureEnrichments
 
 class ProjectActor(projectRoot: File, config: ProjectConfig, sprintChangeNotifyingActor: LiftActor) extends LiftActor {
-  import org.github.jiraburn.actors.FutureEnrichments._
+  import FutureEnrichments._
 
   private val sprintFactory = new SprintActorFactory(projectRoot, config, sprintChangeNotifyingActor)
   private val projectRepo = ProjectRepository(projectRoot)

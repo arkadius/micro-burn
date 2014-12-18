@@ -1,18 +1,15 @@
 package org.github.jiraburn.jira
 
-import java.io.File
-
 import com.typesafe.config.ConfigFactory
 import org.github.jiraburn.domain.SprintDetails
 import org.joda.time.DateTime
-import org.scalatest.{Matchers, FlatSpec}
-import shapeless.HNil
-import spray.routing.{PathMatcher, Directives, Route}
+import org.scalatest.{FlatSpec, Matchers}
+import spray.routing.{Directives, Route}
 
-import scala.concurrent.Await
 import scala.concurrent.duration._
 
 class SprintsProviderTest extends FlatSpec with RestIntegrationTest with Directives with Matchers {
+  import org.github.jiraburn.util.concurrent.FutureEnrichments._
 
   override protected def route: Route = {
     val greenhooper = "jira" / "rest" / "greenhopper" / "1.0"
@@ -33,7 +30,7 @@ class SprintsProviderTest extends FlatSpec with RestIntegrationTest with Directi
     val config = ConfigFactory.load()
     val jiraConfig = JiraConfig(config)
     val provider = new SprintsProvider(jiraConfig)
-    val result = Await.result(provider.allSprintIds, 5 seconds)
+    val result = provider.allSprintIds.await(5 seconds)
     result shouldEqual Seq(21, 22)
   }
 
@@ -42,7 +39,7 @@ class SprintsProviderTest extends FlatSpec with RestIntegrationTest with Directi
     val config = ConfigFactory.load()
     val jiraConfig = JiraConfig(config)
     val provider = new SprintsProvider(jiraConfig)
-    val result = Await.result(provider.sprintDetails(21L), 5 seconds)
+    val result = provider.sprintDetails(21L).await(5 seconds)
     println("result: " + result)
     result shouldEqual SprintDetails(
       "Sprint 1",

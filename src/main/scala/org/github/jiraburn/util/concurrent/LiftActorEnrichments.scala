@@ -1,9 +1,9 @@
-package org.github.jiraburn.actors
+package org.github.jiraburn.util.concurrent
 
 import net.liftweb.actor.{LAFuture, LiftActor}
 
 object LiftActorEnrichments {
-  import org.github.jiraburn.actors.FutureEnrichments._
+  import FutureEnrichments._
 
   implicit class EnrichedLiftActor(actor: LiftActor) {    
     def ??(msg: Any): LAFuture[Any] = {

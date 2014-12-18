@@ -1,4 +1,4 @@
-package org.github.jiraburn.actors
+package org.github.jiraburn.domain.actors
 
 import java.io.File
 import java.util.Date
@@ -7,14 +7,15 @@ import com.typesafe.config.ConfigFactory
 import org.github.jiraburn.domain._
 import org.github.jiraburn.repository.SprintRepository
 import net.liftweb.actor.{LAFuture, MockLiftActor}
+import org.github.jiraburn.util.concurrent.{LiftActorEnrichments, FutureEnrichments}
 import org.scalatest.{FlatSpec, Matchers}
 
 import scala.reflect.io.Path
 import scala.concurrent.duration._
 
 class ProjectActorTest extends FlatSpec with Matchers {
-  import org.github.jiraburn.actors.FutureEnrichments._
-  import org.github.jiraburn.actors.LiftActorEnrichments._
+  import FutureEnrichments._
+  import LiftActorEnrichments._
 
   implicit val config = ProjectConfig(ConfigFactory.load())
 
