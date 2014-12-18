@@ -39,7 +39,7 @@ class SprintsProviderTest extends FlatSpec with RestIntegrationTest with Directi
     val config = ConfigFactory.load()
     val jiraConfig = JiraConfig(config)
     val provider = new SprintsProvider(jiraConfig)
-    val result = provider.sprintDetails(21L).await(5 seconds)
+    val result = provider.sprintDetails("21").await(5 seconds)
     println("result: " + result)
     result shouldEqual SprintDetails(
       "Sprint 1",

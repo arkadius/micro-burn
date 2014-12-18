@@ -26,7 +26,7 @@ class ProjectUpdater(projectActor: LiftActor, sprintsProvider: SprintsProvider) 
     val currentIds = current.map(_.sprintId).toSet
     val missing = retrieved.filterNot { l => currentIds.contains(l.toString) }
     missing.map { sprintId =>
-      sprintsProvider.sprintDetails(sprintId).map { details =>
+      sprintsProvider.sprintDetails(sprintId.toString).map { details =>
         projectActor ! CreateNewSprint(sprintId.toString, details, null, timestamp) // TODO: tasks
       }
     }
@@ -37,7 +37,9 @@ class ProjectUpdater(projectActor: LiftActor, sprintsProvider: SprintsProvider) 
                                  (implicit timestamp: Date) = {
     current.collect {
       case SprintWithState(sprintId, true) =>
-        projectActor ! UpdateSprint(sprintId, null, false, timestamp) // TODO: tasks/finished?
+        sprintsProvider.sprintDetails(sprintId).map { details =>
+          projectActor ! UpdateSprint(sprintId, null, !details.isActive, timestamp) // TODO: tasks
+        }
     }
   }
 

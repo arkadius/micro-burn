@@ -20,10 +20,10 @@ class SprintsProvider(config: JiraConfig) {
     }
   }
 
-  def sprintDetails(sprintId: Long): LAFuture[SprintDetails] = {
+  def sprintDetails(sprintId: String): LAFuture[SprintDetails] = {
     val url = config.greenhopperUrl / "rapid" / "charts" / "sprintreport" <<? Map(
       "rapidViewId" -> config.rapidViewId.toString,
-      "sprintId" -> sprintId.toString
+      "sprintId" -> sprintId
     )
     Http(url OK as.json4s.Json).toLiftFuture.map { jv =>
       val JString(name) = jv \ "sprint" \ "name"
