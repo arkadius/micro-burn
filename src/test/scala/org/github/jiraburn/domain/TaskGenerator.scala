@@ -14,7 +14,7 @@ object TaskGenerator {
     UserStory(id, s"User Story $id", Some(sp), technical.toList, config.firstNotClosingStatus)
   }
 
-  def completedUserStory(sp: Int, technical: Seq[TechnicalTask] = Nil)(implicit config: ProjectConfig) = {
+  def closedUserStory(sp: Int, technical: Seq[TechnicalTask] = Nil)(implicit config: ProjectConfig) = {
     val id = nextId
     UserStory(id, s"User Story $id", Some(sp), technical.toList, config.firstClosingStatus)
   }
@@ -24,7 +24,7 @@ object TaskGenerator {
     TechnicalTask(id, s"Technical Task $id", optionalSP, config.firstNotClosingStatus)
   }
 
-  def completedTechnicalTask(optionalSP: Option[Int])(implicit config: ProjectConfig) = {
+  def closedTechnicalTask(optionalSP: Option[Int])(implicit config: ProjectConfig) = {
     val id = nextId
     TechnicalTask(id, s"Technical Task $id", optionalSP, config.firstClosingStatus)
   }

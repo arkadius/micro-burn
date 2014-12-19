@@ -17,7 +17,7 @@ class SprintScopeRepositoryTest extends FlatSpec with Matchers {
     val firstTechnical = TaskGenerator.openedTechnicalTask(Some(2))
     val secTechnical = TaskGenerator.openedTechnicalTask(None)
     val userStories = Seq(TaskGenerator.openedUserStory(3, Seq(firstTechnical, secTechnical)))
-    val sprint = FooSprint.withEmptyEvents(userStories)
+    val sprint = FooSprint.withEmptyEvents(userStories : _*)
     val repo = SprintScopeRepository(new File(s"target/sprints/${sprint.id}"))
 
     repo.saveCurrentUserStories(sprint)(new Date(1000))

@@ -5,9 +5,11 @@ import java.text.SimpleDateFormat
 import java.util.Date
 
 import com.github.tototoshi.csv._
-import org.github.jiraburn.domain.TaskChanged
+import org.github.jiraburn.domain.{TaskState, TaskChanged}
 
 import scala.util.control.NonFatal
+import scalaz._
+import Scalaz._
 
 trait TaskEventsRepository {
   def appendTasksEvents(events: Seq[TaskChanged]): Unit
@@ -49,7 +51,7 @@ class TaskEventsCsvRepository(taskEventsFile: File) extends TaskEventsRepository
       taskEventsFile.createNewFile()
       val csv = CSVWriter.open(taskEventsFile)(csvFormat)
       try {
-        csv.writeRow(Seq("taskId", "parentTaskId", "fromStatus", "toStatus", "fromStoryPoints", "toStoryPoints", "date"))
+        csv.writeRow(Seq("taskId", "parentTaskId", "isTechnicalTask", "optionalFromStatus", "optionalFromStoryPoints", "optionalToStatus", "optionalToStoryPoints", "date"))
         csv
       } catch {
         case NonFatal(ex) =>
@@ -61,9 +63,13 @@ class TaskEventsCsvRepository(taskEventsFile: File) extends TaskEventsRepository
     }
   }
 
-  private def prepareFields(fields: List[Any]): List[Any] = fields.map {
-    case date: Date => dateFormat.format(date)
-    case other => other
+  private def prepareFields(fields: List[Any]): List[Any] = fields.flatMap {
+    case date: Date => Seq(dateFormat.format(date))
+    case optional: Option[_] =>
+      optional.asInstanceOf[Option[TaskState]]
+        .map(_.productIterator)
+        .getOrElse(List("", ""))
+    case other => Seq(other)
   }
 
   override def loadTaskEvents: Seq[TaskChanged] =
@@ -74,19 +80,26 @@ class TaskEventsCsvRepository(taskEventsFile: File) extends TaskEventsRepository
       try {
         csv.toStream().drop(1).map { rawFields =>
           TaskChanged(
-            taskId          = rawFields(0),
-            parentTaskId    = rawFields(1),
-            fromStatus      = rawFields(2).toInt,
-            toStatus        = rawFields(3).toInt,
-            fromStoryPoints = rawFields(4).toInt,
-            toStoryPoints   = rawFields(5).toInt,
-            date            = dateFormat.parse(rawFields(6))
+            taskId            = rawFields(0),
+            parentTaskId      = rawFields(1),
+            isTechnicalTask   = rawFields(2).toBoolean,
+            optionalFromState = parseOptionalStatus(rawFields(3), rawFields(4)),
+            optionalToState   = parseOptionalStatus(rawFields(5), rawFields(6)),
+            date              = dateFormat.parse(rawFields(7))
           )
         }.toIndexedSeq
       } finally {
         csv.close()
       }
     }
+
+  private def parseOptionalStatus(statusStr: String, storyPointsStr: String): Option[TaskState] = {
+    val trimmedStatus = statusStr.trim
+    val trimmedStoryPoints = storyPointsStr.trim
+    (trimmedStatus.nonEmpty && trimmedStoryPoints.nonEmpty).option {
+      TaskState(trimmedStatus.toInt, trimmedStoryPoints.toInt)
+    }
+  }
 
   private def dateFormat = new SimpleDateFormat("yyyy-MM-dd'T'HH:mm:ss.SSS")
 }

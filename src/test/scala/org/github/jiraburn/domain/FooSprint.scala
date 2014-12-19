@@ -4,7 +4,7 @@ import java.util.Date
 
 object FooSprint {
 
-  def withEmptyEvents(userStories: Seq[UserStory]): Sprint = {
+  def withEmptyEvents(userStories: UserStory*): Sprint = {
     val details = SprintDetails(
       name = "fooName",
       from = new Date(1000),

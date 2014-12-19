@@ -1,33 +1,12 @@
 package org.github.jiraburn.domain
 
-import java.util.Date
-import scalaz._
-import Scalaz._
-
 sealed trait Task {
   def taskId: String
   def taskName: String
+  def isTechnicalTask: Boolean
   def storyPointsWithoutSubTasks: Int
   def parentUserStoryId: String
-  protected def status: Int
-
-  def delta(nextState: Task)
-           (implicit timestamp: Date): Option[TaskChanged] = {
-    require(nextState.taskId == taskId)
-    val statusChanged = nextState.status != status
-    val storyPointsWithoutSubTasksChanged = nextState.storyPointsWithoutSubTasks != storyPointsWithoutSubTasks
-    (statusChanged || storyPointsWithoutSubTasksChanged).option(prepareDelta(nextState))
-  }
-
-  protected def prepareDelta(nextState: Task)
-                            (implicit timestamp: Date): TaskChanged = {
-    TaskChanged(
-      taskId, parentUserStoryId,
-      status, nextState.status,
-      storyPointsWithoutSubTasks, nextState.storyPointsWithoutSubTasks,
-      timestamp
-    )
-  }
+  def status: Int
 }
 
 case class UserStory(taskId: String,
@@ -35,6 +14,8 @@ case class UserStory(taskId: String,
                      optionalStoryPoints: Option[Int],
                      technicalTasksWithoutParentId: List[TechnicalTask],
                      status: Int) extends Task {
+
+  override def isTechnicalTask: Boolean = false
 
   def technicalTasks: Seq[Task] = technicalTasksWithoutParentId.map(TechnicalTaskWithParentId(_, taskId))
   
@@ -53,9 +34,11 @@ case class TechnicalTaskWithParentId(technical: TechnicalTask, parentUserStoryId
 
   override def taskName: String = technical.taskName
 
+  override def isTechnicalTask: Boolean = true
+
   override def storyPointsWithoutSubTasks: Int = technical.optionalStoryPoints.getOrElse(0)
 
-  override protected def status: Int = technical.status
+  override def status: Int = technical.status
 }
 
 case class TechnicalTask(taskId: String, taskName: String, optionalStoryPoints: Option[Int], status: Int)

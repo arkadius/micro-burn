@@ -20,7 +20,7 @@ class ProjectActorTest extends FlatSpec with Matchers {
   implicit val config = ProjectConfig(ConfigFactory.load())
 
   it should "reply with correct active actors" in {
-    val sprint = FooSprint.withEmptyEvents(Nil)
+    val sprint = FooSprint.withEmptyEvents()
     val projectActor = actorWithInitialSprint(sprint)
     def sprintIsActive = sprintActivenessCheck(sprint.id, projectActor)
 
@@ -38,7 +38,7 @@ class ProjectActorTest extends FlatSpec with Matchers {
 
   it should "reply with correct history" in {
     val userStory = TaskGenerator.openedUserStory(sp = 1)
-    val sprint = FooSprint.withEmptyEvents(Seq(userStory))
+    val sprint = FooSprint.withEmptyEvents(userStory)
     val projectActor = actorWithInitialSprint(sprint)
 
     projectActor ! UpdateSprint(sprint.id, Seq(userStory.copy(status = config.firstClosingStatus)), finishSprint = false, new Date)

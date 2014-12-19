@@ -10,7 +10,7 @@ class SprintDetailsRepositoryTest extends FlatSpec with Matchers {
   import org.scalatest.OptionValues._
 
   it should "work round trip" in {
-    val sprint = FooSprint.withEmptyEvents(Nil)
+    val sprint = FooSprint.withEmptyEvents()
     val repo = SprintDetailsRepository(new File(s"target/sprints/${sprint.id}"))
 
     repo.saveDetails(sprint)

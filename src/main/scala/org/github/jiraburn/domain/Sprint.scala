@@ -1,6 +1,8 @@
 package org.github.jiraburn.domain
 
 import java.util.Date
+import scalaz._
+import Scalaz._
 
 case class Sprint(id: String,
                   details: SprintDetails,
@@ -26,13 +28,14 @@ case class Sprint(id: String,
             (timestamp: Date)
             (implicit config: ProjectConfig): SprintUpdateResult = {
     implicit val timestampImplicit = timestamp
-    val currentTasksById = Sprint.flattenTasks(currentUserStories).groupBy(_.taskId).mapValues(_.head)
-    // interesują nas tylko zdarzenia dla nowych zadań, stare które zostały usunięte ze sprintu olewamy
-    // nowe, które nie były dostępne ostatnio też olewamy, bo interesują nast tylko zmiany a nie stan bieżący
+    val currentTasksById = taskById(currentUserStories)
+    val updatedTasksById = taskById(updatedUserStories)
+    val allTaskIds = currentTasksById.keySet ++ updatedTasksById.keySet
     val newAddedEvents = for {
-      updatedTask <- Sprint.flattenTasks(updatedUserStories)
-      currentTask <- currentTasksById.get(updatedTask.taskId)
-      event <- currentTask.delta(updatedTask)
+      taskId <- allTaskIds.toSeq
+      optionalCurrentTask = currentTasksById.get(taskId)
+      optionalUpdatedTask = updatedTasksById.get(taskId)
+      event <- delta(optionalCurrentTask, optionalUpdatedTask)
     } yield event
     val finished = isActive && finishSprint
     
@@ -42,6 +45,38 @@ case class Sprint(id: String,
       events = events ++ newAddedEvents      
     )
     SprintUpdateResult(updatedSprint, newAddedEvents, finished, timestamp)
+  }
+
+  private def delta(state: Option[Task], nextState: Option[Task])
+                   (implicit timestamp: Date): Option[TaskChanged] = {
+    Seq(state, nextState).flatten match {
+      case Nil => None
+      case one :: Nil => Some(prepareDelta(state, nextState))
+      case definedState :: definedNextState :: Nil =>
+        val statusChanged = definedNextState.status != definedState.status
+        val storyPointsWithoutSubTasksChanged =
+          definedNextState.storyPointsWithoutSubTasks != definedState.storyPointsWithoutSubTasks
+        // co ze zmianą parenta/typu zadania?
+        (statusChanged || storyPointsWithoutSubTasksChanged).option(prepareDelta(state, nextState))
+    }
+  }
+
+  private def prepareDelta(state: Option[Task], nextState: Option[Task])
+                          (implicit timestamp: Date): TaskChanged = {
+    val task = (nextState orElse state).get
+    TaskChanged(
+      task.taskId, task.parentUserStoryId, task.isTechnicalTask,
+      state.map(TaskState.apply), nextState.map(TaskState.apply),
+      timestamp
+    )
+  }
+
+  private def taskById(userStories: Seq[UserStory]): Map[String, Task] = {
+    val flattenTasks = for {
+      userStory <- userStories
+      task <- userStory.technicalTasks :+ userStory
+    } yield task
+    flattenTasks.groupBy(_.taskId).mapValues(_.head)
   }
 }
 
@@ -56,7 +91,7 @@ object SprintDetails {
 case class SprintUpdateResult(updatedSprint: Sprint, newAddedEvents: Seq[TaskChanged], sprintFinished: Boolean, timestamp: Date) {
   def importantChange(implicit config: ProjectConfig): Boolean =  importantDetailsChange || importantEventsChange
 
-  def importantDetailsChange: Boolean = sprintFinished // TODO: co ze zmianą nazwy/dat?
+  def importantDetailsChange: Boolean = sprintFinished // co ze zmianą nazwy/dat?
 
   def importantEventsChange(implicit config: ProjectConfig): Boolean =
     Sprint.storyPointsChanges(newAddedEvents)(updatedSprint).exists(_.storyPoints > 0)
@@ -89,10 +124,4 @@ object Sprint {
 
     storyPointsStream.drop(1).take(initialAndCurrentEventsSortedAndGrouped.size)
   }
-
-  private def flattenTasks(userStories: Seq[UserStory]): Seq[Task] =
-    for {
-      userStory <- userStories
-      task <- userStory.technicalTasks :+ userStory
-    } yield task  
 }

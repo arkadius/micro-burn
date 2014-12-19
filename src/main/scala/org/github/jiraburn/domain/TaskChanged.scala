@@ -1,34 +1,51 @@
 package org.github.jiraburn.domain
 
 import java.util.Date
-
-import scalaz.Scalaz._
+import scalaz._
+import Scalaz._
 
 case class TaskChanged(taskId: String,
                        parentTaskId: String,
-                       fromStatus: Int,
-                       toStatus: Int,
-                       fromStoryPoints: Int,
-                       toStoryPoints: Int,
+                       isTechnicalTask: Boolean,
+                       optionalFromState: Option[TaskState],
+                       optionalToState: Option[TaskState],
                        date: Date) {
-  
-  def taskWasReopen(implicit config: ProjectConfig) =
-    config.isClosing(fromStatus) && config.isNotClosing(toStatus)
 
-  def taskWasClosed(implicit config: ProjectConfig) =
-    config.isNotClosing(fromStatus) && config.isClosing(toStatus)
-  
-  def storyPointsWereChanged = {
-    val diff = toStoryPoints - fromStatus
-    (diff != 0).option(diff)
+  def balanceChangeForContinuouslyExistingTask(implicit config: ProjectConfig): Option[Int] = {
+    for {
+      fromState <- optionalFromState
+      toState <- optionalToState       
+    } yield toState.storyPointsForStatusIs(closing = toState.statusIsClosing) - fromState.storyPointsForStatusIs(closing = toState.statusIsClosing)
   }
 
-  def storyPointsAfterChange = toStoryPoints
-  
-  def isOpenedAfterChange(implicit config: ProjectConfig) = config.isNotClosing(toStatus)
-  
-  def isClosedAfterChange(implicit config: ProjectConfig) = config.isClosing(toStatus) 
-  
+  def balanceChangeBecauseOfExistenceChange(implicit config: ProjectConfig): Option[Int] = {
+    (optionalFromState, optionalToState) match {
+      case (None, Some(toState))   => Some(toState.storyPointChangeDependingOnStatus)
+      case (Some(fromState), None) => Some(fromState.storyPointChangeDependingOnStatus)
+      case _ => None
+    }
+  }
+}
+
+case class TaskState(status: Int, storyPoints: Int) {
+  def storyPointsForStatusIs(closing: Boolean)(implicit config: ProjectConfig): Int =
+    (closing && statusIsClosing || !closing && !statusIsClosing).option {
+      storyPointChangeDependingOnGivenStatusIsClosing(closing)
+    }.getOrElse(0)
+
+  def storyPointChangeDependingOnStatus(implicit config: ProjectConfig) = storyPointChangeDependingOnGivenStatusIsClosing(statusIsClosing)
+
+  private def storyPointChangeDependingOnGivenStatusIsClosing(givenStatusIsClosing: Boolean): Int =
+    if (givenStatusIsClosing)
+      -storyPoints
+    else
+      +storyPoints
+
+  def statusIsClosing(implicit config: ProjectConfig): Boolean = config.isClosing(status)
+}
+
+object TaskState {
+  def apply(task: Task): TaskState = TaskState(task.status, task.storyPointsWithoutSubTasks)
 }
 
 case class DateWithStoryPoints(date: Date, storyPoints: Int) {
@@ -38,20 +55,13 @@ case class DateWithStoryPoints(date: Date, storyPoints: Int) {
     } else {
       date
     }
-    val storyPointsDiff =
-      if (event.taskWasReopen) {
-        +event.storyPointsAfterChange
-      } else if (event.taskWasClosed) {
-        -event.storyPointsAfterChange
-      } else {
-        event.storyPointsWereChanged.map { diff =>
-          if (event.isClosedAfterChange)
-            -diff
-          else
-            +diff
-        }.getOrElse(0)
-      } 
-        
+    val storyPointsDiff = Seq(
+      event.balanceChangeForContinuouslyExistingTask,
+      event.balanceChangeBecauseOfExistenceChange.filter(_ => event.isTechnicalTask)
+    ).flatten.sum
+    // nie sumujemy punktów za zmiany istnienia historyjek na tablicy, bo mogą to być zmiany
+    // poszerzające/zmniejszające zakres sprintu nie wpływające na spalanie, albo modyfikacja statusu
+    // mogła być wykonana poza tablicą
         
     DateWithStoryPoints(maxDate, storyPoints + storyPointsDiff)
   }
