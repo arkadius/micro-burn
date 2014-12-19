@@ -51,7 +51,7 @@ class TaskEventsCsvRepository(taskEventsFile: File) extends TaskEventsRepository
       taskEventsFile.createNewFile()
       val csv = CSVWriter.open(taskEventsFile)(csvFormat)
       try {
-        csv.writeRow(Seq("taskId", "parentTaskId", "isTechnicalTask", "optionalFromStatus", "optionalFromStoryPoints", "optionalToStatus", "optionalToStoryPoints", "date"))
+        csv.writeRow(Seq("taskId", "parentTaskId", "isTechnicalTask", "status", "storyPoints", "date"))
         csv
       } catch {
         case NonFatal(ex) =>
@@ -83,9 +83,8 @@ class TaskEventsCsvRepository(taskEventsFile: File) extends TaskEventsRepository
             taskId            = rawFields(0),
             parentTaskId      = rawFields(1),
             isTechnicalTask   = rawFields(2).toBoolean,
-            optionalFromState = parseOptionalStatus(rawFields(3), rawFields(4)),
-            optionalToState   = parseOptionalStatus(rawFields(5), rawFields(6)),
-            date              = dateFormat.parse(rawFields(7))
+            optionalToState   = parseOptionalStatus(rawFields(3), rawFields(4)),
+            date              = dateFormat.parse(rawFields(5))
           )
         }.toIndexedSeq
       } finally {

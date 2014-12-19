@@ -34,21 +34,19 @@ class BoardState(taskStates: Map[String, TaskWithState], val date: Date) {
   }
 
   private def prepareEvent(state: Option[TaskWithState], nextState: Option[TaskWithState])
-                         (implicit timestamp: Date): TaskChanged = {
+                          (implicit timestamp: Date): TaskChanged = {
     val task = (nextState orElse state).get
     TaskChanged(
       task.taskId, task.parentTaskId, task.isTechnicalTask,
-      state.map(_.state), nextState.map(_.state),
-      timestamp
+      nextState.map(_.state), timestamp
     )
   }
   
   def plus(change: TaskChanged): BoardState = {
-    val newStates = (change.optionalFromState, change.optionalToState) match {
-      case (Some(fromState), None) => taskStates - change.taskId
-      case (_, Some(toState)) => taskStates + (change.taskId -> TaskWithState(change.taskId, change.parentTaskId, change.isTechnicalTask, toState))
-      case (None, None) => taskStates
-    }    
+    val newStates = change.optionalToState match {
+      case None => taskStates - change.taskId
+      case Some(toState) => taskStates + (change.taskId -> TaskWithState(change.taskId, change.parentTaskId, change.isTechnicalTask, toState))
+    }
     new BoardState(newStates, change.date)
   }
   

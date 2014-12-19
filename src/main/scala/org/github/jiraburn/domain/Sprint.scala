@@ -102,5 +102,5 @@ case class DateWithStoryPoints(date: Date, storyPoints: Int) {
 }
 
 object DateWithStoryPoints {
-  def zero: DateWithStoryPoints = DateWithStoryPoints(new Date(0L), 0)
+  def zero: DateWithStoryPoints = DateWithStoryPoints(new Date(0), 0)
 }
