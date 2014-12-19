@@ -1,8 +1,6 @@
 package org.github.jiraburn.domain
 
 import java.util.Date
-import scalaz._
-import Scalaz._
 
 case class Sprint(id: String,
                   details: SprintDetails,
@@ -65,10 +63,7 @@ object Sprint {
   private[domain] def storyPointsChanges(events: Seq[TaskChanged])
                                         (sprint: Sprint)
                                         (implicit config: ProjectConfig): Seq[DateWithStoryPoints] = {
-    val initialAndCurrentUserStoriesIds = (sprint.initialUserStories ++ sprint.currentUserStories).map(_.taskId).toSet
-
-    val initialAndCurrentEventsSortedAndGrouped = events
-      .filter { event => initialAndCurrentUserStoriesIds.contains(event.parentTaskId) }
+    val eventsSortedAndGrouped = events
       .groupBy(_.date)
       .toSeq
       .sortBy { case (date, group) => date }
@@ -76,7 +71,7 @@ object Sprint {
 
     lazy val boardStateStream: Stream[BoardState] =
       BoardState(sprint.initialUserStories, new Date(0)) #::
-        (boardStateStream zip initialAndCurrentEventsSortedAndGrouped).map {
+        (boardStateStream zip eventsSortedAndGrouped).map {
           case (prevBoard, currEventsGroup) =>
             currEventsGroup.foldLeft(prevBoard) { (boardAcc, event) =>
               boardAcc.plus(event)
@@ -96,7 +91,7 @@ object Sprint {
             acc.plus(diff)
         }
 
-    storyPointsChangeStream.drop(1).take(initialAndCurrentEventsSortedAndGrouped.size)
+    storyPointsChangeStream.drop(1).take(eventsSortedAndGrouped.size)
   }
 }
 
