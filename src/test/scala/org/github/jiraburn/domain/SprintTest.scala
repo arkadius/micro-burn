@@ -75,13 +75,12 @@ class SprintTest extends FlatSpec with Matchers with Inside {
     val changedScope = withSecClosed.copy(technicalTasksWithoutParentId = List(firstTechnical, secTechnicalWithChangedScope))
     val afterScopeChange = afterSecClose.updateTasks(changedScope)
     inside(afterScopeChange) {
-      case _ => afterScopeChange.storyPointsChangesValues shouldEqual Seq(-1, -3)
-      // FIXME: przez to, że analizując techniczny nie patrzymy na zmiany w parencie, jest podwójny scope change
+      case _ => afterScopeChange.storyPointsChangesValues shouldEqual Seq(-1, -2)
     }
 
     val completedAllUserStory = changedScope.copy(technicalTasksWithoutParentId = List(firstTechnical.close, secTechnicalWithChangedScope)).close
     val afterAllFinish = afterScopeChange.updateTasks(completedAllUserStory)
-    afterAllFinish.storyPointsChangesValues shouldEqual Seq(-1, -2, -4) // FIXME: jw
+    afterAllFinish.storyPointsChangesValues shouldEqual Seq(-1, -2, -3)
   }
 
   // TODO: test na pojawianie się / znikanie tasków technicznych

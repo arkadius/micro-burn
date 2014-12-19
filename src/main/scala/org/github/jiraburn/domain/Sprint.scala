@@ -27,16 +27,9 @@ case class Sprint(id: String,
   def update(updatedUserStories: Seq[UserStory], finishSprint: Boolean)
             (timestamp: Date)
             (implicit config: ProjectConfig): SprintUpdateResult = {
-    implicit val timestampImplicit = timestamp
-    val currentTasksById = taskById(currentUserStories)
-    val updatedTasksById = taskById(updatedUserStories)
-    val allTaskIds = currentTasksById.keySet ++ updatedTasksById.keySet
-    val newAddedEvents = for {
-      taskId <- allTaskIds.toSeq
-      optionalCurrentTask = currentTasksById.get(taskId)
-      optionalUpdatedTask = updatedTasksById.get(taskId)
-      event <- delta(optionalCurrentTask, optionalUpdatedTask)
-    } yield event
+    val currentBoard = BoardState(currentUserStories, new Date(0))
+    val updatedBoard = BoardState(updatedUserStories, timestamp)
+    val newAddedEvents = currentBoard.diff(updatedBoard)
     val finished = isActive && finishSprint
     
     val updatedSprint = copy(
@@ -45,38 +38,6 @@ case class Sprint(id: String,
       events = events ++ newAddedEvents      
     )
     SprintUpdateResult(updatedSprint, newAddedEvents, finished, timestamp)
-  }
-
-  private def delta(state: Option[Task], nextState: Option[Task])
-                   (implicit timestamp: Date): Option[TaskChanged] = {
-    Seq(state, nextState).flatten match {
-      case Nil => None
-      case one :: Nil => Some(prepareDelta(state, nextState))
-      case definedState :: definedNextState :: Nil =>
-        val statusChanged = definedNextState.status != definedState.status
-        val storyPointsWithoutSubTasksChanged =
-          definedNextState.storyPointsWithoutSubTasks != definedState.storyPointsWithoutSubTasks
-        // co ze zmianą parenta/typu zadania?
-        (statusChanged || storyPointsWithoutSubTasksChanged).option(prepareDelta(state, nextState))
-    }
-  }
-
-  private def prepareDelta(state: Option[Task], nextState: Option[Task])
-                          (implicit timestamp: Date): TaskChanged = {
-    val task = (nextState orElse state).get
-    TaskChanged(
-      task.taskId, task.parentUserStoryId, task.isTechnicalTask,
-      state.map(TaskState.apply), nextState.map(TaskState.apply),
-      timestamp
-    )
-  }
-
-  private def taskById(userStories: Seq[UserStory]): Map[String, Task] = {
-    val flattenTasks = for {
-      userStory <- userStories
-      task <- userStory.technicalTasks :+ userStory
-    } yield task
-    flattenTasks.groupBy(_.taskId).mapValues(_.head)
   }
 }
 
@@ -113,15 +74,38 @@ object Sprint {
       .sortBy { case (date, group) => date }
       .map { case (date, group) => group }
 
-    lazy val storyPointsStream: Stream[DateWithStoryPoints] =
-      DateWithStoryPoints.zero #::
-        storyPointsStream.zip(initialAndCurrentEventsSortedAndGrouped).map {
-          case (prevSum, currEventsGroup) =>
-            currEventsGroup.foldLeft(prevSum) { (sum, event) =>
-              sum.accumulateWithEvent(event)
+    lazy val boardStateStream: Stream[BoardState] =
+      BoardState(sprint.initialUserStories, new Date(0)) #::
+        (boardStateStream zip initialAndCurrentEventsSortedAndGrouped).map {
+          case (prevBoard, currEventsGroup) =>
+            currEventsGroup.foldLeft(prevBoard) { (boardAcc, event) =>
+              boardAcc.plus(event)
             }
         }
 
-    storyPointsStream.drop(1).take(initialAndCurrentEventsSortedAndGrouped.size)
+    lazy val storyPointsDiffStream: Stream[DateWithStoryPoints] =
+      (boardStateStream zip boardStateStream.tail).map {
+        case (prev, next) =>
+          DateWithStoryPoints(next.date, prev.closedCount - next.closedCount)
+      }
+
+    lazy val storyPointsChangeStream: Stream[DateWithStoryPoints] =
+      DateWithStoryPoints.zero #::
+        (storyPointsChangeStream zip storyPointsDiffStream).map {
+          case (acc, diff) =>
+            acc.plus(diff)
+        }
+
+    storyPointsChangeStream.drop(1).take(initialAndCurrentEventsSortedAndGrouped.size)
   }
+}
+
+case class DateWithStoryPoints(date: Date, storyPoints: Int) {
+  def plus(other: DateWithStoryPoints): DateWithStoryPoints = {
+    other.copy(storyPoints = this.storyPoints + other.storyPoints)
+  }
+}
+
+object DateWithStoryPoints {
+  def zero: DateWithStoryPoints = DateWithStoryPoints(new Date(0L), 0)
 }
