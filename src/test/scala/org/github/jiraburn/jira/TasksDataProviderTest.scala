@@ -2,23 +2,17 @@ package org.github.jiraburn.jira
 
 import java.io.File
 
+import akka.actor.ActorSystem
 import com.typesafe.config.ConfigFactory
 import org.github.jiraburn.domain.{TechnicalTask, UserStory}
 import org.scalatest.{Matchers, FlatSpec}
 import spray.routing._
 import scala.concurrent.duration._
 
-class TasksDataProviderTest extends FlatSpec with RestIntegrationTest with Directives with Matchers {
+class TasksDataProviderTest extends FlatSpec with RestIntegrationTest with Matchers {
   import org.github.jiraburn.util.concurrent.FutureEnrichments._
 
-  override protected def route: Route = {
-    val jira = "jira" / "rest" / "api" / "latest"
-    path(jira / "search") {
-      get {
-        getFromFile("src/test/resources/jira/tasks.json")
-      }
-    }
-  }
+  override protected val route: Route = TasksDataProviderTest.route
 
   it should "get user stories" in {
 //    val config = ConfigFactory.parseFile(new File("secret.conf")).withFallback(ConfigFactory.load())
@@ -36,4 +30,15 @@ class TasksDataProviderTest extends FlatSpec with RestIntegrationTest with Direc
     )
   }
 
+}
+
+object TasksDataProviderTest extends Directives {
+  def route(implicit system: ActorSystem, routeSettings: RoutingSettings): Route = {
+    val jira = "jira" / "rest" / "api" / "latest"
+    path(jira / "search") {
+      get {
+        getFromFile("src/test/resources/jira/tasks.json")
+      }
+    }
+  }
 }

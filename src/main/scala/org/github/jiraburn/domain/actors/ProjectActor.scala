@@ -31,10 +31,10 @@ class ProjectActor(projectRoot: File, config: ProjectConfig, sprintChangeNotifyi
             SprintWithState(sprintId, isActive)
           }
       }.toSeq
-      reply(LAFuture.collect(sprintWithStateFutures : _*))
+      reply(collectWithWellEmptyListHandling(sprintWithStateFutures))
     case CreateNewSprint(sprintId, details, userStories, timestamp) =>
       sprintActors += sprintId -> sprintFactory.createSprint(sprintId, details, userStories, timestamp)
-      reply(Unit)
+      reply(sprintId)
     case update: UpdateSprint =>
       reply(sprintActors(update.sprintId) !< update)
     case getHistory: GetStoryPointsHistory =>
@@ -43,7 +43,7 @@ class ProjectActor(projectRoot: File, config: ProjectConfig, sprintChangeNotifyi
       val sprintClosedFutures = sprintActors.values.map { sprintActor =>
         (sprintActor !< Close).mapTo[Unit]
       }.toSeq
-      reply(LAFuture.collect(sprintClosedFutures : _*))
+      reply(collectWithWellEmptyListHandling(sprintClosedFutures))
   }
 }
 

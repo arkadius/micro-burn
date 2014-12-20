@@ -1,29 +1,18 @@
 package org.github.jiraburn.jira
 
+import akka.actor.ActorSystem
 import com.typesafe.config.ConfigFactory
 import org.github.jiraburn.domain.SprintDetails
 import org.joda.time.DateTime
 import org.scalatest.{FlatSpec, Matchers}
-import spray.routing.{Directives, Route}
+import spray.routing.{RoutingSettings, Directives, Route}
 
 import scala.concurrent.duration._
 
-class SprintsDataProviderTest extends FlatSpec with RestIntegrationTest with Directives with Matchers {
+class SprintsDataProviderTest extends FlatSpec with RestIntegrationTest with Matchers {
   import org.github.jiraburn.util.concurrent.FutureEnrichments._
 
-  override protected def route: Route = {
-    val greenhooper = "jira" / "rest" / "greenhopper" / "1.0"
-    path(greenhooper / "sprints" / IntNumber) { projectId =>
-      get {
-        getFromFile("src/test/resources/jira/allSprints.json")
-      }
-    } ~
-    path(greenhooper / "rapid" / "charts" / "sprintreport") {
-      get {
-        getFromFile("src/test/resources/jira/sprintDetails.json")
-      }
-    }
-  }
+  override protected val route: Route = SprintsDataProviderTest.route
 
   it should "get sprints ids" in {
 //    val config = ConfigFactory.parseFile(new File("secret.conf")).withFallback(ConfigFactory.load())
@@ -48,7 +37,20 @@ class SprintsDataProviderTest extends FlatSpec with RestIntegrationTest with Dir
       isActive = false
     )
   }
+}
 
-
-
+object SprintsDataProviderTest extends Directives {
+  def route(implicit system: ActorSystem, routeSettings: RoutingSettings): Route = {
+    val greenhooper = "jira" / "rest" / "greenhopper" / "1.0"
+    path(greenhooper / "sprints" / IntNumber) { projectId =>
+      get {
+        getFromFile("src/test/resources/jira/allSprints.json")
+      }
+    } ~
+    path(greenhooper / "rapid" / "charts" / "sprintreport") {
+      get {
+        getFromFile("src/test/resources/jira/sprintDetails.json")
+      }
+    }
+  }
 }

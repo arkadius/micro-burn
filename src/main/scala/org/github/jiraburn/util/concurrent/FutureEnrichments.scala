@@ -2,6 +2,7 @@ package org.github.jiraburn.util.concurrent
 
 import net.liftweb.actor.LAFuture
 import net.liftweb.common.{Empty, Failure, Full}
+import org.github.jiraburn.util.logging.Slf4jLogging
 
 import scala.concurrent.duration.FiniteDuration
 import scala.concurrent.{Future, TimeoutException}
@@ -11,7 +12,14 @@ import scala.util.Success
 object FutureEnrichments {
   import scala.concurrent.ExecutionContext.Implicits.global
 
-  implicit class EnrichedLAFuture[T](laFuture: LAFuture[T]) {
+  def collectWithWellEmptyListHandling[T](futures: Seq[LAFuture[T]]): LAFuture[List[T]] = {
+    if (futures.nonEmpty)
+      LAFuture.collect(futures : _*)
+    else
+      LAFuture[List[T]](() => Nil)
+  }
+
+  implicit class EnrichedLAFuture[T](laFuture: LAFuture[T]) extends Slf4jLogging {
     def mapTo[TT: ClassTag]: LAFuture[TT] = {
       laFuture.map(_.asInstanceOf[TT])
     }
@@ -21,6 +29,13 @@ object FutureEnrichments {
         case Full(value) => value
         case Failure(msg, ex, _) => throw ex.openOr(new Exception(s"Failure: $msg"))
         case Empty => throw new TimeoutException(s"Timeout (after $timeout) awaiting for LAFuture result")
+      }
+    }
+
+    def withLoggingFinished(f: T => String) = {
+      laFuture.map { result =>
+        debug(s"Finished with ${f(result)}")
+        result
       }
     }
   }

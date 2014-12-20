@@ -23,13 +23,13 @@ class SprintActor(var sprint: Sprint,
       repo = repo.saveUpdateResult(result)
       if (result.importantChange)
         changeNotifyingActor ! SprintChanged(sprint.id)
-      reply(Unit)
+      reply(sprint.id)
     case GetStoryPointsHistory(sprintId: String) =>
       require(sprintId == sprint.id)
       reply(StoryPointsHistory(sprint.initialStoryPoints, sprint.storyPointsChanges))
     case Close =>
       repo.flush()
-      reply(Unit)
+      reply(sprint.id)
   }
 
 }
