@@ -9,13 +9,11 @@ case class ProjectConfig(boardColumns: List[BoardColumn]) {
   private val statuses = (for {
     column <- boardColumns
     status <- column.statusIds
-  } yield status -> StatusInfo(column.isClosing, column.name)).toMap
+  } yield status -> column).toMap
 
-  def isNotClosing(status: Int) = !isClosing(status)
+  def closingColumnIndex: Int = boardColumnIndex(firstClosingStatus)
 
-  def isClosing(status: Int) = statuses.get(status).exists(_.isClosing)
-
-  def nameFromBoard(status: Int): Option[String] = statuses.get(status).map(_.nameFromBoard)
+  def boardColumnIndex(status: Int): Int = statuses(status).index
 
   def firstNotClosingStatus: Int = statuses.toSeq.collect {
     case (id, info) if !info.isClosing => id
@@ -26,20 +24,18 @@ case class ProjectConfig(boardColumns: List[BoardColumn]) {
   }.sorted.head
 }
 
-case class BoardColumn(name: String, statusIds: List[Int], isClosing: Boolean)
-
-case class StatusInfo(isClosing: Boolean, nameFromBoard: String)
+case class BoardColumn(index: Int, name: String, statusIds: List[Int], isClosing: Boolean)
 
 object ProjectConfig {
   import collection.convert.wrapAll._
 
   def apply(config: Config): ProjectConfig = {
     val columns = for {
-      columnConfig <- config.getConfigList("jira.greenhopper.boardColumns")
+      (columnConfig, index) <- config.getConfigList("jira.greenhopper.boardColumns").zipWithIndex
       name = columnConfig.getString("name")
       statusIds = columnConfig.getIntList("statusIds").map(_.toInt).toList
       closing = columnConfig.hasPath("closing").option(columnConfig.getBoolean("closing")).getOrElse(false)
-    } yield BoardColumn(name, statusIds, closing)
+    } yield BoardColumn(index, name, statusIds, closing)
     ProjectConfig(columns.toList)
   }
 }

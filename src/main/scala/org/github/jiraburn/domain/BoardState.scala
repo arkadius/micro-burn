@@ -50,7 +50,9 @@ class BoardState(taskStates: Map[String, TaskWithState], val date: Date) {
     new BoardState(newStates, change.date)
   }
   
-  def closedCount(implicit config: ProjectConfig) = taskStates.values.filter(_.isClosed).map(_.storyPoints).sum
+  def taskAtRighttFromBoardColumn(columnIndex: Int)
+                                 (implicit config: ProjectConfig) =
+    taskStates.values.filter(_.boardColumnIndex >= columnIndex).map(_.storyPoints).sum
 
 }
 
@@ -78,7 +80,7 @@ case class TaskWithState(taskId: String,
   def status: Int = state.status
   def storyPoints: Int = state.storyPoints  
   
-  def isClosed(implicit config: ProjectConfig) = config.isClosing(status)
+  def boardColumnIndex(implicit config: ProjectConfig) = config.boardColumnIndex(status)
 }
 
 object TaskWithState {

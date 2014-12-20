@@ -1,6 +1,8 @@
 package org.github.jiraburn.domain
 
 import java.util.Date
+import scalaz._
+import Scalaz._
 
 case class Sprint(id: String,
                   details: SprintDetails,
@@ -20,7 +22,7 @@ case class Sprint(id: String,
     }.sum
   }
 
-  def storyPointsChanges(implicit config: ProjectConfig): Seq[DateWithStoryPoints] = Sprint.storyPointsChanges(events)(this)
+  def storyPointsChanges(implicit config: ProjectConfig): Seq[DateWithStoryPoints] = Sprint.storyPointsChanges(events)(initialUserStories)
 
   def update(updatedUserStories: Seq[UserStory], finishSprint: Boolean)
             (timestamp: Date)
@@ -35,7 +37,7 @@ case class Sprint(id: String,
       currentUserStories = updatedUserStories,    
       events = events ++ newAddedEvents      
     )
-    SprintUpdateResult(updatedSprint, newAddedEvents, finished, timestamp)
+    SprintUpdateResult(currentUserStories, updatedSprint, newAddedEvents, finished, timestamp)
   }
 }
 
@@ -47,13 +49,13 @@ object SprintDetails {
   def apply(name: String, from: Date, to: Date): SprintDetails = SprintDetails(name, from, to, isActive = true)
 }
 
-case class SprintUpdateResult(updatedSprint: Sprint, newAddedEvents: Seq[TaskChanged], sprintFinished: Boolean, timestamp: Date) {
+case class SprintUpdateResult(private val userStoriesBeforeUpdate: Seq[UserStory], updatedSprint: Sprint, newAddedEvents: Seq[TaskChanged], sprintFinished: Boolean, timestamp: Date) {
   def importantChange(implicit config: ProjectConfig): Boolean =  importantDetailsChange || importantEventsChange
 
   def importantDetailsChange: Boolean = sprintFinished // co ze zmianą nazwy/dat?
 
   def importantEventsChange(implicit config: ProjectConfig): Boolean =
-    Sprint.storyPointsChanges(newAddedEvents)(updatedSprint).exists(_.storyPoints > 0)
+    Sprint.storyPointsChanges(newAddedEvents)(userStoriesBeforeUpdate).exists(_.nonEmpty)
 }
 
 object Sprint {
@@ -61,7 +63,7 @@ object Sprint {
     Sprint(id, details, initialUserStories = userStories, currentUserStories = userStories, Nil)
   
   private[domain] def storyPointsChanges(events: Seq[TaskChanged])
-                                        (sprint: Sprint)
+                                        (userStories: Seq[UserStory])
                                         (implicit config: ProjectConfig): Seq[DateWithStoryPoints] = {
     val eventsSortedAndGrouped = events
       .groupBy(_.date)
@@ -70,7 +72,7 @@ object Sprint {
       .map { case (date, group) => group }
 
     lazy val boardStateStream: Stream[BoardState] =
-      BoardState(sprint.initialUserStories, new Date(0)) #::
+      BoardState(userStories, new Date(0)) #::
         (boardStateStream zip eventsSortedAndGrouped).map {
           case (prevBoard, currEventsGroup) =>
             currEventsGroup.foldLeft(prevBoard) { (boardAcc, event) =>
@@ -81,7 +83,11 @@ object Sprint {
     lazy val storyPointsDiffStream: Stream[DateWithStoryPoints] =
       (boardStateStream zip boardStateStream.tail).map {
         case (prev, next) =>
-          DateWithStoryPoints(next.date, prev.closedCount - next.closedCount)
+          val indexOnSum = config.boardColumns.map(_.index).map { boardColumnIndex =>
+            val diff = prev.taskAtRighttFromBoardColumn(boardColumnIndex) - next.taskAtRighttFromBoardColumn(boardColumnIndex)
+            boardColumnIndex -> diff
+          }.toMap
+          DateWithStoryPoints(next.date, indexOnSum)
       }
 
     lazy val storyPointsChangeStream: Stream[DateWithStoryPoints] =
@@ -95,12 +101,16 @@ object Sprint {
   }
 }
 
-case class DateWithStoryPoints(date: Date, storyPoints: Int) {
+case class DateWithStoryPoints(date: Date, private val indexOnSum: Map[Int, Int]) {
   def plus(other: DateWithStoryPoints): DateWithStoryPoints = {
-    other.copy(storyPoints = this.storyPoints + other.storyPoints)
+    other.copy(indexOnSum = this.indexOnSum |+| other.indexOnSum)
   }
+
+  def storyPointsForColumn(boardColumnIndex: Int) = indexOnSum.getOrElse(boardColumnIndex, 0)
+
+  def nonEmpty = indexOnSum.values.exists(_ != 0)
 }
 
 object DateWithStoryPoints {
-  def zero: DateWithStoryPoints = DateWithStoryPoints(new Date(0), 0)
+  def zero: DateWithStoryPoints = DateWithStoryPoints(new Date(0), Map())
 }

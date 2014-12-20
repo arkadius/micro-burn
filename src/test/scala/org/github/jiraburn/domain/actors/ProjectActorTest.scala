@@ -47,7 +47,7 @@ class ProjectActorTest extends FlatSpec with Matchers {
 
     historyFuture.map { history =>
       history.initialStoryPoints shouldEqual 1
-      history.history.map(_.storyPoints) shouldEqual Seq(-1)
+      history.history.map(_.storyPointsForColumn(config.closingColumnIndex)) shouldEqual Seq(-1)
     }.await(5 seconds)
   }
 
