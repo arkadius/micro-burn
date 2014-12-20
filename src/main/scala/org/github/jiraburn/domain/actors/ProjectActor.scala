@@ -34,8 +34,9 @@ class ProjectActor(projectRoot: File, config: ProjectConfig, sprintChangeNotifyi
       reply(LAFuture.collect(sprintWithStateFutures : _*))
     case CreateNewSprint(sprintId, details, userStories, timestamp) =>
       sprintActors += sprintId -> sprintFactory.createSprint(sprintId, details, userStories, timestamp)
+      reply(Unit)
     case update: UpdateSprint =>
-      sprintActors(update.sprintId) ! update
+      reply(sprintActors(update.sprintId) !< update)
     case getHistory: GetStoryPointsHistory =>
       reply(sprintActors(getHistory.sprintId) !< getHistory)
     case Close =>

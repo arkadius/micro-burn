@@ -3,24 +3,35 @@ package org.github.jiraburn.jira
 import com.typesafe.config.Config
 import dispatch._
 
-case class JiraConfig(greenhopperUrl: Req,
+case class JiraConfig(jiraUrl: Req,
+                      greenhopperUrl: Req,
+                      storyPointsField: String,
                       rapidViewId: Int)
 
 object JiraConfig {
   def apply(config: Config): JiraConfig = {
     JiraConfig(
-      config.getString("jira.user"),
-      config.getString("jira.password"),
-      config.getString("jira.greenhopper.url"),
-      config.getInt(   "jira.greenhopper.rapidViewId")
+      jiraUrl           = config.getString("jira.url"),
+      greenhopperUrl    = config.getString("jira.greenhopper.url"),
+      user              = config.getString("jira.user"),
+      password          = config.getString("jira.password"),
+      storyPointsField  = config.getString("jira.greenhopper.storyPointsField"),
+      rapidViewId       = config.getInt("jira.greenhopper.rapidViewId")
     )
   }
 
 
-  def apply(user: String,
-            password: String,
+  def apply(jiraUrl: String,
             greenhopperUrl: String,
+            user: String,
+            password: String,
+            storyPointsField: String,
             rapidViewId: Int): JiraConfig = {
-    JiraConfig(url(greenhopperUrl).as_!(user, password), rapidViewId)
+    JiraConfig(
+      jiraUrl           = url(jiraUrl).as_!(user, password),
+      greenhopperUrl    = url(greenhopperUrl).as_!(user, password),
+      storyPointsField  = storyPointsField,
+      rapidViewId       = rapidViewId
+    )
   }
 }

@@ -1,0 +1,44 @@
+{"expand": "schema,names", "startAt": 0, "maxResults": 1000, "total": 41, "issues": [
+    {
+        "expand": "editmeta,renderedFields,transitions,changelog,operations",
+        "id": "153498",
+        "key": "FOO-635",
+        "fields": {
+            "summary": "Bar user story",
+            "status": {
+                "id": "1"
+            },
+            "customfield_10192": null
+        },
+        "renderedFields": {}
+    },
+    {
+        "expand": "editmeta,renderedFields,transitions,changelog,operations",
+        "id": "153485",
+        "key": "FOO-631",
+        "fields": {
+            "summary": "Foo subtask",
+            "status": {
+                "id": "1"
+            },
+            "customfield_10192": 2.0,
+            "parent": {
+                "key": "FOO-452"
+            }
+        },
+        "renderedFields": {}
+    },
+    {
+        "expand": "editmeta,renderedFields,transitions,changelog,operations",
+        "id": "151499",
+        "key": "FOO-452",
+        "fields": {
+            "summary": "Foo user story",
+            "status": {
+                "id": "3"
+            },
+            "customfield_10192": 5.0
+        },
+        "renderedFields": {}
+    }        
+]}

@@ -8,7 +8,7 @@ import spray.routing.{Directives, Route}
 
 import scala.concurrent.duration._
 
-class SprintsProviderTest extends FlatSpec with RestIntegrationTest with Directives with Matchers {
+class SprintsDataProviderTest extends FlatSpec with RestIntegrationTest with Directives with Matchers {
   import org.github.jiraburn.util.concurrent.FutureEnrichments._
 
   override protected def route: Route = {
@@ -29,7 +29,7 @@ class SprintsProviderTest extends FlatSpec with RestIntegrationTest with Directi
 //    val config = ConfigFactory.parseFile(new File("secret.conf")).withFallback(ConfigFactory.load())
     val config = ConfigFactory.load()
     val jiraConfig = JiraConfig(config)
-    val provider = new SprintsProvider(jiraConfig)
+    val provider = new SprintsDataProvider(jiraConfig)
     val result = provider.allSprintIds.await(5 seconds)
     result shouldEqual Seq(21, 22)
   }
@@ -38,7 +38,7 @@ class SprintsProviderTest extends FlatSpec with RestIntegrationTest with Directi
 //    val config = ConfigFactory.parseFile(new File("secret.conf")).withFallback(ConfigFactory.load())
     val config = ConfigFactory.load()
     val jiraConfig = JiraConfig(config)
-    val provider = new SprintsProvider(jiraConfig)
+    val provider = new SprintsDataProvider(jiraConfig)
     val result = provider.sprintDetails("21").await(5 seconds)
     println("result: " + result)
     result shouldEqual SprintDetails(

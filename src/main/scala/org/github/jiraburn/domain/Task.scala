@@ -42,22 +42,3 @@ case class TechnicalTaskWithParentId(technical: TechnicalTask, parentUserStoryId
 }
 
 case class TechnicalTask(taskId: String, taskName: String, optionalStoryPoints: Option[Int], status: Int)
-
-object UserStory {
-  def apply(taskId: String,
-            taskName: String,
-            optionalStoryPoints: Option[Int],
-            technicalTasks: Seq[TechnicalTask])
-           (implicit config: ProjectConfig): UserStory = {
-    new UserStory(taskId, taskName, optionalStoryPoints, technicalTasks.toList, config.firstClosingStatus)
-  }
-}
-
-object TechnicalTask {
-  def apply(taskId: String,
-            taskName: String,
-            optionalStoryPoints: Option[Int])
-           (implicit config: ProjectConfig): TechnicalTask = {
-    new TechnicalTask(taskId, taskName, optionalStoryPoints, config.firstNotClosingStatus)
-  }
-}

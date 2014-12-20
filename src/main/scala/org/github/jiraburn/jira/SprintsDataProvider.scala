@@ -7,11 +7,11 @@ import net.liftweb.actor.LAFuture
 import org.github.jiraburn.domain.SprintDetails
 import org.json4s._
 
-class SprintsProvider(config: JiraConfig) {
+class SprintsDataProvider(config: JiraConfig) {
   import scala.concurrent.ExecutionContext.Implicits.global
   import org.github.jiraburn.util.concurrent.FutureEnrichments._
 
-  def allSprintIds: LAFuture[List[Long]] = {
+  def allSprintIds: LAFuture[Seq[Long]] = {
     val url = config.greenhopperUrl / "sprints" / config.rapidViewId
     Http(url OK as.json4s.Json).toLiftFuture.map { jv =>
       (jv \ "sprints" \\ "id").children.collect {
