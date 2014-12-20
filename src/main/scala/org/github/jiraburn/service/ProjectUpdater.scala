@@ -67,7 +67,7 @@ class ProjectUpdater(projectActor: LiftActor, sprintsProvider: SprintsDataProvid
 
   private def parallelSprintDetailsAndUserStories(sprintId: String): LAFuture[(SprintDetails, Seq[UserStory])] = {
     val detailsFuture = sprintsProvider.sprintDetails(sprintId).withLoggingFinished(s"sprint details for sprint $sprintId: " + _)
-    val tasksFuture = tasksProvider.userStories(sprintId).withLoggingFinished(s"user stories for sprint $sprintId: " + _.size)
+    val tasksFuture = tasksProvider.userStories(sprintId).withLoggingFinished(s"user stories count for sprint $sprintId: " + _.size)
     for {
       details <- detailsFuture
       tasks <- tasksFuture
