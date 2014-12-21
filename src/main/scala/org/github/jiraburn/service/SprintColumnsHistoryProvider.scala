@@ -25,10 +25,10 @@ class SprintColumnsHistoryProvider(projectActor: LiftActor)(implicit config: Pro
   private def extractColumnsHistory(history: SprintHistory): ColumnsHistoryWithDetails = {
     val toPrepend = computePrepend(history).toSeq
     val toAppend = computeToAppend(history)
-    val fullHistory = toPrepend ++ history.changes ++ toAppend
+    val fullHistory = toPrepend ++ history.columnStates ++ toAppend
 
-    val base = DateWithColumnsState.const(history.initialStoryPointsSum)(new Date(0))
-    val withBaseAdded = fullHistory.map(_.multiply(-1).plus(base.indexOnSum))
+    val baseIndexOnSum = DateWithColumnsState.constIndexOnSum(history.initialStoryPointsSum)
+    val withBaseAdded = fullHistory.map(_.multiply(-1).plus(baseIndexOnSum))
 
     val columnsHistory = unzipByColumn(withBaseAdded)
     ColumnsHistoryWithDetails(history.sprintDetails, columnsHistory)
@@ -45,7 +45,7 @@ class SprintColumnsHistoryProvider(projectActor: LiftActor)(implicit config: Pro
 
   private def computeToAppend(history: SprintHistory): Option[DateWithColumnsState] = {
     val nowOrSprintsEndForFinished = history.sprintDetails.finished.option(history.sprintDetails.end).getOrElse(new Date)
-    val last = history.changes.last
+    val last = history.columnStates.last
     val lastAvailableBeforeNow = last.date.before(nowOrSprintsEndForFinished)
     lastAvailableBeforeNow.option {
       last.copy(date = nowOrSprintsEndForFinished)

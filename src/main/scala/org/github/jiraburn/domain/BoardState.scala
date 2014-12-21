@@ -49,19 +49,27 @@ class BoardState(taskStates: Map[String, TaskWithState], val date: Date) {
     }
     new BoardState(newStates, change.date)
   }
-  
-  def storyPointsOnRightFromBoardColumn(columnIndex: Int)
-                                 (implicit config: ProjectConfig) =
+
+
+  def columnsState(implicit config: ProjectConfig): DateWithColumnsState = {
+    val indexOnSum = config.boardColumns.map(_.index).map { boardColumnIndex =>
+      boardColumnIndex -> storyPointsOnRightFromBoardColumn(boardColumnIndex)
+    }.toMap
+    DateWithColumnsState(date, indexOnSum)
+  }
+
+  private def storyPointsOnRightFromBoardColumn(columnIndex: Int)
+                                               (implicit config: ProjectConfig) =
     taskStates.values.filter(_.boardColumnIndex >= columnIndex).map(_.storyPoints).sum
 
 }
 
 object BoardState {
   def apply(state: SprintState): BoardState = {
-    new BoardState(stateById(state.userStories), state.date)
+    new BoardState(taskStatesById(state.userStories), state.date)
   }
 
-  private def stateById(userStories: Seq[UserStory]): Map[String, TaskWithState] = {
+  private def taskStatesById(userStories: Seq[UserStory]): Map[String, TaskWithState] = {
     val flattenTasks = for {
       userStory <- userStories
       task <- userStory.technicalTasks :+ userStory
@@ -80,7 +88,7 @@ case class TaskWithState(taskId: String,
   def status: Int = state.status
   def storyPoints: Int = state.storyPoints  
   
-  def boardColumnIndex(implicit config: ProjectConfig) = config.boardColumnIndex(status)
+  def boardColumnIndex(implicit config: ProjectConfig): Int = config.boardColumnIndex(status)
 }
 
 object TaskWithState {

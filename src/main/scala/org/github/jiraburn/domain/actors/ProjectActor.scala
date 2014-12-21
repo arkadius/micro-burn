@@ -47,11 +47,6 @@ class ProjectActor(projectRoot: File, config: ProjectConfig, sprintChangeNotifyi
         (sprintActor !< getHistory).map(Full(_))
       }.getOrElse(LAFuture[Box[_]](() => Failure("Sprint with given id does not exist")))
       reply(future)
-    case Close =>
-      val sprintClosedFutures = sprintActors.values.map { sprintActor =>
-        (sprintActor !< Close).mapTo[Unit]
-      }.toSeq
-      reply(collectWithWellEmptyListHandling(sprintClosedFutures))
   }
 }
 
@@ -67,10 +62,8 @@ case class GetStoryPointsHistory(sprintId: String)
 
 case class SprintHistory(initialStoryPointsSum: Int,
                          initialDate: Date,
-                         changes: Seq[DateWithColumnsState],
+                         columnStates: Seq[DateWithColumnsState],
                          sprintDetails: SprintDetails)
-
-case object Close
 
 object ProjectActor {
   def apply(sprintChangeNotifyingActor: LiftActor): ProjectActor = {
