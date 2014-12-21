@@ -31,7 +31,10 @@ class SprintColumnsHistoryProvider(projectActor: LiftActor)(implicit config: Pro
     val withBaseAdded = fullHistory.map(_.multiply(-1).plus(baseIndexOnSum))
 
     val columnsHistory = unzipByColumn(withBaseAdded)
-    ColumnsHistoryWithDetails(history.sprintDetails, columnsHistory)
+
+    val estimate = computeEstimate(history)
+
+    ColumnsHistoryWithDetails(history.sprintDetails, columnsHistory :+ estimate)
   }
 
   private def computePrepend(history: SprintHistory): Option[DateWithColumnsState] = {
@@ -61,6 +64,14 @@ class SprintColumnsHistoryProvider(projectActor: LiftActor)(implicit config: Pro
       }.toList
       ColumnWithStoryPointsHistory(column.name, column.color, storyPointsForColumn)
     }
+  }
+
+  private def computeEstimate(history: SprintHistory): ColumnWithStoryPointsHistory = {
+    ColumnWithStoryPointsHistory("Estimate", "red", history.initialStoryPointsSum.to(0, step = -1).map { storyPoints =>
+      val time = history.sprintDetails.start.getTime +
+        (history.sprintDetails.end.getTime - history.sprintDetails.start.getTime) * (1 - storyPoints.toDouble / history.initialStoryPointsSum)
+      DateWithStoryPointsForSingleColumn(new Date(time.toLong), storyPoints)
+    }.toList)
   }
 }
 

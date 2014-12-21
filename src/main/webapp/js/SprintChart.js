@@ -1,4 +1,6 @@
 $.getJSON("history?sprintId=120", function(response) {
+    console.log(response.series);
+
     var graph = new Rickshaw.Graph({
         element: document.querySelector("#chart"),
         renderer: "line",
