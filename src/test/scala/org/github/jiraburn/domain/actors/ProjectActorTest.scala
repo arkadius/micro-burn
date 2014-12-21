@@ -41,14 +41,14 @@ class ProjectActorTest extends FlatSpec with Matchers {
     val sprint = FooSprint.withEmptyEvents(userStory)
     val projectActor = actorWithInitialSprint(sprint)
 
-    projectActor ! UpdateSprint(sprint.id, Seq(userStory.copy(status = config.firstClosingStatus)), finishSprint = false, new Date)
+    val userStoriesWithClosed = Seq(userStory.copy(status = config.firstClosingStatus))
+    val beforeSprintsEnd = new Date(sprint.details.end.getTime-1)
+    projectActor ! UpdateSprint(sprint.id, userStoriesWithClosed, finishSprint = false, beforeSprintsEnd)
 
-    val historyFuture = (projectActor ?? GetStoryPointsHistory(sprint.id)).mapTo[StoryPointsHistory]
-
-    historyFuture.map { history =>
-      history.initialStoryPoints shouldEqual 1
-      history.history.map(_.storyPointsForColumn(config.closingColumnIndex)) shouldEqual Seq(-1)
-    }.await(5 seconds)
+    val sprintHistory = (projectActor ?? GetStoryPointsHistory(sprint.id)).mapTo[SprintHistory].await(5 seconds)
+    sprintHistory.initialStoryPoints shouldEqual 1
+    val closedColumnHistory = sprintHistory.columnsHistoryFor(sprint.details.end)(config.closingColumnIndex).storyPointsChanges.map(_.storyPoints)
+    closedColumnHistory shouldEqual Seq(1, 0, 0)
   }
 
   private def actorWithInitialSprint(sprint: Sprint): ProjectActor = {

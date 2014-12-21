@@ -19,7 +19,7 @@ class ProjectUpdaterTest extends FlatSpec with RestIntegrationTest with Directiv
   override def route: Route = SprintsDataProviderTest.route ~ TasksDataProviderTest.route
 
   it should "fetch inital project state" in {
-//    val config = ConfigFactory.parseFile(new File("secret.conf")).withFallback(ConfigFactory.load())
+//    val config = ConfigFactory.parseFile(new File("application.conf")).withFallback(ConfigFactory.load())
     val config = ConfigFactory.load()
     val projectRoot = new File("target/sprints")
     Path(projectRoot).deleteRecursively()

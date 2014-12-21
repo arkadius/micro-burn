@@ -26,7 +26,7 @@ class SprintActor(var sprint: Sprint,
       reply(sprint.id)
     case GetStoryPointsHistory(sprintId: String) =>
       require(sprintId == sprint.id)
-      reply(StoryPointsHistory(sprint.initialStoryPoints, sprint.storyPointsChanges))
+      reply(SprintHistory(sprint.initialStoryPoints, sprint.details, sprint.storyPointsChanges))
     case Close =>
       repo.flush()
       reply(sprint.id)

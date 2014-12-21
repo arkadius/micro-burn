@@ -41,12 +41,14 @@ case class Sprint(id: String,
   }
 }
 
-case class SprintDetails(name: String, from: Date, to: Date, isActive: Boolean) {
+case class SprintDetails(name: String, start: Date, end: Date, isActive: Boolean) {
+  def finished = !isActive
+
   def finish = copy(isActive = false)
 }
 
 object SprintDetails {
-  def apply(name: String, from: Date, to: Date): SprintDetails = SprintDetails(name, from, to, isActive = true)
+  def apply(name: String, start: Date, end: Date): SprintDetails = SprintDetails(name, start, end, isActive = true)
 }
 
 case class SprintUpdateResult(private val userStoriesBeforeUpdate: Seq[UserStory], updatedSprint: Sprint, newAddedEvents: Seq[TaskChanged], sprintFinished: Boolean, timestamp: Date) {
@@ -101,9 +103,13 @@ object Sprint {
   }
 }
 
-case class DateWithStoryPoints(date: Date, private val indexOnSum: Map[Int, Int]) {
+case class DateWithStoryPoints(date: Date, indexOnSum: Map[Int, Int]) {
   def plus(other: DateWithStoryPoints): DateWithStoryPoints = {
     other.copy(indexOnSum = this.indexOnSum |+| other.indexOnSum)
+  }
+
+  def plus(const: Int): DateWithStoryPoints = {
+    copy(indexOnSum = indexOnSum.mapValues(_ + const))
   }
 
   def storyPointsForColumn(boardColumnIndex: Int) = indexOnSum.getOrElse(boardColumnIndex, 0)
@@ -112,5 +118,9 @@ case class DateWithStoryPoints(date: Date, private val indexOnSum: Map[Int, Int]
 }
 
 object DateWithStoryPoints {
-  def zero: DateWithStoryPoints = DateWithStoryPoints(new Date(0), Map())
+  def zero(implicit config: ProjectConfig): DateWithStoryPoints = zero(new Date(0))
+
+  def zero(date: Date)(implicit config: ProjectConfig): DateWithStoryPoints =
+    DateWithStoryPoints(date, config.boardColumns.map(_.index -> 0).toMap)
+
 }

@@ -15,7 +15,7 @@ class TasksDataProviderTest extends FlatSpec with RestIntegrationTest with Match
   override protected val route: Route = TasksDataProviderTest.route
 
   it should "get user stories" in {
-//    val config = ConfigFactory.parseFile(new File("secret.conf")).withFallback(ConfigFactory.load())
+//    val config = ConfigFactory.parseFile(new File("application.conf")).withFallback(ConfigFactory.load())
     val config = ConfigFactory.load()
     val jiraConfig = JiraConfig(config)
     val provider = new TasksDataProvider(jiraConfig)

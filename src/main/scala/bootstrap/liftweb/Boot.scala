@@ -1,10 +1,18 @@
 package bootstrap.liftweb
 
+import java.io.File
+
+import com.typesafe.config.ConfigFactory
+import net.liftweb.actor.MockLiftActor
 import net.liftweb.common._
 import net.liftweb.http._
 import net.liftweb.sitemap.Loc._
 import net.liftweb.sitemap._
 import org.github.jiraburn.RestRoutes
+import org.github.jiraburn.domain.ProjectConfig
+import org.github.jiraburn.domain.actors.ProjectActor
+
+import scala.reflect.io.Path
 
 
 /**
@@ -43,7 +51,11 @@ class Boot {
     // Force the request to be UTF-8
     LiftRules.early.append(_.setCharacterEncoding("UTF-8"))
 
-    LiftRules.statelessDispatch.append(RestRoutes)
+    val config = ConfigFactory.parseFile(new File("application.conf")).withFallback(ConfigFactory.parseResources("defaults.conf"))
+    val projectRoot = new File(config.getString("data.project.root"))
+    val projectActor = new ProjectActor(projectRoot, ProjectConfig(config), new MockLiftActor)
+
+    LiftRules.statelessDispatch.append(new RestRoutes(projectActor))
 
     net.liftmodules.ng.Angular.init()
     net.liftmodules.ng.AngularJS.init()

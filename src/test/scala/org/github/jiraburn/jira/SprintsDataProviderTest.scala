@@ -15,7 +15,7 @@ class SprintsDataProviderTest extends FlatSpec with RestIntegrationTest with Mat
   override protected val route: Route = SprintsDataProviderTest.route
 
   it should "get sprints ids" in {
-//    val config = ConfigFactory.parseFile(new File("secret.conf")).withFallback(ConfigFactory.load())
+//    val config = ConfigFactory.parseFile(new File("application.conf")).withFallback(ConfigFactory.load())
     val config = ConfigFactory.load()
     val jiraConfig = JiraConfig(config)
     val provider = new SprintsDataProvider(jiraConfig)
@@ -24,7 +24,7 @@ class SprintsDataProviderTest extends FlatSpec with RestIntegrationTest with Mat
   }
 
   it should "get sprint details" in {
-//    val config = ConfigFactory.parseFile(new File("secret.conf")).withFallback(ConfigFactory.load())
+//    val config = ConfigFactory.parseFile(new File("application.conf")).withFallback(ConfigFactory.load())
     val config = ConfigFactory.load()
     val jiraConfig = JiraConfig(config)
     val provider = new SprintsDataProvider(jiraConfig)
