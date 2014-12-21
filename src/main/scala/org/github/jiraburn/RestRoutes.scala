@@ -47,7 +47,7 @@ class RestRoutes(projectActor: LiftActor)(implicit config: ProjectConfig) extend
     boarColumnsWithDroppedTODO.map { column =>
       val storyPointsForColumn = withBaseAdded.map { allColumnsInfo =>
         val storyPoints = allColumnsInfo.storyPointsForColumn(column.index)
-        DateWithStoryPointsForSingleColumn(allColumnsInfo.date, storyPoints)
+        DateWithStoryPointsForSingleColumn(allColumnsInfo.date.getTime, storyPoints)
       }.toList
       ColumnWithStoryPointsHistory(column.name, storyPointsForColumn)
     }
@@ -58,5 +58,4 @@ case class ColumnsHistoryWithDetails(detail: SprintDetails, columnsHistory: List
 
 case class ColumnWithStoryPointsHistory(name: String, storyPointsChanges: List[DateWithStoryPointsForSingleColumn])
 
-case class DateWithStoryPointsForSingleColumn(date: Date, storyPoints: Int)
-
+case class DateWithStoryPointsForSingleColumn(x: Long, y: Int)

@@ -21,7 +21,7 @@ class ProjectUpdaterTest extends FlatSpec with RestIntegrationTest with Directiv
   it should "fetch inital project state" in {
 //    val config = ConfigFactory.parseFile(new File("application.conf")).withFallback(ConfigFactory.load())
     val config = ConfigFactory.load()
-    val projectRoot = new File("target/sprints")
+    val projectRoot = new File(config.getString("data.project.root"))
     Path(projectRoot).deleteRecursively()
     val projectActor = new ProjectActor(projectRoot, ProjectConfig(config), new MockLiftActor)
     val jiraConfig = JiraConfig(config)
