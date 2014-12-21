@@ -3,14 +3,18 @@ package bootstrap.liftweb
 import java.io.File
 
 import com.typesafe.config.ConfigFactory
+import net.liftmodules.JQueryModule
 import net.liftweb.actor.MockLiftActor
 import net.liftweb.common._
 import net.liftweb.http._
+import net.liftweb.http.js.jquery.JQueryArtifacts
 import net.liftweb.sitemap.Loc._
 import net.liftweb.sitemap._
 import org.github.jiraburn.RestRoutes
+import org.github.jiraburn.comet.ChatServer
 import org.github.jiraburn.domain.ProjectConfig
 import org.github.jiraburn.domain.actors.ProjectActor
+import org.github.jiraburn.model.User
 
 import scala.reflect.io.Path
 
@@ -23,22 +27,6 @@ class Boot {
   def boot {
     // where to search snippet
     LiftRules.addToPackages("org.github.jiraburn")
-
-    // Build SiteMap
-    val entries = List(
-      Menu.i("Home") / "index", // the simple way to declare a menu
-
-      // more complex because this menu allows anything in the
-      // /static path to be visible
-      Menu(Loc("Static", Link(List("static"), matchHead_? = true, "/static/index"),
-        "Static Content")))
-
-    // set the sitemap.  Note if you don't want access control for
-    // each page, just comment this line out.
-    LiftRules.setSiteMap(SiteMap(entries:_*))
-
-    // Use jQuery 1.4
-    LiftRules.jsArtifacts = net.liftweb.http.js.jquery.JQueryArtifacts
 
     //Show the spinny image when an Ajax call starts
     LiftRules.ajaxStart =
@@ -58,7 +46,15 @@ class Boot {
 
     LiftRules.statelessDispatch.append(new RestRoutes(projectActor))
 
+    LiftRules.jsArtifacts = JQueryArtifacts
+    JQueryModule.InitParam.JQuery=JQueryModule.JQuery172
+    JQueryModule.init()
+
     net.liftmodules.ng.Angular.init()
     net.liftmodules.ng.AngularJS.init()
+
+    LiftSession.afterSessionCreate :+= {(_:LiftSession, req:Req) =>
+      ChatServer ! User(req.remoteAddr)
+    }
   }
 }

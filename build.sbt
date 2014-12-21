@@ -17,6 +17,7 @@ libraryDependencies ++= {
     "net.databinder.dispatch" %% "dispatch-json4s-native" % "0.11.2",
     "net.liftmodules"      %%   s"ng_${liftEdition}" % "0.6.1",
     "net.liftmodules"      %%   s"ng-js_${liftEdition}" % "0.2_1.3.6",
+    "net.liftmodules"      %%   s"lift-jquery-module_2.6" % "2.8",
     "net.liftweb"          %%  "lift-webkit"      % liftV,
     "org.eclipse.jetty"     %  "jetty-server"     % jettyV,
     "org.eclipse.jetty"     %  "jetty-webapp"     % jettyV,
