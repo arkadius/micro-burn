@@ -12,6 +12,8 @@ import org.github.jiraburn.util.logging.Slf4jLogging
 import org.joda.time.Duration
 
 class ProjectUpdater(projectActor: LiftActor, sprintsProvider: SprintsDataProvider, tasksProvider: TasksDataProvider) extends Slf4jLogging {
+  private final val UPDATE_REPEAT_INTERVAL = Duration.standardMinutes(1)
+
   import net.liftweb.util.Helpers.TimeSpan._
   import org.github.jiraburn.util.concurrent.FutureEnrichments._
   import org.github.jiraburn.util.concurrent.LiftActorEnrichments._
@@ -24,7 +26,7 @@ class ProjectUpdater(projectActor: LiftActor, sprintsProvider: SprintsDataProvid
         case Failure(msg, ex, _) => error(s"Error while updating project data: ${ex.map(_.getMessage).openOr(msg)}")
         case _ =>
       }
-      Schedule.schedule(() => repeat(), Duration.standardMinutes(1))
+      Schedule.schedule(() => repeat(), UPDATE_REPEAT_INTERVAL)
     }
   }
 

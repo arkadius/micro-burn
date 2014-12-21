@@ -64,6 +64,7 @@ class SprintColumnsHistoryProvider(projectActor: LiftActor)(implicit config: Pro
   }
 }
 
+//TODO: wrócić do nazw domenowych zamiast series, x, y - color i przeliczanie do sekund powinno być po stronie front-endu
 case class ColumnsHistoryWithDetails(detail: SprintDetails, series: List[ColumnWithStoryPointsHistory])
 
 case class ColumnWithStoryPointsHistory(name: String, color: String, data: List[DateWithStoryPointsForSingleColumn])
