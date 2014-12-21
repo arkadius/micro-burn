@@ -26,17 +26,6 @@ case class UserStory(taskId: String,
   }
 
   override def parentUserStoryId: String = taskId
-
-
-  def close(implicit config: ProjectConfig): UserStory = {
-    val closedTechnicalTasks = technicalTasksWithoutParentId.map(_.close)
-    copy(status = config.firstClosingStatus, technicalTasksWithoutParentId = closedTechnicalTasks)
-  }
-
-  def reopen(implicit config: ProjectConfig): UserStory = {
-    val reopenedTechnicalTasks = technicalTasksWithoutParentId.map(_.reopen)
-    copy(status = config.firstNotClosingStatus, technicalTasksWithoutParentId = reopenedTechnicalTasks)
-  }
 }
 
 case class TechnicalTaskWithParentId(technical: TechnicalTask, parentUserStoryId: String) extends Task {
@@ -51,8 +40,4 @@ case class TechnicalTaskWithParentId(technical: TechnicalTask, parentUserStoryId
   override def status: Int = technical.status
 }
 
-case class TechnicalTask(taskId: String, taskName: String, optionalStoryPoints: Option[Int], status: Int) {
-  def close(implicit config: ProjectConfig): TechnicalTask = copy(status = config.firstClosingStatus)
-
-  def reopen(implicit config: ProjectConfig): TechnicalTask = copy(status = config.firstNotClosingStatus)
-}
+case class TechnicalTask(taskId: String, taskName: String, optionalStoryPoints: Option[Int], status: Int)

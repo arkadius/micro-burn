@@ -94,8 +94,26 @@ class SprintTest extends FlatSpec with Matchers with Inside {
     def updateTasks(updatedTasks: UserStory*) = sprint.update(updatedTasks, finishSprint = false)(nextDate).updatedSprint
 
     def storyPointsChangesValues(implicit config: ProjectConfig): Seq[Int] = sprint.columnStatesHistory.map { dateWithStoryPoints =>
-      dateWithStoryPoints.storyPointsForColumn(config.closingColumnIndex)
+      dateWithStoryPoints.storyPointsForColumn(ProjectConfigUtils.closingColumnIndex)
     }
+  }
+
+  implicit class EnhancedUserStory(userStory: UserStory) {
+    def close(implicit config: ProjectConfig): UserStory = {
+      val closedTechnicalTasks = userStory.technicalTasksWithoutParentId.map(_.close)
+      userStory.copy(status = ProjectConfigUtils.firstClosingStatus, technicalTasksWithoutParentId = closedTechnicalTasks)
+    }
+
+    def reopen(implicit config: ProjectConfig): UserStory = {
+      val reopenedTechnicalTasks = userStory.technicalTasksWithoutParentId.map(_.reopen)
+      userStory.copy(status = ProjectConfigUtils.firstNotClosingStatus, technicalTasksWithoutParentId = reopenedTechnicalTasks)
+    }
+  }
+
+  implicit class EnhancedTechnicalTask(technical: TechnicalTask) {
+    def close(implicit config: ProjectConfig): TechnicalTask = technical.copy(status = ProjectConfigUtils.firstClosingStatus)
+
+    def reopen(implicit config: ProjectConfig): TechnicalTask = technical.copy(status = ProjectConfigUtils.firstNotClosingStatus)
   }
 }
 

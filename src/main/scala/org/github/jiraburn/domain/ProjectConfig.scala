@@ -11,13 +11,7 @@ case class ProjectConfig(boardColumns: List[BoardColumn]) {
     status <- column.statusIds
   } yield status -> column).toMap
 
-  def closingColumnIndex: Int = boardColumnIndex(firstClosingStatus)
-
   def boardColumnIndex(status: Int): Int = statuses(status).index
-
-  def firstNotClosingStatus: Int = boardColumns.head.statusIds.head
-
-  def firstClosingStatus: Int = boardColumns.last.statusIds.head
 }
 
 case class BoardColumn(index: Int, name: String, statusIds: List[Int], color: String)

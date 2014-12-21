@@ -11,22 +11,22 @@ object TaskGenerator {
 
   def openedUserStory(sp: Int, technical: Seq[TechnicalTask] = Nil)(implicit config: ProjectConfig) = {
     val id = nextId
-    UserStory(id, s"User Story $id", Some(sp), technical.toList, config.firstNotClosingStatus)
+    UserStory(id, s"User Story $id", Some(sp), technical.toList, ProjectConfigUtils.firstNotClosingStatus)
   }
 
   def closedUserStory(sp: Int, technical: Seq[TechnicalTask] = Nil)(implicit config: ProjectConfig) = {
     val id = nextId
-    UserStory(id, s"User Story $id", Some(sp), technical.toList, config.firstClosingStatus)
+    UserStory(id, s"User Story $id", Some(sp), technical.toList, ProjectConfigUtils.firstClosingStatus)
   }
 
   def openedTechnicalTask(optionalSP: Option[Int])(implicit config: ProjectConfig) = {
     val id = nextId
-    TechnicalTask(id, s"Technical Task $id", optionalSP, config.firstNotClosingStatus)
+    TechnicalTask(id, s"Technical Task $id", optionalSP, ProjectConfigUtils.firstNotClosingStatus)
   }
 
   def closedTechnicalTask(optionalSP: Option[Int])(implicit config: ProjectConfig) = {
     val id = nextId
-    TechnicalTask(id, s"Technical Task $id", optionalSP, config.firstClosingStatus)
+    TechnicalTask(id, s"Technical Task $id", optionalSP, ProjectConfigUtils.firstClosingStatus)
   }
 
 }

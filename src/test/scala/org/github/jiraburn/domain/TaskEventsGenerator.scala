@@ -8,7 +8,7 @@ object TaskEventsGenerator {
     "fooTaskId",
     "fooParentTaskId",
     isTechnicalTask = false,
-    Some(TaskState(config.firstClosingStatus, 123)),
+    Some(TaskState(ProjectConfigUtils.firstClosingStatus, 123)),
     new Date
   )
 
@@ -16,7 +16,7 @@ object TaskEventsGenerator {
     "fooTaskId",
     "fooParentTaskId",
     isTechnicalTask = false,
-    Some(TaskState(config.firstNotClosingStatus, 123)),
+    Some(TaskState(ProjectConfigUtils.firstNotClosingStatus, 123)),
     new Date
   )
 
