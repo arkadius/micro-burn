@@ -6,7 +6,7 @@ import java.util.Date
 import com.typesafe.config.ConfigFactory
 import net.liftweb.actor.{LAFuture, LiftActor}
 import net.liftweb.common.{Failure, Full, Box}
-import org.github.jiraburn.domain.{DateWithStoryPoints, ProjectConfig, SprintDetails, UserStory}
+import org.github.jiraburn.domain._
 import org.github.jiraburn.repository.ProjectRepository
 
 import scalaz.Scalaz._
@@ -35,7 +35,7 @@ class ProjectActor(projectRoot: File, config: ProjectConfig, sprintChangeNotifyi
       }.toSeq
       reply(collectWithWellEmptyListHandling(sprintWithStateFutures))
     case CreateNewSprint(sprintId, details, userStories, timestamp) if details.finished =>
-      sprintActors += sprintId -> sprintFactory.migrateSprint(sprintId, details, userStories)(config)
+      sprintActors += sprintId -> sprintFactory.migrateSprint(sprintId, details, userStories)
       reply(sprintId)
     case CreateNewSprint(sprintId, details, userStories, timestamp) =>
       sprintActors += sprintId -> sprintFactory.createSprint(sprintId, details, userStories, timestamp)
@@ -65,9 +65,10 @@ case class UpdateSprint(sprintId: String, userStories: Seq[UserStory], finishSpr
 
 case class GetStoryPointsHistory(sprintId: String)
 
-case class SprintHistory(initialStoryPoints: Int,
-                         sprintDetails: SprintDetails,
-                         changes: Seq[DateWithStoryPoints])
+case class SprintHistory(initialStoryPointsSum: Int,
+                         initialState: DateWithColumnsState,
+                         changes: Seq[DateWithColumnsState],
+                         sprintDetails: SprintDetails)
 
 case object Close
 

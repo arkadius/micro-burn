@@ -3,13 +3,30 @@ package org.github.jiraburn.service
 import java.util.Date
 
 import net.liftweb.actor.{LAFuture, LiftActor}
+import net.liftweb.common.Failure
+import net.liftweb.util.Schedule
 import org.github.jiraburn.domain.actors._
 import org.github.jiraburn.domain.{SprintDetails, UserStory}
 import org.github.jiraburn.jira.{SprintsDataProvider, TasksDataProvider}
+import org.github.jiraburn.util.logging.Slf4jLogging
+import org.joda.time.Duration
 
-class ProjectUpdater(projectActor: LiftActor, sprintsProvider: SprintsDataProvider, tasksProvider: TasksDataProvider) {
+class ProjectUpdater(projectActor: LiftActor, sprintsProvider: SprintsDataProvider, tasksProvider: TasksDataProvider) extends Slf4jLogging {
+  import net.liftweb.util.Helpers.TimeSpan._
   import org.github.jiraburn.util.concurrent.FutureEnrichments._
   import org.github.jiraburn.util.concurrent.LiftActorEnrichments._
+
+  def start(): Unit = repeat()
+
+  private def repeat(): Unit = {
+    updateProject().onComplete { result =>
+      result match {
+        case Failure(msg, ex, _) => error("Error while updating project data", ex.openOr(new Exception(msg)))
+        case _ =>
+      }
+      Schedule.schedule(() => repeat(), Duration.standardMinutes(1))
+    }
+  }
 
   def updateProject(): LAFuture[_] = {
     implicit val timestamp = new Date

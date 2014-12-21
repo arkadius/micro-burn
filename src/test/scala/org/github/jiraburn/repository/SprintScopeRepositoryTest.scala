@@ -4,7 +4,7 @@ import java.io.File
 import java.util.Date
 
 import com.typesafe.config.ConfigFactory
-import org.github.jiraburn.domain.{ProjectConfig, FooSprint, TaskGenerator}
+import org.github.jiraburn.domain.{SprintState, ProjectConfig, FooSprint, TaskGenerator}
 import org.scalatest.{FlatSpec, Matchers}
 
 class SprintScopeRepositoryTest extends FlatSpec with Matchers {
@@ -20,11 +20,11 @@ class SprintScopeRepositoryTest extends FlatSpec with Matchers {
     val sprint = FooSprint.withEmptyEvents(userStories : _*)
     val repo = SprintScopeRepository(new File(s"target/sprints/${sprint.id}"))
 
-    repo.saveCurrentUserStories(sprint)(new Date(1000))
+    repo.saveCurrentUserStories(sprint)
 
     val loaded = repo.loadCurrentUserStories.value
 
-    loaded shouldEqual userStories
+    loaded shouldEqual sprint.currentState
   }
 
 }

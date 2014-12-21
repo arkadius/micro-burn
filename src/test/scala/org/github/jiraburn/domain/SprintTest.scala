@@ -15,7 +15,8 @@ class SprintTest extends FlatSpec with Matchers with Inside {
       TaskGenerator.closedUserStory(2)
     )
 
-    sprint.initialStoryPoints shouldBe 3
+    sprint.initialColumnsState.indexOnSum(config.closingColumnIndex) shouldBe 2
+    sprint.initialStoryPointsSum shouldBe 3
   }
 
   it should "produce correct events for update" in {
@@ -25,11 +26,11 @@ class SprintTest extends FlatSpec with Matchers with Inside {
     val sprintBeforeUpdate = FooSprint.withEmptyEvents(taskInitiallyOpened, taskInitiallyCompleted)
 
     val sprintAfterFirstFinish = sprintBeforeUpdate.updateTasks(taskInitiallyOpened.close, taskInitiallyCompleted)
-    sprintAfterFirstFinish.initialStoryPoints shouldBe 3
+    sprintAfterFirstFinish.initialStoryPointsSum shouldBe 3
     sprintAfterFirstFinish.storyPointsChangesValues shouldEqual Seq(-1)
 
     val sprintAfterSecReopen = sprintAfterFirstFinish.updateTasks(taskInitiallyOpened.close, taskInitiallyCompleted.reopen)
-    sprintAfterSecReopen.initialStoryPoints shouldBe 3
+    sprintAfterSecReopen.initialStoryPointsSum shouldBe 3
     sprintAfterSecReopen.storyPointsChangesValues shouldEqual Seq(-1, 1)
   }
 

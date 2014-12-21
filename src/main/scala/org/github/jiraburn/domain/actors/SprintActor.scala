@@ -3,7 +3,7 @@ package org.github.jiraburn.domain.actors
 import java.io.File
 import java.util.Date
 
-import org.github.jiraburn.domain.{ProjectConfig, Sprint, SprintDetails, UserStory}
+import org.github.jiraburn.domain._
 import org.github.jiraburn.repository.SprintRepository
 import net.liftweb.actor.LiftActor
 
@@ -26,7 +26,7 @@ class SprintActor(var sprint: Sprint,
       reply(sprint.id)
     case GetStoryPointsHistory(sprintId: String) =>
       require(sprintId == sprint.id)
-      reply(SprintHistory(sprint.initialStoryPoints, sprint.details, sprint.storyPointsChanges))
+      reply(SprintHistory(sprint.initialStoryPointsSum, sprint.initialColumnsState, sprint.storyPointsChanges, sprint.details))
     case Close =>
       repo.flush()
       reply(sprint.id)
@@ -46,21 +46,14 @@ class SprintActorFactory(projectRoot: File, config: ProjectConfig, changeNotifyi
     }
   }
 
-  def migrateSprint(sprintId: String, details: SprintDetails, userStories: Seq[UserStory])
-                   (implicit config: ProjectConfig): SprintActor = {
-    val allOpened = userStories.map(_.reopen)
-    val sprint = Sprint.withEmptyEvents(sprintId, details, allOpened)
-    val repo = createRepo(sprintId)
-    repo.saveSprint(sprint)(details.start)
-    val updateResult = sprint.update(userStories, details.finished)(details.end)
-    repo.saveUpdateResult(updateResult)
-    new SprintActor(updateResult.updatedSprint, repo)(config, changeNotifyingActor)
+  def migrateSprint(sprintId: String, details: SprintDetails, userStories: Seq[UserStory]): SprintActor = {
+    createSprint(sprintId, details, userStories, details.end)
   }
 
   def createSprint(sprintId: String, details: SprintDetails, userStories: Seq[UserStory], timestamp: Date): SprintActor = {
-    val sprint = Sprint.withEmptyEvents(sprintId, details, userStories)
+    val sprint = Sprint.withEmptyEvents(sprintId, details, SprintState(userStories, timestamp))
     val repo = createRepo(sprintId)
-    repo.saveSprint(sprint)(timestamp)
+    repo.saveSprint(sprint)
     new SprintActor(sprint, repo)(config, changeNotifyingActor)
   }
 

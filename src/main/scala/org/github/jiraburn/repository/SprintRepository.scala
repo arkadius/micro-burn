@@ -20,10 +20,10 @@ case class SprintRepository private(private val sprintRoot: File,
       events = eventsRepo.loadTaskEvents    
     } yield Sprint(sprintId, details, initial, current, events)
 
-  def saveSprint(sprint: Sprint)(timestamp: Date): SprintRepository = {
+  def saveSprint(sprint: Sprint): SprintRepository = {
     require(sprint.id == sprintId)
     detailsRepo.saveDetails(sprint)
-    storiesRepo.saveCurrentUserStories(sprint)(timestamp)
+    storiesRepo.saveCurrentUserStories(sprint)
     this
   }
 
@@ -42,7 +42,7 @@ case class SprintRepository private(private val sprintRoot: File,
   }
 
   private def saveCurrentUserStories(updateResult: SprintUpdateResult): SprintRepository = {
-    storiesRepo.saveCurrentUserStories(updateResult.updatedSprint)(updateResult.timestamp)
+    storiesRepo.saveCurrentUserStories(updateResult.updatedSprint)
     storiesRepo.cleanUnnecessaryStates()
     this
   }

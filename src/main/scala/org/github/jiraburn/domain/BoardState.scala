@@ -57,8 +57,8 @@ class BoardState(taskStates: Map[String, TaskWithState], val date: Date) {
 }
 
 object BoardState {
-  def apply(userStories: Seq[UserStory], date: Date): BoardState = {
-    new BoardState(stateById(userStories), date)
+  def apply(state: SprintState): BoardState = {
+    new BoardState(stateById(state.userStories), state.date)
   }
 
   private def stateById(userStories: Seq[UserStory]): Map[String, TaskWithState] = {

@@ -10,11 +10,14 @@ import net.liftweb.http._
 import net.liftweb.http.js.jquery.JQueryArtifacts
 import net.liftweb.sitemap.Loc._
 import net.liftweb.sitemap._
-import org.github.jiraburn.RestRoutes
+import org.github.jiraburn.ApplicationContext
 import org.github.jiraburn.comet.ChatServer
 import org.github.jiraburn.domain.ProjectConfig
 import org.github.jiraburn.domain.actors.ProjectActor
+import org.github.jiraburn.jira.{TasksDataProvider, JiraConfig, SprintsDataProvider}
 import org.github.jiraburn.model.User
+import org.github.jiraburn.rest.RestRoutes
+import org.github.jiraburn.service.{SprintColumnsHistoryProvider, ProjectUpdater}
 
 import scala.reflect.io.Path
 
@@ -39,13 +42,6 @@ class Boot {
     // Force the request to be UTF-8
     LiftRules.early.append(_.setCharacterEncoding("UTF-8"))
 
-    val config = ConfigFactory.parseFile(new File("application.conf")).withFallback(ConfigFactory.parseResources("defaults.conf"))
-    val projectRoot = new File(config.getString("data.project.root"))
-    implicit val projectConfig = ProjectConfig(config)
-    val projectActor = new ProjectActor(projectRoot, projectConfig, new MockLiftActor)
-
-    LiftRules.statelessDispatch.append(new RestRoutes(projectActor))
-
     LiftRules.jsArtifacts = JQueryArtifacts
     JQueryModule.InitParam.JQuery=JQueryModule.JQuery172
     JQueryModule.init()
@@ -56,5 +52,9 @@ class Boot {
     LiftSession.afterSessionCreate :+= {(_:LiftSession, req:Req) =>
       ChatServer ! User(req.remoteAddr)
     }
+
+    val context = ApplicationContext()
+    context.updater.start()
+    LiftRules.statelessDispatch.append(new RestRoutes(context.columnsHistoryProvider))
   }
 }

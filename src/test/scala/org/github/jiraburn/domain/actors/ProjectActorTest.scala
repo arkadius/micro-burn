@@ -29,7 +29,7 @@ class ProjectActorTest extends FlatSpec with Matchers {
       beforeUpdateActiveness <- sprintIsActive
       _ = {
         beforeUpdateActiveness shouldBe true
-        projectActor ! UpdateSprint(sprint.id, sprint.currentUserStories, finishSprint = true, new Date)
+        projectActor ! UpdateSprint(sprint.id, sprint.currentState.userStories, finishSprint = true, new Date)
       }
       afterUpdateActiveness <- sprintIsActive
     } yield {
@@ -48,7 +48,7 @@ class ProjectActorTest extends FlatSpec with Matchers {
 
     val sprintHistoryBox = (projectActor ?? GetStoryPointsHistory(sprint.id)).mapTo[Box[SprintHistory]].await(5 seconds)
     val sprintHistory = sprintHistoryBox.openOrThrowException("")
-    sprintHistory.initialStoryPoints shouldEqual 1
+    sprintHistory.initialStoryPointsSum shouldEqual 1
     val closedColumnHistory = sprintHistory.changes.map(_.storyPointsForColumn(config.closingColumnIndex))
     closedColumnHistory shouldEqual Seq(-1)
   }
@@ -56,7 +56,7 @@ class ProjectActorTest extends FlatSpec with Matchers {
   private def actorWithInitialSprint(sprint: Sprint): ProjectActor = {
     val projectRoot = new File("target/projectActorTest")
     Path(projectRoot).deleteRecursively()
-    SprintRepository(new File(projectRoot, sprint.id), sprint.id).saveSprint(sprint)(new Date)
+    SprintRepository(new File(projectRoot, sprint.id), sprint.id).saveSprint(sprint)
 
     val projectActor = new ProjectActor(projectRoot, config, new MockLiftActor)
     projectActor

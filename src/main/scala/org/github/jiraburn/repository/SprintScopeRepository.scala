@@ -10,10 +10,10 @@ import scala.io.Source
 import scala.util.control.Exception._
 
 trait SprintScopeRepository {
-  def saveCurrentUserStories(sprint: Sprint)(timestamp: Date): Unit
+  def saveCurrentUserStories(sprint: Sprint): Unit
 
-  def loadInitialUserStories: Option[Seq[UserStory]]
-  def loadCurrentUserStories: Option[Seq[UserStory]]
+  def loadInitialUserStories: Option[SprintState]
+  def loadCurrentUserStories: Option[SprintState]
 
   def cleanUnnecessaryStates(): Unit
 }
@@ -30,10 +30,10 @@ class SprintScopeFSRepository(sprintRoot: File) extends SprintScopeRepository {
 
   implicit val formats = DefaultFormats.withHints(FullTypeHints(List(classOf[Task], classOf[TechnicalTask])))
 
-  override def saveCurrentUserStories(sprint: Sprint)(timestamp: Date): Unit = {
+  override def saveCurrentUserStories(sprint: Sprint): Unit = {
     sprintRoot.mkdirs()
-    val sprintJsonFile = new File(sprintRoot, jsonFileName(timestamp))
-    val rendered = pretty(render(decompose(sprint.currentUserStories)))
+    val sprintJsonFile = new File(sprintRoot, jsonFileName(sprint.currentState.date))
+    val rendered = pretty(render(decompose(sprint.currentState.userStories)))
     val writer = new PrintWriter(sprintJsonFile)
     try {
       writer.write(rendered)
@@ -44,24 +44,27 @@ class SprintScopeFSRepository(sprintRoot: File) extends SprintScopeRepository {
 
   private def jsonFileName(date: Date) = dateFormat.format(date) + ".json"
 
-  override def loadInitialUserStories: Option[Seq[UserStory]] = {
-    sortedJsonFiles.headOption.map(loadUserStories)
+  override def loadInitialUserStories: Option[SprintState] = {
+    sortedJsonFiles.headOption.map(loadUserStories _ tupled)
   }
 
-  override def loadCurrentUserStories: Option[Seq[UserStory]] = {
-    sortedJsonFiles.lastOption.map(loadUserStories)
+  override def loadCurrentUserStories: Option[SprintState] = {
+    sortedJsonFiles.lastOption.map(loadUserStories _ tupled)
   }
 
-  private def loadUserStories(sprintJsonFile: File): Seq[UserStory] = {
+  private def loadUserStories(sprintJsonFile: File, date: Date): SprintState = {
     val content = Source.fromFile(sprintJsonFile).mkString
-    extract[Array[UserStory]](parse(content))
+    SprintState(extract[Array[UserStory]](parse(content)), date)
   }
 
   override def cleanUnnecessaryStates(): Unit = {
-    sortedJsonFiles.drop(1).dropRight(1).foreach(_.delete())
+    sortedJsonFiles.drop(1).dropRight(1).foreach {
+      case (file, date) =>
+        file.delete()
+    }
   }
 
-  private def sortedJsonFiles: Seq[File] = {
+  private def sortedJsonFiles: Seq[(File, Date)] = {
     val jsonFilesWithDates = for {
       files <- Option(sprintRoot.listFiles()).toSeq
       file <- files
@@ -70,8 +73,6 @@ class SprintScopeFSRepository(sprintRoot: File) extends SprintScopeRepository {
     } yield (file, date)
     jsonFilesWithDates.sortBy {
       case (file, date) => date
-    } map {
-      case (file, date) => file
     }
   }
 
@@ -81,5 +82,5 @@ class SprintScopeFSRepository(sprintRoot: File) extends SprintScopeRepository {
     }
   }
 
-  private def dateFormat = new SimpleDateFormat("yyyy_MM_dddd_HH_mm_ss")
+  private def dateFormat = new SimpleDateFormat("yyyy_MM_dd_HH_mm_ss")
 }
