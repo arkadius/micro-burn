@@ -23,42 +23,32 @@ class SprintColumnsHistoryProvider(projectActor: LiftActor)(implicit config: Pro
   }
   
   private def extractColumnsHistory(history: SprintHistory): ColumnsHistoryWithDetails = {
-    val now = new Date
-    val (toPrepend, base) = computePrependAndBase(history)
-    val prependedAndChanges = toPrepend ++ history.changes
-    val toAppend = computeToAppend(history, now, prependedAndChanges)
-    val fullHistory = prependedAndChanges ++ toAppend
+    val toPrepend = computePrepend(history).toSeq
+    val toAppend = computeToAppend(history)
+    val fullHistory = toPrepend ++ history.changes ++ toAppend
 
-    val withBaseAdded = fullHistory.map(_.plus(base.indexOnSum))
+    val base = DateWithColumnsState.const(history.initialStoryPointsSum)(new Date(0))
+    val withBaseAdded = fullHistory.map(_.multiply(-1).plus(base.indexOnSum))
 
     val columnsHistory = unzipByColumn(withBaseAdded)
     ColumnsHistoryWithDetails(history.sprintDetails, columnsHistory)
   }
 
-  private def computePrependAndBase(history: SprintHistory): (Seq[DateWithColumnsState], DateWithColumnsState) = {
-    val initialDate = new DateTime(history.initialState.date)
+  private def computePrepend(history: SprintHistory): Option[DateWithColumnsState] = {
+    val initialDate = new DateTime(history.initialDate)
     val startDatePlusAcceptableDelay = new DateTime(history.sprintDetails.start).plusHours(INITIAL_TO_START_ACCEPTABLE_DELAY_HOURS)
-    val initialBeforeStartPlusDelay = initialDate.isBefore(startDatePlusAcceptableDelay)
-    if (initialBeforeStartPlusDelay) {
-      (Seq(DateWithColumnsState.zero(history.initialState.date)), history.initialState)
-    } else {
-      val baseFromStoryPointSum = DateWithColumnsState.const(history.initialStoryPointsSum)(history.sprintDetails.start)
-      val toPrepend = Seq(
-        DateWithColumnsState.zero(history.sprintDetails.start),
-        history.initialState.multiply(-1)
-      )
-      (toPrepend, baseFromStoryPointSum)
+    val initialAfterStartPlusDelay = initialDate.isAfter(startDatePlusAcceptableDelay)
+    initialAfterStartPlusDelay.option {
+      DateWithColumnsState.zero(history.sprintDetails.start)
     }
   }
 
-  private def computeToAppend(history: SprintHistory, now: Date, prependedAndChanges: Seq[DateWithColumnsState]): Option[DateWithColumnsState] = {
-    val nowOrSprintsEndForFinished = history.sprintDetails.finished.option(history.sprintDetails.end).getOrElse(now)
-    val last = prependedAndChanges.last
+  private def computeToAppend(history: SprintHistory): Option[DateWithColumnsState] = {
+    val nowOrSprintsEndForFinished = history.sprintDetails.finished.option(history.sprintDetails.end).getOrElse(new Date)
+    val last = history.changes.last
     val lastAvailableBeforeNow = last.date.before(nowOrSprintsEndForFinished)
-    if (lastAvailableBeforeNow) {
-      Some(last.copy(date = nowOrSprintsEndForFinished))
-    } else {
-      None
+    lastAvailableBeforeNow.option {
+      last.copy(date = nowOrSprintsEndForFinished)
     }
   }
 
@@ -67,15 +57,24 @@ class SprintColumnsHistoryProvider(projectActor: LiftActor)(implicit config: Pro
     boardColumnsWithDroppedFirst.map { column =>
       val storyPointsForColumn = zipped.map { allColumnsInfo =>
         val storyPoints = allColumnsInfo.storyPointsForColumn(column.index)
-        DateWithStoryPointsForSingleColumn(allColumnsInfo.date.getTime, storyPoints)
+        DateWithStoryPointsForSingleColumn(allColumnsInfo.date, storyPoints)
       }.toList
-      ColumnWithStoryPointsHistory(column.name, storyPointsForColumn)
+      ColumnWithStoryPointsHistory(column.name, column.color, storyPointsForColumn)
     }
   }
 }
 
-case class ColumnsHistoryWithDetails(detail: SprintDetails, columnsHistory: List[ColumnWithStoryPointsHistory])
+case class ColumnsHistoryWithDetails(detail: SprintDetails, series: List[ColumnWithStoryPointsHistory])
 
-case class ColumnWithStoryPointsHistory(name: String, storyPointsChanges: List[DateWithStoryPointsForSingleColumn])
+case class ColumnWithStoryPointsHistory(name: String, color: String, data: List[DateWithStoryPointsForSingleColumn])
 
 case class DateWithStoryPointsForSingleColumn(x: Long, y: Int)
+
+object DateWithStoryPointsForSingleColumn {
+  def apply(date: Date, storyPoints: Int): DateWithStoryPointsForSingleColumn =
+    DateWithStoryPointsForSingleColumn(toSeconds(date), storyPoints)
+
+  private def toSeconds(date: Date): Long = {
+    date.getTime / 1000
+  }
+}

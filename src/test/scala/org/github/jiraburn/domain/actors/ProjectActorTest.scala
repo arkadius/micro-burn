@@ -5,9 +5,11 @@ import java.util.Date
 
 import com.typesafe.config.ConfigFactory
 import net.liftweb.common.Box
+import org.github.jiraburn.ApplicationContext
 import org.github.jiraburn.domain._
 import org.github.jiraburn.repository.SprintRepository
 import net.liftweb.actor.{LAFuture, MockLiftActor}
+import org.github.jiraburn.service.SprintColumnsHistoryProvider
 import org.github.jiraburn.util.concurrent.{LiftActorEnrichments, FutureEnrichments}
 import org.scalatest.{FlatSpec, Matchers}
 
@@ -50,7 +52,21 @@ class ProjectActorTest extends FlatSpec with Matchers {
     val sprintHistory = sprintHistoryBox.openOrThrowException("")
     sprintHistory.initialStoryPointsSum shouldEqual 1
     val closedColumnHistory = sprintHistory.changes.map(_.storyPointsForColumn(config.closingColumnIndex))
-    closedColumnHistory shouldEqual Seq(-1)
+    closedColumnHistory shouldEqual Seq(0, 1)
+  }
+
+
+  it should "reproduce bad history showing" in {
+    val config = ConfigFactory.parseFile(new File("application.conf")).withFallback(ConfigFactory.parseResources("defaults.conf"))
+    val projectRoot = new File(config.getString("data.project.root"))
+    implicit val projectConfig = ProjectConfig(config)
+    val projectActor = new ProjectActor(projectRoot, projectConfig, new MockLiftActor)
+    val columnsHistoryProvider = new SprintColumnsHistoryProvider(projectActor)
+
+    val historyBox = columnsHistoryProvider.columnsHistory("120").await(5 seconds)
+    val history = historyBox.openOrThrowException("")
+
+    println(history.series(projectConfig.closingColumnIndex-1).data.mkString("\n"))
   }
 
   private def actorWithInitialSprint(sprint: Sprint): ProjectActor = {

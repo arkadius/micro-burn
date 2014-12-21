@@ -1,9 +1,10 @@
-import org.eclipse.jetty.server.{NetworkTrafficServerConnector, Server}
+import org.eclipse.jetty.server.Server
+import org.eclipse.jetty.server.nio.SelectChannelConnector
 import org.eclipse.jetty.webapp.WebAppContext
 
 object Main extends App {
   val server = new Server
-  val connector = new NetworkTrafficServerConnector(server)
+  val connector = new SelectChannelConnector()
   connector.setPort(8080)
   server.addConnector(connector)
 

@@ -20,7 +20,7 @@ case class ProjectConfig(boardColumns: List[BoardColumn]) {
   def firstClosingStatus: Int = boardColumns.last.statusIds.head
 }
 
-case class BoardColumn(index: Int, name: String, statusIds: List[Int])
+case class BoardColumn(index: Int, name: String, statusIds: List[Int], color: String)
 
 object ProjectConfig {
   import collection.convert.wrapAll._
@@ -30,7 +30,8 @@ object ProjectConfig {
       (columnConfig, index) <- config.getConfigList("jira.greenhopper.boardColumns").zipWithIndex
       name = columnConfig.getString("name")
       statusIds = columnConfig.getIntList("statusIds").map(_.toInt).toList
-    } yield BoardColumn(index, name, statusIds)
+      color = columnConfig.hasPath("color").option(columnConfig.getString("color")).getOrElse("")
+    } yield BoardColumn(index, name, statusIds, color)
     ProjectConfig(columns.toList)
   }
 }

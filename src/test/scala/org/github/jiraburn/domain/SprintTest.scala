@@ -3,6 +3,7 @@ package org.github.jiraburn.domain
 import java.util.Date
 
 import com.typesafe.config.ConfigFactory
+import org.github.jiraburn.ApplicationContext
 import org.scalatest.{Inside, FlatSpec, Matchers}
 
 class SprintTest extends FlatSpec with Matchers with Inside {
@@ -15,7 +16,6 @@ class SprintTest extends FlatSpec with Matchers with Inside {
       TaskGenerator.closedUserStory(2)
     )
 
-    sprint.initialColumnsState.indexOnSum(config.closingColumnIndex) shouldBe 2
     sprint.initialStoryPointsSum shouldBe 3
   }
 
@@ -27,11 +27,11 @@ class SprintTest extends FlatSpec with Matchers with Inside {
 
     val sprintAfterFirstFinish = sprintBeforeUpdate.updateTasks(taskInitiallyOpened.close, taskInitiallyCompleted)
     sprintAfterFirstFinish.initialStoryPointsSum shouldBe 3
-    sprintAfterFirstFinish.storyPointsChangesValues shouldEqual Seq(-1)
+    sprintAfterFirstFinish.storyPointsChangesValues shouldEqual Seq(2, 3)
 
     val sprintAfterSecReopen = sprintAfterFirstFinish.updateTasks(taskInitiallyOpened.close, taskInitiallyCompleted.reopen)
     sprintAfterSecReopen.initialStoryPointsSum shouldBe 3
-    sprintAfterSecReopen.storyPointsChangesValues shouldEqual Seq(-1, 1)
+    sprintAfterSecReopen.storyPointsChangesValues shouldEqual Seq(2, 3, 1)
   }
 
   it should "generate empty events for not estimated technical tasks and non empty for parent user stories" in {
@@ -43,7 +43,7 @@ class SprintTest extends FlatSpec with Matchers with Inside {
 
     val afterUpdate = sprint.updateTasks(completedUserStory)
 
-    afterUpdate.storyPointsChangesValues shouldEqual Seq(-1)
+    afterUpdate.storyPointsChangesValues shouldEqual Seq(0, 1)
   }
 
   it should "generate non empty events for estimated technical tasks and empty for parent user stories" in {
@@ -54,11 +54,11 @@ class SprintTest extends FlatSpec with Matchers with Inside {
 
     val completedFirstUserStory = userStory.copy(technicalTasksWithoutParentId = List(firstTechnical.close, secTechnical))
     val afterFirstFinish = sprint.updateTasks(completedFirstUserStory)
-    afterFirstFinish.storyPointsChangesValues shouldEqual Seq(-1)
+    afterFirstFinish.storyPointsChangesValues shouldEqual Seq(0, 1)
 
     val completedAllUserStory = completedFirstUserStory.copy(technicalTasksWithoutParentId = List(firstTechnical.close, secTechnical.close)).close
     val afterAllFinish = afterFirstFinish.updateTasks(completedAllUserStory)
-    afterAllFinish.storyPointsChangesValues shouldEqual Seq(-1, -3)
+    afterAllFinish.storyPointsChangesValues shouldEqual Seq(0, 1, 3)
   }
 
   it should "generate correct events for scope change" in {
@@ -70,18 +70,18 @@ class SprintTest extends FlatSpec with Matchers with Inside {
     val secTechnicalClosed = secTechnical.close
     val withSecClosed = userStory.copy(technicalTasksWithoutParentId = List(firstTechnical, secTechnicalClosed))
     val afterSecClose = sprint.updateTasks(withSecClosed)
-    afterSecClose.storyPointsChangesValues shouldEqual Seq(-1)
+    afterSecClose.storyPointsChangesValues shouldEqual Seq(0, 1)
 
     val secTechnicalWithChangedScope = secTechnicalClosed.copy(optionalStoryPoints = Some(2))
     val changedScope = withSecClosed.copy(technicalTasksWithoutParentId = List(firstTechnical, secTechnicalWithChangedScope))
     val afterScopeChange = afterSecClose.updateTasks(changedScope)
     inside(afterScopeChange) {
-      case _ => afterScopeChange.storyPointsChangesValues shouldEqual Seq(-1, -2)
+      case _ => afterScopeChange.storyPointsChangesValues shouldEqual Seq(0, 1, 2)
     }
 
     val completedAllUserStory = changedScope.copy(technicalTasksWithoutParentId = List(firstTechnical.close, secTechnicalWithChangedScope)).close
     val afterAllFinish = afterScopeChange.updateTasks(completedAllUserStory)
-    afterAllFinish.storyPointsChangesValues shouldEqual Seq(-1, -2, -3)
+    afterAllFinish.storyPointsChangesValues shouldEqual Seq(0, 1, 2, 3)
   }
 
   // TODO: test na pojawianie się / znikanie tasków technicznych

@@ -11,7 +11,8 @@ resolvers += "scalaz-bintray" at "http://dl.bintray.com/scalaz/releases"
 libraryDependencies ++= {
   val liftV = "3.0-M2"
   val liftEdition = liftV.substring(0,3)
-  val jettyV = "9.3.0.M1"
+//  val jettyV = "9.3.0.M1" <- jakiś busy waiting się dzieje
+  val jettyV = "8.1.16.v20140903"
   Seq(
     "com.typesafe" % "config" % "1.2.1",
     "net.databinder.dispatch" %% "dispatch-json4s-native" % "0.11.2",

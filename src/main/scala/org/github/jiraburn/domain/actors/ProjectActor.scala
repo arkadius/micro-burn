@@ -66,7 +66,7 @@ case class UpdateSprint(sprintId: String, userStories: Seq[UserStory], finishSpr
 case class GetStoryPointsHistory(sprintId: String)
 
 case class SprintHistory(initialStoryPointsSum: Int,
-                         initialState: DateWithColumnsState,
+                         initialDate: Date,
                          changes: Seq[DateWithColumnsState],
                          sprintDetails: SprintDetails)
 

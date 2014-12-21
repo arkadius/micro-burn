@@ -21,7 +21,7 @@ class ProjectUpdater(projectActor: LiftActor, sprintsProvider: SprintsDataProvid
   private def repeat(): Unit = {
     updateProject().onComplete { result =>
       result match {
-        case Failure(msg, ex, _) => error("Error while updating project data", ex.openOr(new Exception(msg)))
+        case Failure(msg, ex, _) => error(s"Error while updating project data: ${ex.map(_.getMessage).openOr(msg)}")
         case _ =>
       }
       Schedule.schedule(() => repeat(), Duration.standardMinutes(1))

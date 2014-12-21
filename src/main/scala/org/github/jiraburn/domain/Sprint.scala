@@ -12,7 +12,7 @@ case class Sprint(id: String,
 
   def isActive = details.isActive
 
-  def initialColumnsState(implicit config: ProjectConfig): DateWithColumnsState = DateWithColumnsState(initialState)
+  def initialDate: Date = initialState.date
 
   def initialStoryPointsSum: Int = {
     sumStoryPoints(initialState.userStories)
@@ -87,20 +87,7 @@ object Sprint {
             }
         }
 
-    lazy val storyPointsDiffStream: Stream[DateWithColumnsState] =
-      (boardStateStream zip boardStateStream.tail).map {
-        case (prev, next) =>
-           DateWithColumnsState(next).multiply(-1).plus(DateWithColumnsState(prev).indexOnSum)
-      }
-
-    lazy val storyPointsChangeStream: Stream[DateWithColumnsState] =
-      DateWithColumnsState.zero #::
-        (storyPointsChangeStream zip storyPointsDiffStream).map {
-          case (acc, diff) =>
-            diff.plus(acc.indexOnSum)
-        }
-
-    storyPointsChangeStream.drop(1).take(eventsSortedAndGrouped.size)
+    boardStateStream.map(DateWithColumnsState.apply).toList
   }
 }
 
@@ -129,15 +116,15 @@ object DateWithColumnsState {
 
   def const(c: Int)(date: Date)(implicit config: ProjectConfig) = DateWithColumnsState(date, config.boardColumns.map(_.index -> c).toMap)
 
-  def apply(boardState: BoardState)(implicit config: ProjectConfig): DateWithColumnsState = {
-    val indexOnSum = config.boardColumns.map(_.index).map { boardColumnIndex =>
-      boardColumnIndex -> boardState.taskAtRighttFromBoardColumn(boardColumnIndex)
-    }.toMap
-    DateWithColumnsState(boardState.date, indexOnSum)
-  }
-
   def apply(sprintState: SprintState)(implicit config: ProjectConfig): DateWithColumnsState = {
     DateWithColumnsState(BoardState(sprintState))
+  }
+
+  def apply(boardState: BoardState)(implicit config: ProjectConfig): DateWithColumnsState = {
+    val indexOnSum = config.boardColumns.map(_.index).map { boardColumnIndex =>
+      boardColumnIndex -> boardState.storyPointsOnRightFromBoardColumn(boardColumnIndex)
+    }.toMap
+    DateWithColumnsState(boardState.date, indexOnSum)
   }
 
 }

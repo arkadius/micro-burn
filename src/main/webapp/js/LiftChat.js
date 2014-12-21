@@ -1,5 +1,4 @@
 angular.module('LiftChat', ['ChatServices'])
-
 .controller('ChatController', ['$scope', '$timeout', 'chatSvc', function($scope, $timeout, chatSvc){
   $scope.onSend = function() {
     chatSvc.sendChat($scope.chatInput);

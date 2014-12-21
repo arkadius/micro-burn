@@ -50,7 +50,7 @@ class BoardState(taskStates: Map[String, TaskWithState], val date: Date) {
     new BoardState(newStates, change.date)
   }
   
-  def taskAtRighttFromBoardColumn(columnIndex: Int)
+  def storyPointsOnRightFromBoardColumn(columnIndex: Int)
                                  (implicit config: ProjectConfig) =
     taskStates.values.filter(_.boardColumnIndex >= columnIndex).map(_.storyPoints).sum
 

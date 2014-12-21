@@ -1,25 +1,11 @@
 package bootstrap.liftweb
 
-import java.io.File
-
-import com.typesafe.config.ConfigFactory
 import net.liftmodules.JQueryModule
-import net.liftweb.actor.MockLiftActor
 import net.liftweb.common._
 import net.liftweb.http._
 import net.liftweb.http.js.jquery.JQueryArtifacts
-import net.liftweb.sitemap.Loc._
-import net.liftweb.sitemap._
 import org.github.jiraburn.ApplicationContext
-import org.github.jiraburn.comet.ChatServer
-import org.github.jiraburn.domain.ProjectConfig
-import org.github.jiraburn.domain.actors.ProjectActor
-import org.github.jiraburn.jira.{TasksDataProvider, JiraConfig, SprintsDataProvider}
-import org.github.jiraburn.model.User
 import org.github.jiraburn.rest.RestRoutes
-import org.github.jiraburn.service.{SprintColumnsHistoryProvider, ProjectUpdater}
-
-import scala.reflect.io.Path
 
 
 /**
@@ -48,10 +34,6 @@ class Boot {
 
     net.liftmodules.ng.Angular.init()
     net.liftmodules.ng.AngularJS.init()
-
-    LiftSession.afterSessionCreate :+= {(_:LiftSession, req:Req) =>
-      ChatServer ! User(req.remoteAddr)
-    }
 
     val context = ApplicationContext()
     context.updater.start()
