@@ -96,15 +96,5 @@ class SprintTest extends FlatSpec with Matchers with Inside {
       dateWithStoryPoints.storyPointsForColumn(config.closingColumnIndex)
     }
   }
-  
-  implicit class EnhancedUserStory(userStory: UserStory) {
-    def close = userStory.copy(status = config.firstClosingStatus)
-    def reopen = userStory.copy(status = config.firstNotClosingStatus)
-  }
-
-  implicit class EnhancedTechnicalTask(technicalTask: TechnicalTask) {
-    def close = technicalTask.copy(status = config.firstClosingStatus)
-    def reopen = technicalTask.copy(status = config.firstNotClosingStatus)
-  }
 }
 

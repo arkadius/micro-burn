@@ -34,6 +34,9 @@ class ProjectActor(projectRoot: File, config: ProjectConfig, sprintChangeNotifyi
           }
       }.toSeq
       reply(collectWithWellEmptyListHandling(sprintWithStateFutures))
+    case CreateNewSprint(sprintId, details, userStories, timestamp) if details.finished =>
+      sprintActors += sprintId -> sprintFactory.migrateSprint(sprintId, details, userStories)(config)
+      reply(sprintId)
     case CreateNewSprint(sprintId, details, userStories, timestamp) =>
       sprintActors += sprintId -> sprintFactory.createSprint(sprintId, details, userStories, timestamp)
       reply(sprintId)
@@ -64,36 +67,7 @@ case class GetStoryPointsHistory(sprintId: String)
 
 case class SprintHistory(initialStoryPoints: Int,
                          sprintDetails: SprintDetails,
-                         private val changes: Seq[DateWithStoryPoints])
-                        (implicit config: ProjectConfig) {
-  
-  def columnsHistoryFor(now: Date): List[ColumnWithStoryPointsHistory] = {
-    val firstRealChangeNotBeforeSprintStart = !changes.headOption.exists(!_.date.after(sprintDetails.start))
-    val toPrepend = firstRealChangeNotBeforeSprintStart.option(DateWithStoryPoints.zero(sprintDetails.start))
-
-    val nowOrSprintsEndForFinished = sprintDetails.finished.option(sprintDetails.end).getOrElse(now)
-    val lastRealChangeNotAfterNow = !changes.lastOption.exists(!_.date.before(nowOrSprintsEndForFinished))
-    val toAppend = lastRealChangeNotAfterNow.option {
-      changes.lastOption.map { last =>
-        last.copy(date = nowOrSprintsEndForFinished)
-      } getOrElse DateWithStoryPoints.zero(nowOrSprintsEndForFinished)
-    }
-
-    val fullHistory = toPrepend ++ changes ++ toAppend
-    val withBaseAdded = fullHistory.map(_.plus(initialStoryPoints))
-    config.boardColumns.map { column =>
-      val storyPointsForColumn = withBaseAdded.map { allColumnsInfo =>
-        val storyPoints = allColumnsInfo.storyPointsForColumn(column.index)
-        DateWithStoryPointsForSingleColumn(allColumnsInfo.date, storyPoints)
-      }.toList
-      ColumnWithStoryPointsHistory(column.name, storyPointsForColumn)
-    }
-  }
-}
-
-case class ColumnWithStoryPointsHistory(name: String, storyPointsChanges: List[DateWithStoryPointsForSingleColumn])
-
-case class DateWithStoryPointsForSingleColumn(date: Date, storyPoints: Int)
+                         changes: Seq[DateWithStoryPoints])
 
 case object Close
 

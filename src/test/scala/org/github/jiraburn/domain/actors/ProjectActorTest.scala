@@ -4,6 +4,7 @@ import java.io.File
 import java.util.Date
 
 import com.typesafe.config.ConfigFactory
+import net.liftweb.common.Box
 import org.github.jiraburn.domain._
 import org.github.jiraburn.repository.SprintRepository
 import net.liftweb.actor.{LAFuture, MockLiftActor}
@@ -45,10 +46,11 @@ class ProjectActorTest extends FlatSpec with Matchers {
     val beforeSprintsEnd = new Date(sprint.details.end.getTime-1)
     projectActor ! UpdateSprint(sprint.id, userStoriesWithClosed, finishSprint = false, beforeSprintsEnd)
 
-    val sprintHistory = (projectActor ?? GetStoryPointsHistory(sprint.id)).mapTo[SprintHistory].await(5 seconds)
+    val sprintHistoryBox = (projectActor ?? GetStoryPointsHistory(sprint.id)).mapTo[Box[SprintHistory]].await(5 seconds)
+    val sprintHistory = sprintHistoryBox.openOrThrowException("")
     sprintHistory.initialStoryPoints shouldEqual 1
-    val closedColumnHistory = sprintHistory.columnsHistoryFor(sprint.details.end)(config.closingColumnIndex).storyPointsChanges.map(_.storyPoints)
-    closedColumnHistory shouldEqual Seq(1, 0, 0)
+    val closedColumnHistory = sprintHistory.changes.map(_.storyPointsForColumn(config.closingColumnIndex))
+    closedColumnHistory shouldEqual Seq(-1)
   }
 
   private def actorWithInitialSprint(sprint: Sprint): ProjectActor = {

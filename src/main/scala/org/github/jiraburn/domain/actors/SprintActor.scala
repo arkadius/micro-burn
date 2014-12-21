@@ -46,6 +46,17 @@ class SprintActorFactory(projectRoot: File, config: ProjectConfig, changeNotifyi
     }
   }
 
+  def migrateSprint(sprintId: String, details: SprintDetails, userStories: Seq[UserStory])
+                   (implicit config: ProjectConfig): SprintActor = {
+    val allOpened = userStories.map(_.reopen)
+    val sprint = Sprint.withEmptyEvents(sprintId, details, allOpened)
+    val repo = createRepo(sprintId)
+    repo.saveSprint(sprint)(details.start)
+    val updateResult = sprint.update(userStories, details.finished)(details.end)
+    repo.saveUpdateResult(updateResult)
+    new SprintActor(updateResult.updatedSprint, repo)(config, changeNotifyingActor)
+  }
+
   def createSprint(sprintId: String, details: SprintDetails, userStories: Seq[UserStory], timestamp: Date): SprintActor = {
     val sprint = Sprint.withEmptyEvents(sprintId, details, userStories)
     val repo = createRepo(sprintId)

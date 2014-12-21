@@ -53,7 +53,8 @@ class Boot {
 
     val config = ConfigFactory.parseFile(new File("application.conf")).withFallback(ConfigFactory.parseResources("defaults.conf"))
     val projectRoot = new File(config.getString("data.project.root"))
-    val projectActor = new ProjectActor(projectRoot, ProjectConfig(config), new MockLiftActor)
+    implicit val projectConfig = ProjectConfig(config)
+    val projectActor = new ProjectActor(projectRoot, projectConfig, new MockLiftActor)
 
     LiftRules.statelessDispatch.append(new RestRoutes(projectActor))
 
