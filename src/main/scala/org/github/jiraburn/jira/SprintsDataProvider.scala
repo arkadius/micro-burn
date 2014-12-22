@@ -35,5 +35,4 @@ class SprintsDataProvider(config: JiraConfig) {
   }
 
   private def dateFormat = new SimpleDateFormat("dd/MMM/yy HH:mm")
-
 }

@@ -1,12 +1,25 @@
-organization  := "org"
+organization  := "org.github"
+
+name := "jira-burn"
 
 version       := "0.1"
 
 scalaVersion  := "2.11.4"
 
+resolvers ++= Seq("snapshots"     at "http://oss.sonatype.org/content/repositories/snapshots",
+  "staging"       at "http://oss.sonatype.org/content/repositories/staging",
+  "releases"        at "http://oss.sonatype.org/content/repositories/releases",
+  "Local Maven Repository" at "file://"+Path.userHome.absolutePath+"/.m2/repository",
+  "scalaz-bintray" at "http://dl.bintray.com/scalaz/releases"
+)
+
 scalacOptions := Seq("-unchecked", "-deprecation", "-encoding", "utf8")
 
-resolvers += "scalaz-bintray" at "http://dl.bintray.com/scalaz/releases"
+parallelExecution in Test := false // żeby port nie był zajmowany prze inne testy
+
+unmanagedResourceDirectories in Compile += { baseDirectory.value / "src/main/webapp" }
+
+seq(net.virtualvoid.sbt.graph.Plugin.graphSettings : _*)
 
 libraryDependencies ++= {
   val liftV = "3.0-M2"
@@ -34,5 +47,14 @@ libraryDependencies ++= {
     "com.typesafe.akka"    %% "akka-testkit"      % "2.3.6" % "test"
   )
 }
+
+assemblyMergeStrategy in assembly := {
+  case PathList("scala", "io", _*) => MergeStrategy.first
+  case x =>
+    val oldStrategy = (assemblyMergeStrategy in assembly).value
+    oldStrategy(x)
+}
+
+mainClass in assembly := Some("Main")
 
 Revolver.settings

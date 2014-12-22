@@ -6,13 +6,11 @@ import net.liftweb.actor.{LAFuture, LiftActor}
 import net.liftweb.common.Box
 import org.github.jiraburn.domain.actors.{GetStoryPointsHistory, SprintHistory}
 import org.github.jiraburn.domain.{DateWithColumnsState, ProjectConfig, SprintDetails}
-import org.joda.time.DateTime
+import org.joda.time.{Weeks, Interval, Days, DateTime}
 
 import scalaz.Scalaz._
 
-class SprintColumnsHistoryProvider(projectActor: LiftActor)(implicit config: ProjectConfig) {
-  private final val INITIAL_TO_START_ACCEPTABLE_DELAY_HOURS = 2
-
+class SprintColumnsHistoryProvider(projectActor: LiftActor, initialFetchToSpringStartAcceptableDelayMinutes: Int)(implicit config: ProjectConfig) {
   import org.github.jiraburn.util.concurrent.FutureEnrichments._
   import org.github.jiraburn.util.concurrent.LiftActorEnrichments._
   
@@ -39,7 +37,7 @@ class SprintColumnsHistoryProvider(projectActor: LiftActor)(implicit config: Pro
 
   private def computePrepend(history: SprintHistory): Option[DateWithColumnsState] = {
     val initialDate = new DateTime(history.initialDate)
-    val startDatePlusAcceptableDelay = new DateTime(history.sprintDetails.start).plusHours(INITIAL_TO_START_ACCEPTABLE_DELAY_HOURS)
+    val startDatePlusAcceptableDelay = new DateTime(history.sprintDetails.start).plusMinutes(initialFetchToSpringStartAcceptableDelayMinutes)
     val initialAfterStartPlusDelay = initialDate.isAfter(startDatePlusAcceptableDelay)
     initialAfterStartPlusDelay.option {
       DateWithColumnsState.zero(history.sprintDetails.start)

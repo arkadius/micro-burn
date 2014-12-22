@@ -10,7 +10,8 @@ import org.github.jiraburn.jira.{JiraConfig, SprintsDataProvider, TasksDataProvi
 import org.github.jiraburn.service.{ProjectUpdater, SprintColumnsHistoryProvider}
 
 class ApplicationContext private(val updater: ProjectUpdater,
-                                 val columnsHistoryProvider: SprintColumnsHistoryProvider)
+                                 val columnsHistoryProvider: SprintColumnsHistoryProvider,
+                                 val jettyPort: Int)
 
 object ApplicationContext {
   def apply(): ApplicationContext = context
@@ -22,10 +23,16 @@ object ApplicationContext {
     val projectActor = new ProjectActor(projectRoot, projectConfig, new MockLiftActor)
 
     val jiraConfig = JiraConfig(config)
-    val updater = new ProjectUpdater(projectActor, new SprintsDataProvider(jiraConfig), new TasksDataProvider(jiraConfig))
-    val columnsHistoryProvider = new SprintColumnsHistoryProvider(projectActor)
+
+    val jettyPort = config.getInt("jetty.port")
+    val jiraFetchPeriodSeconds = config.getInt("jira.fetchPeriodSeconds")
+    val initialFetchToSpringStartAcceptableDelayMinutes = config.getInt("jira.initialFetchToSpringStartAcceptableDelayMinutes")
+
+    val updater = new ProjectUpdater(projectActor, new SprintsDataProvider(jiraConfig), new TasksDataProvider(jiraConfig), initialFetchToSpringStartAcceptableDelayMinutes)
+    val columnsHistoryProvider = new SprintColumnsHistoryProvider(projectActor, initialFetchToSpringStartAcceptableDelayMinutes)
     new ApplicationContext(
       updater                 = updater,
-      columnsHistoryProvider  = columnsHistoryProvider)
+      columnsHistoryProvider  = columnsHistoryProvider,
+      jettyPort               = jettyPort)
   }
 }

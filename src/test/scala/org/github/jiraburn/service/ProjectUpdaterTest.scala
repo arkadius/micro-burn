@@ -25,7 +25,7 @@ class ProjectUpdaterTest extends FlatSpec with RestIntegrationTest with Directiv
     Path(projectRoot).deleteRecursively()
     val projectActor = new ProjectActor(projectRoot, ProjectConfig(config), new MockLiftActor)
     val jiraConfig = JiraConfig(config)
-    val updater = new ProjectUpdater(projectActor, new SprintsDataProvider(jiraConfig), new TasksDataProvider(jiraConfig))
+    val updater = new ProjectUpdater(projectActor, new SprintsDataProvider(jiraConfig), new TasksDataProvider(jiraConfig), jiraFetchPeriodSeconds = 123)
     updater.updateProject().await(10 seconds)
   }
 
