@@ -36,8 +36,10 @@ class SprintRepository(sprintRoot: File, sprintId: String) {
   }
 
   private def saveCurrentUserStories(updateResult: SprintUpdateResult): Unit = {
-    storiesRepo.saveCurrentUserStories(updateResult.updatedSprint)
-    storiesRepo.cleanUnnecessaryStates()
+    if (updateResult.importantEventsChange) {
+      storiesRepo.saveCurrentUserStories(updateResult.updatedSprint)
+      storiesRepo.cleanUnnecessaryStates()
+    }
   }
 
   private def appendTasksEventsIfNecessary(updateResult: SprintUpdateResult): Unit = {

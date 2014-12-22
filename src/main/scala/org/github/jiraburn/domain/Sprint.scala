@@ -77,5 +77,5 @@ case class SprintUpdateResult(private val stateBeforeUpdate: SprintState, update
 
 object Sprint {
   def withEmptyEvents(id: String, details: SprintDetails, state: SprintState): Sprint =
-    Sprint(id, details, initialState = state, currentState = state, Nil) 
+    Sprint(id, details, initialState = state, currentState = state, IndexedSeq.empty)
 }
