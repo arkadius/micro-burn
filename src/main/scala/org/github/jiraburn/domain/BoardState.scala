@@ -2,8 +2,10 @@ package org.github.jiraburn.domain
 
 import java.util.Date
 
-case class BoardState(nestedTasks: Seq[UserStory], date: Date) extends HavingNestedTasks[UserStory] {
+case class BoardState(userStories: Seq[UserStory], date: Date) extends HavingNestedTasks[UserStory] {
   override type Self = BoardState
+
+  override protected def nestedTasks: Seq[UserStory] = userStories
 
   def userStoriesStoryPointsSum: Int = nestedTasksStoryPointsSum
 
@@ -11,10 +13,10 @@ case class BoardState(nestedTasks: Seq[UserStory], date: Date) extends HavingNes
 
   def plus(event: TaskEvent): BoardState = event match {
     case a:TaskAdded if !a.isTechnicalTask =>
-      new BoardState(nestedTasks :+ UserStory(a), a.date)
+      new BoardState(userStories :+ UserStory(a), a.date)
     case r:TaskRemoved if !r.isTechnicalTask =>
       require(taskById.contains(r.taskId), s"User story missing: ${r.taskId}")
-      new BoardState(nestedTasks.filterNot(_.taskId == r.taskId), r.date)
+      new BoardState(userStories.filterNot(_.taskId == r.taskId), r.date)
     case u:TaskUpdated if !u.isTechnicalTask =>
       withUpdatedParentUserStory(u) { parent =>
         parent.copy(
@@ -56,7 +58,7 @@ case class BoardState(nestedTasks: Seq[UserStory], date: Date) extends HavingNes
   }
 
   private def userStoriesWithUpdateTask(updated: UserStory) = {
-    nestedTasks.filterNot(_.taskId == updated.taskId) :+ updated
+    userStories.filterNot(_.taskId == updated.taskId) :+ updated
   }
 
   def columnsState(implicit config: ProjectConfig): DateWithColumnsState = {
@@ -69,10 +71,9 @@ case class BoardState(nestedTasks: Seq[UserStory], date: Date) extends HavingNes
   private def storyPointsOnRightFromColumn(columnIndex: Int)
                                           (implicit config: ProjectConfig) = {
     (for {
-      userStory <- nestedTasks
+      userStory <- userStories
       task <- userStory.flattenTasks
       if task.boardColumnIndex >= columnIndex
     } yield task.storyPointsWithoutSubTasks).sum
   }
-
 }
