@@ -1,17 +1,18 @@
-package org.github.jiraburn.jira
+package org.github.jiraburn.integration.jira
 
 import java.text.SimpleDateFormat
 
 import dispatch._
 import net.liftweb.actor.LAFuture
 import org.github.jiraburn.domain.SprintDetails
+import org.github.jiraburn.integration.SprintsDataProvider
 import org.json4s._
 
-class SprintsDataProvider(config: JiraConfig) {
-  import scala.concurrent.ExecutionContext.Implicits.global
+class JiraSprintsDataProvider(config: JiraConfig) extends SprintsDataProvider {
   import org.github.jiraburn.util.concurrent.FutureEnrichments._
+  import scala.concurrent.ExecutionContext.Implicits.global
 
-  def allSprintIds: LAFuture[Seq[Long]] = {
+  override def allSprintIds: LAFuture[Seq[Long]] = {
     val url = config.greenhopperUrl / "sprints" / config.rapidViewId
     Http(url OK as.json4s.Json).toLiftFuture.map { jv =>
       (jv \ "sprints" \\ "id").children.collect {
@@ -20,7 +21,7 @@ class SprintsDataProvider(config: JiraConfig) {
     }
   }
 
-  def sprintDetails(sprintId: String): LAFuture[SprintDetails] = {
+  override def sprintDetails(sprintId: String): LAFuture[SprintDetails] = {
     val url = config.greenhopperUrl / "rapid" / "charts" / "sprintreport" <<? Map(
       "rapidViewId" -> config.rapidViewId.toString,
       "sprintId" -> sprintId

@@ -1,24 +1,25 @@
-package org.github.jiraburn.jira
+package org.github.jiraburn.integration.jira
 
 import akka.actor.ActorSystem
 import com.typesafe.config.ConfigFactory
 import org.github.jiraburn.domain.SprintDetails
+import org.github.jiraburn.integration.RestIntegrationTest
 import org.joda.time.DateTime
 import org.scalatest.{FlatSpec, Matchers}
-import spray.routing.{RoutingSettings, Directives, Route}
+import spray.routing.{Directives, Route, RoutingSettings}
 
 import scala.concurrent.duration._
 
-class SprintsDataProviderTest extends FlatSpec with RestIntegrationTest with Matchers {
+class JiraSprintsDataProviderTest extends FlatSpec with RestIntegrationTest with Matchers {
   import org.github.jiraburn.util.concurrent.FutureEnrichments._
 
-  override protected val route: Route = SprintsDataProviderTest.route
+  override protected val route: Route = JiraSprintsDataProviderTest.route
 
   it should "get sprints ids" in {
 //    val config = ConfigFactory.parseFile(new File("application.conf")).withFallback(ConfigFactory.load())
     val config = ConfigFactory.load()
     val jiraConfig = JiraConfig(config)
-    val provider = new SprintsDataProvider(jiraConfig)
+    val provider = new JiraSprintsDataProvider(jiraConfig)
     val result = provider.allSprintIds.await(5 seconds)
     result shouldEqual Seq(21, 22)
   }
@@ -27,7 +28,7 @@ class SprintsDataProviderTest extends FlatSpec with RestIntegrationTest with Mat
 //    val config = ConfigFactory.parseFile(new File("application.conf")).withFallback(ConfigFactory.load())
     val config = ConfigFactory.load()
     val jiraConfig = JiraConfig(config)
-    val provider = new SprintsDataProvider(jiraConfig)
+    val provider = new JiraSprintsDataProvider(jiraConfig)
     val result = provider.sprintDetails("21").await(5 seconds)
     println("result: " + result)
     result shouldEqual SprintDetails(
@@ -39,7 +40,7 @@ class SprintsDataProviderTest extends FlatSpec with RestIntegrationTest with Mat
   }
 }
 
-object SprintsDataProviderTest extends Directives {
+object JiraSprintsDataProviderTest extends Directives {
   def route(implicit system: ActorSystem, routeSettings: RoutingSettings): Route = {
     val greenhooper = "jira" / "rest" / "greenhopper" / "1.0"
     path(greenhooper / "sprints" / IntNumber) { projectId =>

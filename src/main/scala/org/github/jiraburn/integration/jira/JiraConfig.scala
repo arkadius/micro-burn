@@ -1,4 +1,4 @@
-package org.github.jiraburn.jira
+package org.github.jiraburn.integration.jira
 
 import com.typesafe.config.Config
 import dispatch._

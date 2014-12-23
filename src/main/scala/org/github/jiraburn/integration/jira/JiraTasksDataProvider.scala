@@ -1,15 +1,16 @@
-package org.github.jiraburn.jira
+package org.github.jiraburn.integration.jira
 
 import dispatch.{Http, as}
 import net.liftweb.actor.LAFuture
 import org.github.jiraburn.domain.{TechnicalTask, UserStory}
+import org.github.jiraburn.integration.TasksDataProvider
 import org.json4s.JsonAST._
 
-class TasksDataProvider(config: JiraConfig) {
+class JiraTasksDataProvider(config: JiraConfig) extends TasksDataProvider {
   import org.github.jiraburn.util.concurrent.FutureEnrichments._
   import scala.concurrent.ExecutionContext.Implicits.global
 
-  def userStories(sprintId: String): LAFuture[Seq[UserStory]] = {
+  override def userStories(sprintId: String): LAFuture[Seq[UserStory]] = {
     val url = config.jiraUrl / "search" <<? Map(
       "jql" -> s"sprint=$sprintId",
       "fields" -> s"summary,type,status,${config.storyPointsField},parent"

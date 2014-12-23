@@ -2,12 +2,12 @@ package org.github.jiraburn
 
 import java.io.File
 
-import com.typesafe.config.ConfigFactory
+import com.typesafe.config.{Config, ConfigFactory}
 import net.liftweb.actor.MockLiftActor
 import org.github.jiraburn.domain.ProjectConfig
 import org.github.jiraburn.domain.actors.ProjectActor
-import org.github.jiraburn.jira.{JiraConfig, SprintsDataProvider, TasksDataProvider}
-import org.github.jiraburn.service.{ProjectUpdater, SprintColumnsHistoryProvider}
+import org.github.jiraburn.integration.jira.{JiraConfig, JiraSprintsDataProvider, JiraTasksDataProvider}
+import org.github.jiraburn.service.{ProjectUpdater, IntegrationProviders, SprintColumnsHistoryProvider}
 
 class ApplicationContext private(val updater: ProjectUpdater,
                                  val columnsHistoryProvider: SprintColumnsHistoryProvider,
@@ -22,17 +22,34 @@ object ApplicationContext {
     implicit val projectConfig = ProjectConfig(config)
     val projectActor = new ProjectActor(projectRoot, projectConfig, new MockLiftActor)
 
-    val jiraConfig = JiraConfig(config)
-
     val jettyPort = config.getInt("jetty.port")
-    val jiraFetchPeriodSeconds = config.getInt("jira.fetchPeriodSeconds")
-    val initialFetchToSpringStartAcceptableDelayMinutes = config.getInt("jira.initialFetchToSpringStartAcceptableDelayMinutes")
+    val updatePeriodSeconds = config.getInt("integration.updatePeriodSeconds")
+    val initialFetchToSprintStartAcceptableDelayMinutes = config.getInt("history.initialFetchToSprintStartAcceptableDelayMinutes")
 
-    val updater = new ProjectUpdater(projectActor, new SprintsDataProvider(jiraConfig), new TasksDataProvider(jiraConfig), initialFetchToSpringStartAcceptableDelayMinutes)
-    val columnsHistoryProvider = new SprintColumnsHistoryProvider(projectActor, initialFetchToSpringStartAcceptableDelayMinutes)
+    val providers = firstConfiguredProvider.applyOrElse(config, throw new IllegalArgumentException("You must define integration tool"))
+    val updater = new ProjectUpdater(projectActor, providers, updatePeriodSeconds)
+
+    val columnsHistoryProvider = new SprintColumnsHistoryProvider(projectActor, initialFetchToSprintStartAcceptableDelayMinutes)
+
     new ApplicationContext(
       updater                 = updater,
       columnsHistoryProvider  = columnsHistoryProvider,
       jettyPort               = jettyPort)
   }
+
+  private def firstConfiguredProvider: PartialFunction[Config, IntegrationProviders] =
+    supportedProviders.foldLeft(PartialFunction.empty[Config, IntegrationProviders]) { case (acc, tryProvider) =>
+      acc orElse tryProvider
+    }
+
+  private val tryJiraProvider: PartialFunction[Config, IntegrationProviders] = {
+    case config if config.hasPath("jira") =>
+      val jiraConfig = JiraConfig(config)
+      val sprintsDataProvider = new JiraSprintsDataProvider(jiraConfig)
+      val tasksDataProvider = new JiraTasksDataProvider(jiraConfig)
+      IntegrationProviders(sprintsDataProvider, tasksDataProvider)
+  }
+
+  private val supportedProviders = Seq(tryJiraProvider)
+
 }

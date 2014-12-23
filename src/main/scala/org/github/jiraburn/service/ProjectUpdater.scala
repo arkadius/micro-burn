@@ -7,11 +7,11 @@ import net.liftweb.common.Failure
 import net.liftweb.util.Schedule
 import org.github.jiraburn.domain.actors._
 import org.github.jiraburn.domain.{SprintDetails, UserStory}
-import org.github.jiraburn.jira.{SprintsDataProvider, TasksDataProvider}
+import org.github.jiraburn.integration.{SprintsDataProvider, TasksDataProvider}
 import org.github.jiraburn.util.logging.Slf4jLogging
-import org.joda.time.{Seconds, Period, Duration}
+import org.joda.time.Seconds
 
-class ProjectUpdater(projectActor: LiftActor, sprintsProvider: SprintsDataProvider, tasksProvider: TasksDataProvider, jiraFetchPeriodSeconds: Int) extends Slf4jLogging {
+class ProjectUpdater(projectActor: LiftActor, providers: IntegrationProviders, updatePeriodSeconds: Int) extends Slf4jLogging {
 
   import net.liftweb.util.Helpers.TimeSpan._
   import org.github.jiraburn.util.concurrent.FutureEnrichments._
@@ -25,7 +25,7 @@ class ProjectUpdater(projectActor: LiftActor, sprintsProvider: SprintsDataProvid
         case Failure(msg, ex, _) => error(s"Error while updating project data: ${ex.map(_.getMessage).openOr(msg)}")
         case _ =>
       }
-      Schedule.schedule(() => repeat(), Seconds.seconds(jiraFetchPeriodSeconds).toPeriod)
+      Schedule.schedule(() => repeat(), Seconds.seconds(updatePeriodSeconds).toPeriod)
     }
   }
 
@@ -41,7 +41,7 @@ class ProjectUpdater(projectActor: LiftActor, sprintsProvider: SprintsDataProvid
     val currentFuture = (projectActor ?? GetSprintsWithStates)
       .mapTo[Seq[SprintWithState]]
       .withLoggingFinished("current sprint ids: " + _.map(_.sprintId).mkString(", "))
-    val updatedIdsFuture = sprintsProvider.allSprintIds.withLoggingFinished("updated sprints ids: " + _.mkString(", "))
+    val updatedIdsFuture = providers.sprintsProvider.allSprintIds.withLoggingFinished("updated sprints ids: " + _.mkString(", "))
     for {
       current <- currentFuture
       updatedIds <- updatedIdsFuture
@@ -84,8 +84,8 @@ class ProjectUpdater(projectActor: LiftActor, sprintsProvider: SprintsDataProvid
   }
 
   private def parallelSprintDetailsAndUserStories(sprintId: String): LAFuture[(SprintDetails, Seq[UserStory])] = {
-    val detailsFuture = sprintsProvider.sprintDetails(sprintId).withLoggingFinished(s"sprint details for sprint $sprintId: " + _)
-    val tasksFuture = tasksProvider.userStories(sprintId).withLoggingFinished(s"user stories count for sprint $sprintId: " + _.size)
+    val detailsFuture = providers.sprintsProvider.sprintDetails(sprintId).withLoggingFinished(s"sprint details for sprint $sprintId: " + _)
+    val tasksFuture = providers.tasksProvider.userStories(sprintId).withLoggingFinished(s"user stories count for sprint $sprintId: " + _.size)
     for {
       details <- detailsFuture
       tasks <- tasksFuture
@@ -93,3 +93,5 @@ class ProjectUpdater(projectActor: LiftActor, sprintsProvider: SprintsDataProvid
   }
 
 }
+
+case class IntegrationProviders(sprintsProvider: SprintsDataProvider, tasksProvider: TasksDataProvider)

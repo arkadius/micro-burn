@@ -1,4 +1,4 @@
-package org.github.jiraburn.jira
+package org.github.jiraburn.integration
 
 import akka.actor.{Actor, ActorRefFactory, ActorSystem, Props}
 import akka.io.IO
