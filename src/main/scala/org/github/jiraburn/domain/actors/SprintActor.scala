@@ -46,7 +46,7 @@ class SprintActorFactory(projectRoot: File, config: ProjectConfig, changeNotifyi
   }
 
   def createSprint(sprintId: String, details: SprintDetails, userStories: Seq[UserStory], timestamp: Date): SprintActor = {
-    val sprint = Sprint.withEmptyEvents(sprintId, details, SprintState(userStories, timestamp))
+    val sprint = Sprint.withEmptyEvents(sprintId, details, BoardState(userStories, timestamp))
     val repo = createRepo(sprintId)
     repo.saveSprint(sprint)
     new SprintActor(sprint)(repo, config, changeNotifyingActor)

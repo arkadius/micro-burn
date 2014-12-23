@@ -1,13 +1,12 @@
 package org.github.jiraburn.repository
 
 import java.io.File
-import java.util.Date
 
 import com.typesafe.config.ConfigFactory
-import org.github.jiraburn.domain.{SprintState, ProjectConfig, FooSprint, TaskGenerator}
+import org.github.jiraburn.domain.{FooSprint, ProjectConfig, TaskGenerator}
 import org.scalatest.{FlatSpec, Matchers}
 
-class SprintScopeRepositoryTest extends FlatSpec with Matchers {
+class BoardStateRepositoryTest extends FlatSpec with Matchers {
 
   import org.scalatest.OptionValues._
 
@@ -18,13 +17,13 @@ class SprintScopeRepositoryTest extends FlatSpec with Matchers {
     val secTechnical = TaskGenerator.openedTechnicalTask(None)
     val userStories = Seq(TaskGenerator.openedUserStory(3, Seq(firstTechnical, secTechnical)))
     val sprint = FooSprint.withEmptyEvents(userStories : _*)
-    val repo = SprintScopeRepository(new File(s"target/sprints/${sprint.id}"))
+    val repo = BoardStateRepository(new File(s"target/sprints/${sprint.id}"))
 
     repo.saveCurrentUserStories(sprint)
 
     val loaded = repo.loadCurrentUserStories.value
 
-    loaded shouldEqual sprint.currentState
+    loaded shouldEqual sprint.currentBoard
   }
 
 }

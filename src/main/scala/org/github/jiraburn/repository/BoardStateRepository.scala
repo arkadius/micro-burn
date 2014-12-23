@@ -9,22 +9,22 @@ import org.github.jiraburn.domain._
 import scala.io.Source
 import scala.util.control.Exception._
 
-trait SprintScopeRepository {
+trait BoardStateRepository {
   def saveCurrentUserStories(sprint: Sprint): Unit
 
-  def loadInitialUserStories: Option[SprintState]
-  def loadCurrentUserStories: Option[SprintState]
+  def loadInitialUserStories: Option[BoardState]
+  def loadCurrentUserStories: Option[BoardState]
 
   def cleanUnnecessaryStates(): Unit
 }
 
-object SprintScopeRepository {
-  def apply(sprintRoot: File): SprintScopeRepository = {
-    new SprintScopeFSRepository(sprintRoot)
+object BoardStateRepository {
+  def apply(sprintRoot: File): BoardStateRepository = {
+    new BoardStateFSRepository(sprintRoot)
   }
 }
 
-class SprintScopeFSRepository(sprintRoot: File) extends SprintScopeRepository {
+class BoardStateFSRepository(sprintRoot: File) extends BoardStateRepository {
   import net.liftweb.json.Extraction._
   import net.liftweb.json._
 
@@ -32,8 +32,8 @@ class SprintScopeFSRepository(sprintRoot: File) extends SprintScopeRepository {
 
   override def saveCurrentUserStories(sprint: Sprint): Unit = {
     sprintRoot.mkdirs()
-    val sprintJsonFile = new File(sprintRoot, jsonFileName(sprint.currentState.date))
-    val rendered = pretty(render(decompose(sprint.currentState.userStories)))
+    val sprintJsonFile = new File(sprintRoot, jsonFileName(sprint.currentBoard.date))
+    val rendered = pretty(render(decompose(sprint.currentBoard.userStories)))
     val writer = new PrintWriter(sprintJsonFile)
     try {
       writer.write(rendered)
@@ -44,17 +44,17 @@ class SprintScopeFSRepository(sprintRoot: File) extends SprintScopeRepository {
 
   private def jsonFileName(date: Date) = dateFormat.format(date) + ".json"
 
-  override def loadInitialUserStories: Option[SprintState] = {
+  override def loadInitialUserStories: Option[BoardState] = {
     sortedJsonFiles.headOption.map(loadUserStories _ tupled)
   }
 
-  override def loadCurrentUserStories: Option[SprintState] = {
+  override def loadCurrentUserStories: Option[BoardState] = {
     sortedJsonFiles.lastOption.map(loadUserStories _ tupled)
   }
 
-  private def loadUserStories(sprintJsonFile: File, date: Date): SprintState = {
+  private def loadUserStories(sprintJsonFile: File, date: Date): BoardState = {
     val content = Source.fromFile(sprintJsonFile).mkString
-    SprintState(extract[Array[UserStory]](parse(content)), date)
+    BoardState(extract[Array[UserStory]](parse(content)), date)
   }
 
   override def cleanUnnecessaryStates(): Unit = {

@@ -4,9 +4,23 @@ import java.util.Date
 
 import scalaz.Scalaz._
 
-class BoardState(taskStates: Map[String, TaskWithState], val date: Date) {
+case class BoardState(userStories: Seq[UserStory], date: Date) {
 
-  def taskIds: Set[String] = taskStates.keySet
+  private[this] val taskStates: Map[String, TaskWithState] = {
+    val flattenTasks = for {
+      userStory <- userStories
+      task <- userStory.technicalTasks :+ userStory
+    } yield task
+    flattenTasks.groupBy(_.taskId).mapValues { tasks =>
+      TaskWithState(tasks.head)
+    }
+  }
+
+  def userStoriesStoryPointsSum: Int = {
+    userStories.flatMap { userStory =>
+      userStory.optionalStoryPoints
+    }.sum
+  }
 
   def diff(other: BoardState): Seq[TaskChanged] = {
     val allTaskIds = this.taskIds ++ other.taskIds
@@ -17,6 +31,8 @@ class BoardState(taskStates: Map[String, TaskWithState], val date: Date) {
       event <- diff(optionalCurrentTask, optionalUpdatedTask)(other.date)
     } yield event
   }
+
+  private def taskIds: Set[String] = taskStates.keySet
 
   private def taskState(taskId: String): Option[TaskWithState] = taskStates.get(taskId)
 
@@ -42,12 +58,13 @@ class BoardState(taskStates: Map[String, TaskWithState], val date: Date) {
     )
   }
   
-  def plus(change: TaskChanged): BoardState = {
-    val newStates = change.optionalToState match {
-      case None => taskStates - change.taskId
-      case Some(toState) => taskStates + (change.taskId -> TaskWithState(change.taskId, change.parentTaskId, change.isTechnicalTask, toState))
-    }
-    new BoardState(newStates, change.date)
+  def plus(change: TaskChanged): BoardState = { // TODO: eventy powinny pokazywać zmiany domenowe, a nie pochodnego bytu
+//    val newStates = change.optionalToState match {
+//      case None => taskStates - change.taskId
+//      case Some(toState) => taskStates + (change.taskId -> TaskWithState(change.taskId, change.parentTaskId, change.isTechnicalTask, toState))
+//    }
+//    new BoardState(newStates, change.date)
+    null
   }
 
 
@@ -63,22 +80,6 @@ class BoardState(taskStates: Map[String, TaskWithState], val date: Date) {
     taskStates.values.filter(_.boardColumnIndex >= columnIndex).map(_.storyPoints).sum
 
 }
-
-object BoardState {
-  def apply(state: SprintState): BoardState = {
-    new BoardState(taskStatesById(state.userStories), state.date)
-  }
-
-  private def taskStatesById(userStories: Seq[UserStory]): Map[String, TaskWithState] = {
-    val flattenTasks = for {
-      userStory <- userStories
-      task <- userStory.technicalTasks :+ userStory
-    } yield task
-    flattenTasks.groupBy(_.taskId).mapValues { tasks =>
-      TaskWithState(tasks.head)
-    }
-  }
-} 
 
 case class TaskWithState(taskId: String,
                          parentTaskId: String,

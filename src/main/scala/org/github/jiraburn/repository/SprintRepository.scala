@@ -6,7 +6,7 @@ import org.github.jiraburn.domain.{Sprint, SprintUpdateResult}
 
 class SprintRepository(sprintRoot: File, sprintId: String) {
   private val detailsRepo: SprintDetailsRepository = SprintDetailsRepository(sprintRoot)
-  private val storiesRepo = SprintScopeRepository(sprintRoot)
+  private val storiesRepo = BoardStateRepository(sprintRoot)
   private val eventsRepo = TaskEventsRepository(sprintRoot)
   
   def loadSprint: Option[Sprint] =
@@ -36,14 +36,14 @@ class SprintRepository(sprintRoot: File, sprintId: String) {
   }
 
   private def saveCurrentUserStories(updateResult: SprintUpdateResult): Unit = {
-    if (updateResult.importantEventsChange) {
+    if (updateResult.importantBoardChange) {
       storiesRepo.saveCurrentUserStories(updateResult.updatedSprint)
       storiesRepo.cleanUnnecessaryStates()
     }
   }
 
   private def appendTasksEventsIfNecessary(updateResult: SprintUpdateResult): Unit = {
-    if (updateResult.importantEventsChange)
+    if (updateResult.importantBoardChange)
       eventsRepo.appendTasksEvents(updateResult.newAddedEvents)
   }
 }

@@ -4,35 +4,29 @@ import java.util.Date
 
 case class Sprint(id: String,
                   details: SprintDetails,
-                  private val initialState: SprintState,
-                  currentState: SprintState,
+                  private val initialBoard: BoardState,
+                  currentBoard: BoardState,
                   private val events: Seq[TaskChanged]) {
 
   def isActive = details.isActive
 
-  def initialDate: Date = initialState.date
+  def initialDate: Date = initialBoard.date
 
-  def initialStoryPointsSum: Int = {
-    initialState.userStories.flatMap { userStory =>
-      userStory.optionalStoryPoints
-    }.sum
-  }
+  def initialStoryPointsSum: Int = initialBoard.userStoriesStoryPointsSum
 
   def update(updatedUserStories: Seq[UserStory], finishSprint: Boolean)
             (timestamp: Date)
             (implicit config: ProjectConfig): SprintUpdateResult = {
-    val updatedState = SprintState(updatedUserStories, timestamp)
-    val currentBoard = BoardState(currentState)
-    val updatedBoard = BoardState(updatedState)
+    val updatedBoard = BoardState(updatedUserStories, timestamp)
     val newAddedEvents = currentBoard.diff(updatedBoard)
     val finished = isActive && finishSprint
     
     val updatedSprint = copy(
       details = if (finished) details.finish else details,
-      currentState = updatedState,
+      currentBoard = updatedBoard,
       events = events ++ newAddedEvents      
     )
-    SprintUpdateResult(currentState, updatedSprint, newAddedEvents, finished, timestamp)
+    SprintUpdateResult(updatedBoard, updatedSprint, newAddedEvents, finished, timestamp)
   }
   
   def columnStatesHistory(implicit config: ProjectConfig): Seq[DateWithColumnsState] = {
@@ -43,7 +37,7 @@ case class Sprint(id: String,
       .map { case (date, group) => group }
 
     lazy val boardStateStream: Stream[BoardState] =
-      BoardState(initialState) #::
+      initialBoard #::
         (boardStateStream zip eventsSortedAndGrouped).map {
           case (prevBoard, currEventsGroup) =>
             currEventsGroup.foldLeft(prevBoard) { (boardAcc, event) =>
@@ -55,8 +49,6 @@ case class Sprint(id: String,
   }
 }
 
-case class SprintState(userStories: Seq[UserStory], date: Date)
-
 case class SprintDetails(name: String, start: Date, end: Date, isActive: Boolean) {
   def finished = !isActive
 
@@ -67,15 +59,15 @@ object SprintDetails {
   def apply(name: String, start: Date, end: Date): SprintDetails = SprintDetails(name, start, end, isActive = true)
 }
 
-case class SprintUpdateResult(private val stateBeforeUpdate: SprintState, updatedSprint: Sprint, newAddedEvents: Seq[TaskChanged], sprintFinished: Boolean, timestamp: Date) {
-  def importantChange: Boolean =  importantDetailsChange || importantEventsChange
+case class SprintUpdateResult(private val stateBeforeUpdate: BoardState, updatedSprint: Sprint, newAddedEvents: Seq[TaskChanged], sprintFinished: Boolean, timestamp: Date) {
+  def importantChange: Boolean =  importantDetailsChange || importantBoardChange
 
   def importantDetailsChange: Boolean = sprintFinished // co ze zmianą nazwy/dat?
   
-  def importantEventsChange: Boolean = newAddedEvents.nonEmpty
+  def importantBoardChange: Boolean = newAddedEvents.nonEmpty
 }
 
 object Sprint {
-  def withEmptyEvents(id: String, details: SprintDetails, state: SprintState): Sprint =
-    Sprint(id, details, initialState = state, currentState = state, IndexedSeq.empty)
+  def withEmptyEvents(id: String, details: SprintDetails, state: BoardState): Sprint =
+    Sprint(id, details, initialBoard = state, currentBoard = state, IndexedSeq.empty)
 }
