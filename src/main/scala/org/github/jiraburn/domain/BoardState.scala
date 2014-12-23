@@ -13,7 +13,7 @@ case class BoardState(nestedTasks: Seq[UserStory], date: Date) extends HavingNes
     case a:TaskAdded if !a.isTechnicalTask =>
       new BoardState(nestedTasks :+ UserStory(a), a.date)
     case r:TaskRemoved if !r.isTechnicalTask =>
-      require(nestedTask(r.taskId).isDefined, s"User story missing: ${r.taskId}")
+      require(taskById.contains(r.taskId), s"User story missing: ${r.taskId}")
       new BoardState(nestedTasks.filterNot(_.taskId == r.taskId), r.date)
     case u:TaskUpdated if !u.isTechnicalTask =>
       withUpdatedParentUserStory(u) { parent =>
