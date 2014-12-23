@@ -6,7 +6,7 @@ import net.liftweb.actor.{LAFuture, LiftActor}
 import net.liftweb.common.Box
 import org.github.jiraburn.domain.actors.{GetStoryPointsHistory, SprintHistory}
 import org.github.jiraburn.domain.{DateWithColumnsState, ProjectConfig, SprintDetails}
-import org.joda.time.{Weeks, Interval, Days, DateTime}
+import org.joda.time.DateTime
 
 import scalaz.Scalaz._
 
@@ -65,11 +65,8 @@ class SprintColumnsHistoryProvider(projectActor: LiftActor, initialFetchToSpring
   }
 
   private def computeEstimate(history: SprintHistory): ColumnWithStoryPointsHistory = {
-    ColumnWithStoryPointsHistory("Estimate", "red", history.initialStoryPointsSum.to(0, step = -1).map { storyPoints =>
-      val time = history.sprintDetails.start.getTime +
-        (history.sprintDetails.end.getTime - history.sprintDetails.start.getTime) * (1 - storyPoints.toDouble / history.initialStoryPointsSum)
-      DateWithStoryPointsForSingleColumn(new Date(time.toLong), storyPoints)
-    }.toList)
+    val estimates = EstimateComputer.estimatesBetween(new DateTime(history.sprintDetails.start), new DateTime(history.sprintDetails.end), history.initialStoryPointsSum)
+    ColumnWithStoryPointsHistory("Estimate", "red", estimates)
   }
 }
 
