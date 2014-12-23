@@ -3,7 +3,7 @@ package org.github.jiraburn.repository
 import java.io.File
 
 import com.typesafe.config.ConfigFactory
-import org.github.jiraburn.domain.{TaskChanged, ProjectConfig, TaskEventsGenerator}
+import org.github.jiraburn.domain.{TaskEvent, ProjectConfig, TaskEventsGenerator}
 import org.scalatest.{FlatSpec, Matchers}
 
 class TaskEventsRepositoryTest extends FlatSpec with Matchers {

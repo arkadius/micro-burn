@@ -33,7 +33,7 @@ class BoardStateFSRepository(sprintRoot: File) extends BoardStateRepository {
   override def saveCurrentUserStories(sprint: Sprint): Unit = {
     sprintRoot.mkdirs()
     val sprintJsonFile = new File(sprintRoot, jsonFileName(sprint.currentBoard.date))
-    val rendered = pretty(render(decompose(sprint.currentBoard.userStories)))
+    val rendered = pretty(render(decompose(sprint.currentBoard.nestedTasks)))
     val writer = new PrintWriter(sprintJsonFile)
     try {
       writer.write(rendered)

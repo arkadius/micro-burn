@@ -4,20 +4,24 @@ import java.util.Date
 
 object TaskEventsGenerator {
 
-  def completedEvent(implicit config: ProjectConfig) = TaskChanged(
-    "fooTaskId",
-    "fooParentTaskId",
+  def completedEvent(implicit config: ProjectConfig) = TaskUpdated(
+    taskId = "fooTaskId",
+    parentUserStoryId = "fooParentTaskId",
     isTechnicalTask = false,
-    Some(TaskState(ProjectConfigUtils.firstClosingStatus, 123)),
-    new Date
+    taskName = "fooTaskName",
+    optionalStoryPoints = Some(123),
+    status = ProjectConfigUtils.firstClosingStatus,
+    date = new Date
   )
 
-  def reopenedEvent(implicit config: ProjectConfig) = TaskChanged(
-    "fooTaskId",
-    "fooParentTaskId",
+  def reopenedEvent(implicit config: ProjectConfig) = TaskUpdated(
+    taskId = "fooTaskId",
+    parentUserStoryId = "fooParentTaskId",
     isTechnicalTask = false,
-    Some(TaskState(ProjectConfigUtils.firstNotClosingStatus, 123)),
-    new Date
+    taskName = "fooTaskName",
+    optionalStoryPoints = Some(123),
+    status = ProjectConfigUtils.firstNotClosingStatus,
+    date = new Date
   )
 
 }

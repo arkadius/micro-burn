@@ -31,7 +31,7 @@ class ProjectActorTest extends FlatSpec with Matchers {
       beforeUpdateActiveness <- sprintIsActive
       _ = {
         beforeUpdateActiveness shouldBe true
-        projectActor ! UpdateSprint(sprint.id, sprint.currentBoard.userStories, finishSprint = true, new Date)
+        projectActor ! UpdateSprint(sprint.id, sprint.currentBoard.nestedTasks, finishSprint = true, new Date)
       }
       afterUpdateActiveness <- sprintIsActive
     } yield {
