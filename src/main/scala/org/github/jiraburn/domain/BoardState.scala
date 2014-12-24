@@ -9,7 +9,7 @@ case class BoardState(userStories: Set[UserStory], date: Date) extends HavingNes
 
   def userStoriesStoryPointsSum: Int = nestedTasksStoryPointsSum
 
-  def diff(other: BoardState): Seq[TaskEvent] = super.diff(other)(other.date)
+  def diff(other: BoardState): Seq[TaskEvent] = nestedDiff(other)(other.date)
 
   def plus(event: TaskEvent): BoardState = event match {
     case a:TaskAdded if !a.isTechnicalTask =>

@@ -20,13 +20,13 @@ trait HavingNestedTasks[NestedTaskType <: Task with ComparableWith[NestedTaskTyp
     }.sum
   }
 
-  def diff(other: Self)(implicit timestamp: Date): Seq[TaskEvent] = {
+  def nestedDiff(other: Self)(implicit timestamp: Date): Seq[TaskEvent] = {
     val allTaskIds = this.tasksIds ++ other.tasksIds
     for {
       taskId <- allTaskIds.toSeq
       optionalThisTask = this.nestedTask(taskId)
       optionalOtherTask = other.nestedTask(taskId)
-      event <- diff(optionalThisTask, optionalOtherTask)(timestamp)
+      event <- diff(optionalThisTask, optionalOtherTask)
     } yield event
   }
 

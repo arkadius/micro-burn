@@ -50,7 +50,7 @@ case class UserStory(taskId: String,
   }
 
   override def diff(other: Self)(implicit timestamp: Date): Seq[TaskEvent] = {
-    selfDiff(other) ++ super.diff(other)
+    selfDiff(other) ++ nestedDiff(other)
   }
 
   def flattenTasks: List[Task] = this :: nestedTasks.toList
@@ -62,7 +62,7 @@ case class UserStory(taskId: String,
   }
 
   override def toString: String = {
-    s"""UserStory(id = $taskId, sp = $optionalStoryPoints, st = $status, name = $taskName
+    s"""UserStory(id = $taskId
        |${technicalTasksWithoutParentId.map(_.toString).mkString(",\n")}
        |)""".stripMargin
   }
@@ -86,10 +86,10 @@ case class TechnicalTaskWithParentId(technical: TechnicalTask,
   }
 }
 
-trait ComparableWith[Self <: Task with ComparableWith[_]] { self: Task =>
-  def diff(other: Self)(implicit timestamp: Date): Seq[TaskEvent]
+trait ComparableWith[OtherTaskType <: Task with ComparableWith[_]] { self: Task =>
+  def diff(other: OtherTaskType)(implicit timestamp: Date): Seq[TaskEvent]
 
-  protected def selfDiff(other: Self)(implicit timestamp: Date): Seq[TaskEvent] = {
+  protected def selfDiff(other: OtherTaskType)(implicit timestamp: Date): Seq[TaskEvent] = {
     (other.taskName != this.taskName ||
       other.optionalStoryPoints != this.optionalStoryPoints ||
       other.status != this.status).option(TaskUpdated(other)).toSeq
@@ -101,7 +101,7 @@ case class TechnicalTask(taskId: String,
                          optionalStoryPoints: Option[Int],
                          status: Int) {
   override def toString: String = {
-    s"  Technical(id = $taskId, sp = $optionalStoryPoints, st = $status, name = $taskName)"
+    s"  Technical($taskId)"
   }
 }
 
