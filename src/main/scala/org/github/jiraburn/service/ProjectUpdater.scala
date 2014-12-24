@@ -65,7 +65,7 @@ class ProjectUpdater(projectActor: LiftActor, providers: IntegrationProviders, u
     val createResults = missing.map { sprintId =>
       for {
         (details, userStories) <- parallelSprintDetailsAndUserStories(sprintId.toString)
-        createResult <- (projectActor !< CreateNewSprint(sprintId.toString, details, userStories, timestamp)).mapTo[String]
+        createResult <- (projectActor !< CreateNewSprint(sprintId.toString, details, userStories.toSet, timestamp)).mapTo[String]
       } yield createResult
     }
     collectWithWellEmptyListHandling(createResults)
@@ -77,7 +77,7 @@ class ProjectUpdater(projectActor: LiftActor, providers: IntegrationProviders, u
       case SprintWithState(sprintId, true) =>
         for {
           (details, userStories) <- parallelSprintDetailsAndUserStories(sprintId)
-          updateResult <- (projectActor ?? UpdateSprint(sprintId, userStories, !details.isActive, timestamp)).mapTo[String]
+          updateResult <- (projectActor ?? UpdateSprint(sprintId, userStories.toSet, !details.isActive, timestamp)).mapTo[String]
         } yield updateResult
     }
     collectWithWellEmptyListHandling(updateResults)

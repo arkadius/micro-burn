@@ -3,7 +3,7 @@ package org.github.jiraburn.repository
 import java.io.File
 
 import com.typesafe.config.ConfigFactory
-import org.github.jiraburn.domain.{FooSprint, ProjectConfig, TaskGenerator}
+import org.github.jiraburn.domain.{SampleSprint, ProjectConfig, SampleTasks}
 import org.scalatest.{FlatSpec, Matchers}
 
 class BoardStateRepositoryTest extends FlatSpec with Matchers {
@@ -13,10 +13,10 @@ class BoardStateRepositoryTest extends FlatSpec with Matchers {
   implicit val config = ProjectConfig(ConfigFactory.load())
 
   it should "work round trip" in {
-    val firstTechnical = TaskGenerator.openedTechnicalTask(Some(2))
-    val secTechnical = TaskGenerator.openedTechnicalTask(None)
-    val userStories = Seq(TaskGenerator.openedUserStory(3, Seq(firstTechnical, secTechnical)))
-    val sprint = FooSprint.withEmptyEvents(userStories : _*)
+    val firstTechnical = SampleTasks.openedTechnicalTask(Some(2))
+    val secTechnical = SampleTasks.openedTechnicalTask(None)
+    val userStories = Seq(SampleTasks.openedUserStory(3, Set(firstTechnical, secTechnical)))
+    val sprint = SampleSprint.withEmptyEvents(userStories : _*)
     val repo = BoardStateRepository(new File(s"target/sprints/${sprint.id}"))
 
     repo.saveCurrentUserStories(sprint)

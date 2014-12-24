@@ -11,19 +11,19 @@ class SprintTest extends FlatSpec with Matchers with Inside {
   implicit val config = ProjectConfig(ConfigFactory.load())
 
   it should "give correct story points sum" in {
-    val sprint = FooSprint.withEmptyEvents(
-      TaskGenerator.openedUserStory(1),
-      TaskGenerator.closedUserStory(2)
+    val sprint = SampleSprint.withEmptyEvents(
+      SampleTasks.openedUserStory(1),
+      SampleTasks.closedUserStory(2)
     )
 
     sprint.initialStoryPointsSum shouldBe 3
   }
 
   it should "produce correct events for update" in {
-    val taskInitiallyOpened = TaskGenerator.openedUserStory(1)
-    val taskInitiallyCompleted = TaskGenerator.closedUserStory(2)
+    val taskInitiallyOpened = SampleTasks.openedUserStory(1)
+    val taskInitiallyCompleted = SampleTasks.closedUserStory(2)
 
-    val sprintBeforeUpdate = FooSprint.withEmptyEvents(taskInitiallyOpened, taskInitiallyCompleted)
+    val sprintBeforeUpdate = SampleSprint.withEmptyEvents(taskInitiallyOpened, taskInitiallyCompleted)
 
     val sprintAfterFirstFinish = sprintBeforeUpdate.updateTasks(taskInitiallyOpened.close, taskInitiallyCompleted)
     sprintAfterFirstFinish.initialStoryPointsSum shouldBe 3
@@ -35,11 +35,11 @@ class SprintTest extends FlatSpec with Matchers with Inside {
   }
 
   it should "generate empty events for not estimated technical tasks and non empty for parent user stories" in {
-    val technical = TaskGenerator.openedTechnicalTask(optionalSP = None)
-    val userStory = TaskGenerator.openedUserStory(1, Seq(technical))
-    val sprint = FooSprint.withEmptyEvents(userStory)
+    val technical = SampleTasks.openedTechnicalTask(optionalSP = None)
+    val userStory = SampleTasks.openedUserStory(1, Set(technical))
+    val sprint = SampleSprint.withEmptyEvents(userStory)
 
-    val completedUserStory = userStory.copy(technicalTasksWithoutParentId = List(technical.close)).close
+    val completedUserStory = userStory.copy(technicalTasksWithoutParentId = Set(technical.close)).close
 
     val afterUpdate = sprint.updateTasks(completedUserStory)
 
@@ -47,39 +47,39 @@ class SprintTest extends FlatSpec with Matchers with Inside {
   }
 
   it should "generate non empty events for estimated technical tasks and empty for parent user stories" in {
-    val firstTechnical = TaskGenerator.openedTechnicalTask(optionalSP = Some(1))
-    val secTechnical = TaskGenerator.openedTechnicalTask(optionalSP = Some(1))
-    val userStory = TaskGenerator.openedUserStory(3, Seq(firstTechnical, secTechnical))
-    val sprint = FooSprint.withEmptyEvents(userStory)
+    val firstTechnical = SampleTasks.openedTechnicalTask(optionalSP = Some(1))
+    val secTechnical = SampleTasks.openedTechnicalTask(optionalSP = Some(1))
+    val userStory = SampleTasks.openedUserStory(3, Set(firstTechnical, secTechnical))
+    val sprint = SampleSprint.withEmptyEvents(userStory)
 
-    val completedFirstUserStory = userStory.copy(technicalTasksWithoutParentId = List(firstTechnical.close, secTechnical))
+    val completedFirstUserStory = userStory.copy(technicalTasksWithoutParentId = Set(firstTechnical.close, secTechnical))
     val afterFirstFinish = sprint.updateTasks(completedFirstUserStory)
     afterFirstFinish.storyPointsChangesValues shouldEqual Seq(0, 1)
 
-    val completedAllUserStory = completedFirstUserStory.copy(technicalTasksWithoutParentId = List(firstTechnical.close, secTechnical.close)).close
+    val completedAllUserStory = completedFirstUserStory.copy(technicalTasksWithoutParentId = Set(firstTechnical.close, secTechnical.close)).close
     val afterAllFinish = afterFirstFinish.updateTasks(completedAllUserStory)
     afterAllFinish.storyPointsChangesValues shouldEqual Seq(0, 1, 3)
   }
 
   it should "generate correct events for scope change" in {
-    val firstTechnical = TaskGenerator.openedTechnicalTask(optionalSP = Some(1))
-    val secTechnical = TaskGenerator.openedTechnicalTask(optionalSP = Some(1))
-    val userStory = TaskGenerator.openedUserStory(3, Seq(firstTechnical, secTechnical))
-    val sprint = FooSprint.withEmptyEvents(userStory)
+    val firstTechnical = SampleTasks.openedTechnicalTask(optionalSP = Some(1))
+    val secTechnical = SampleTasks.openedTechnicalTask(optionalSP = Some(1))
+    val userStory = SampleTasks.openedUserStory(3, Set(firstTechnical, secTechnical))
+    val sprint = SampleSprint.withEmptyEvents(userStory)
 
     val secTechnicalClosed = secTechnical.close
-    val withSecClosed = userStory.copy(technicalTasksWithoutParentId = List(firstTechnical, secTechnicalClosed))
+    val withSecClosed = userStory.copy(technicalTasksWithoutParentId = Set(firstTechnical, secTechnicalClosed))
     val afterSecClose = sprint.updateTasks(withSecClosed)
     afterSecClose.storyPointsChangesValues shouldEqual Seq(0, 1)
 
     val secTechnicalWithChangedScope = secTechnicalClosed.copy(optionalStoryPoints = Some(2))
-    val changedScope = withSecClosed.copy(technicalTasksWithoutParentId = List(firstTechnical, secTechnicalWithChangedScope))
+    val changedScope = withSecClosed.copy(technicalTasksWithoutParentId = Set(firstTechnical, secTechnicalWithChangedScope))
     val afterScopeChange = afterSecClose.updateTasks(changedScope)
     inside(afterScopeChange) {
       case _ => afterScopeChange.storyPointsChangesValues shouldEqual Seq(0, 1, 2)
     }
 
-    val completedAllUserStory = changedScope.copy(technicalTasksWithoutParentId = List(firstTechnical.close, secTechnicalWithChangedScope)).close
+    val completedAllUserStory = changedScope.copy(technicalTasksWithoutParentId = Set(firstTechnical.close, secTechnicalWithChangedScope)).close
     val afterAllFinish = afterScopeChange.updateTasks(completedAllUserStory)
     afterAllFinish.storyPointsChangesValues shouldEqual Seq(0, 1, 2, 3)
   }
@@ -91,7 +91,7 @@ class SprintTest extends FlatSpec with Matchers with Inside {
   private def nextDate = dateIterator.next()
 
   implicit class EnhancedSprint(sprint: Sprint) {
-    def updateTasks(updatedTasks: UserStory*) = sprint.update(updatedTasks, finishSprint = false)(nextDate).updatedSprint
+    def updateTasks(updatedTasks: UserStory*) = sprint.update(updatedTasks.toSet, finishSprint = false)(nextDate).updatedSprint
 
     def storyPointsChangesValues(implicit config: ProjectConfig): Seq[Int] = sprint.columnStatesHistory.map { dateWithStoryPoints =>
       dateWithStoryPoints.storyPointsForColumn(ProjectConfigUtils.closingColumnIndex)

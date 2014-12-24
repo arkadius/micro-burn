@@ -23,8 +23,8 @@ class JiraTasksDataProviderTest extends FlatSpec with RestIntegrationTest with M
     println(result)
 
     result shouldEqual Seq(
-      UserStory("FOO-635","Bar user story", None, Nil, 1),
-      UserStory("FOO-452","Foo user story", Some(5), List(
+      UserStory("FOO-635","Bar user story", None, Set.empty, 1),
+      UserStory("FOO-452","Foo user story", Some(5), Set(
         TechnicalTask("FOO-631","Foo subtask", Some(2) , 1)
       ), 3)
     )

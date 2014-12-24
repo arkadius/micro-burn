@@ -54,7 +54,7 @@ class BoardStateFSRepository(sprintRoot: File) extends BoardStateRepository {
 
   private def loadUserStories(sprintJsonFile: File, date: Date): BoardState = {
     val content = Source.fromFile(sprintJsonFile).mkString
-    BoardState(extract[Array[UserStory]](parse(content)), date)
+    BoardState(extract[Array[UserStory]](parse(content)).toSet, date)
   }
 
   override def cleanUnnecessaryStates(): Unit = {

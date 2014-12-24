@@ -23,7 +23,7 @@ class ProjectActorTest extends FlatSpec with Matchers {
   implicit val config = ProjectConfig(ConfigFactory.load())
 
   it should "reply with correct active actors" in {
-    val sprint = FooSprint.withEmptyEvents()
+    val sprint = SampleSprint.withEmptyEvents()
     val projectActor = actorWithInitialSprint(sprint)
     def sprintIsActive = sprintActivenessCheck(sprint.id, projectActor)
 
@@ -31,7 +31,7 @@ class ProjectActorTest extends FlatSpec with Matchers {
       beforeUpdateActiveness <- sprintIsActive
       _ = {
         beforeUpdateActiveness shouldBe true
-        projectActor ! UpdateSprint(sprint.id, sprint.currentBoard.nestedTasks, finishSprint = true, new Date)
+        projectActor ! UpdateSprint(sprint.id, sprint.currentBoard.userStories, finishSprint = true, new Date)
       }
       afterUpdateActiveness <- sprintIsActive
     } yield {
@@ -40,11 +40,11 @@ class ProjectActorTest extends FlatSpec with Matchers {
   }
 
   it should "reply with correct history" in {
-    val userStory = TaskGenerator.openedUserStory(sp = 1)
-    val sprint = FooSprint.withEmptyEvents(userStory)
+    val userStory = SampleTasks.openedUserStory(sp = 1)
+    val sprint = SampleSprint.withEmptyEvents(userStory)
     val projectActor = actorWithInitialSprint(sprint)
 
-    val userStoriesWithClosed = Seq(userStory.copy(status = ProjectConfigUtils.firstClosingStatus))
+    val userStoriesWithClosed = Set(userStory.copy(status = ProjectConfigUtils.firstClosingStatus))
     val beforeSprintsEnd = new Date(sprint.details.end.getTime-1)
     projectActor ! UpdateSprint(sprint.id, userStoriesWithClosed, finishSprint = false, beforeSprintsEnd)
 

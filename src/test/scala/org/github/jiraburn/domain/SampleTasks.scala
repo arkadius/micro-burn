@@ -1,6 +1,6 @@
 package org.github.jiraburn.domain
 
-object TaskGenerator {
+object SampleTasks {
 
   private var currentId = 0
 
@@ -9,14 +9,14 @@ object TaskGenerator {
     currentId.toString
   }
 
-  def openedUserStory(sp: Int, technical: Seq[TechnicalTask] = Nil)(implicit config: ProjectConfig) = {
+  def openedUserStory(sp: Int, technical: Set[TechnicalTask] = Set.empty)(implicit config: ProjectConfig) = {
     val id = nextId
-    UserStory(id, s"User Story $id", Some(sp), technical.toList, ProjectConfigUtils.firstNotClosingStatus)
+    UserStory(id, s"User Story $id", Some(sp), technical, ProjectConfigUtils.firstNotClosingStatus)
   }
 
-  def closedUserStory(sp: Int, technical: Seq[TechnicalTask] = Nil)(implicit config: ProjectConfig) = {
+  def closedUserStory(sp: Int, technical: Set[TechnicalTask] = Set.empty)(implicit config: ProjectConfig) = {
     val id = nextId
-    UserStory(id, s"User Story $id", Some(sp), technical.toList, ProjectConfigUtils.firstClosingStatus)
+    UserStory(id, s"User Story $id", Some(sp), technical, ProjectConfigUtils.firstClosingStatus)
   }
 
   def openedTechnicalTask(optionalSP: Option[Int])(implicit config: ProjectConfig) = {

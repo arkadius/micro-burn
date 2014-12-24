@@ -54,9 +54,9 @@ case object GetSprintsWithStates
 
 case class SprintWithState(sprintId: String, isActive: Boolean)
 
-case class CreateNewSprint(sprintId: String, details: SprintDetails, userStories: Seq[UserStory], timestamp: Date)
+case class CreateNewSprint(sprintId: String, details: SprintDetails, userStories: Set[UserStory], timestamp: Date)
 
-case class UpdateSprint(sprintId: String, userStories: Seq[UserStory], finishSprint: Boolean, timestamp: Date)
+case class UpdateSprint(sprintId: String, userStories: Set[UserStory], finishSprint: Boolean, timestamp: Date)
 
 case class GetStoryPointsHistory(sprintId: String)
 

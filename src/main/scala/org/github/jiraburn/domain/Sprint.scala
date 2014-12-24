@@ -14,9 +14,8 @@ case class Sprint(id: String,
 
   def initialStoryPointsSum: Int = initialBoard.userStoriesStoryPointsSum
 
-  def update(updatedUserStories: Seq[UserStory], finishSprint: Boolean)
-            (timestamp: Date)
-            (implicit config: ProjectConfig): SprintUpdateResult = {
+  def update(updatedUserStories: Set[UserStory], finishSprint: Boolean)
+            (timestamp: Date): SprintUpdateResult = {
     val updatedBoard = BoardState(updatedUserStories, timestamp)
     val newAddedEvents = currentBoard.diff(updatedBoard)
     val finished = isActive && finishSprint

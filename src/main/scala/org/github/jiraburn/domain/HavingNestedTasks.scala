@@ -5,7 +5,7 @@ import java.util.Date
 trait HavingNestedTasks[NestedTaskType <: Task with ComparableWith[NestedTaskType]] { self =>
   type Self >: self.type <: HavingNestedTasks[NestedTaskType]
 
-  protected def nestedTasks: Seq[NestedTaskType]
+  protected def nestedTasks: Set[NestedTaskType]
   
   protected lazy val taskById: Map[String, NestedTaskType] =
     nestedTasks.groupBy(_.taskId).mapValues(_.head).toMap
@@ -34,7 +34,7 @@ trait HavingNestedTasks[NestedTaskType <: Task with ComparableWith[NestedTaskTyp
                   (implicit timestamp: Date): Seq[TaskEvent] = {
     (thisTask, otherTask) match {
       case (None, None) => throw new IllegalArgumentException("At least one story should be defined")
-      case (None, Some(definedOtherTask)) => Seq(TaskAdded(definedOtherTask))
+      case (None, Some(definedOtherTask)) => definedOtherTask.taskAdded
       case (Some(definedThisTask), None)  => Seq(TaskRemoved(definedThisTask))
       case (Some(definedThisTask), Some(definedOtherTask)) => definedThisTask.diff(definedOtherTask)
     }

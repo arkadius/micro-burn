@@ -41,11 +41,11 @@ class SprintActorFactory(projectRoot: File, config: ProjectConfig, changeNotifyi
     }
   }
 
-  def migrateSprint(sprintId: String, details: SprintDetails, userStories: Seq[UserStory]): SprintActor = {
+  def migrateSprint(sprintId: String, details: SprintDetails, userStories: Set[UserStory]): SprintActor = {
     createSprint(sprintId, details, userStories, details.end)
   }
 
-  def createSprint(sprintId: String, details: SprintDetails, userStories: Seq[UserStory], timestamp: Date): SprintActor = {
+  def createSprint(sprintId: String, details: SprintDetails, userStories: Set[UserStory], timestamp: Date): SprintActor = {
     val sprint = Sprint.withEmptyEvents(sprintId, details, BoardState(userStories, timestamp))
     val repo = createRepo(sprintId)
     repo.saveSprint(sprint)
