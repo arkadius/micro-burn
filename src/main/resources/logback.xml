@@ -7,7 +7,7 @@
         </encoder>
     </appender>
 
-    <logger name="org.github.jiraburn" level="DEBUG"/>
+    <logger name="org.github.micoburn" level="DEBUG"/>
 
     <root level="INFO">
         <appender-ref ref="STDOUT" />

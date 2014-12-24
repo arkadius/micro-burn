@@ -4,8 +4,8 @@ import net.liftmodules.JQueryModule
 import net.liftweb.common._
 import net.liftweb.http._
 import net.liftweb.http.js.jquery.JQueryArtifacts
-import org.github.jiraburn.ApplicationContext
-import org.github.jiraburn.rest.RestRoutes
+import org.github.micoburn.ApplicationContext
+import org.github.micoburn.rest.RestRoutes
 
 
 /**
@@ -15,7 +15,7 @@ import org.github.jiraburn.rest.RestRoutes
 class Boot {
   def boot {
     // where to search snippet
-    LiftRules.addToPackages("org.github.jiraburn")
+    LiftRules.addToPackages("org.github.micorburn")
 
     //Show the spinny image when an Ajax call starts
     LiftRules.ajaxStart =
