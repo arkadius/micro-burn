@@ -1,7 +1,8 @@
-package org.github.jiraburn.domain
+package org.github.jiraburn.domain.generator
 
 import java.util.Date
 
+import org.github.jiraburn.domain.{TaskAdded, TaskEvent, TaskRemoved, TaskUpdated}
 import org.scalacheck.Gen
 
 object TaskEventsGenerator {
@@ -47,7 +48,7 @@ object TaskEventsGenerator {
     )
   }
 
-  val taskEventGenerator: Gen[TaskEvent] =
+  val generator: Gen[TaskEvent] =
     Gen.oneOf(addedEventGenerator, updatedEventGenerator, removedEventGenerator)
 
 }

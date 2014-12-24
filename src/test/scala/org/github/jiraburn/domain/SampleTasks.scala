@@ -11,12 +11,12 @@ object SampleTasks {
 
   def openedUserStory(sp: Int, technical: Seq[TechnicalTask] = Nil)(implicit config: ProjectConfig) = {
     val id = nextId
-    UserStory(id, s"User Story $id", Some(sp), technical.toList, ProjectConfigUtils.firstNotClosingStatus)
+    UserStory(id, s"User Story $id", Some(sp), technical.toIndexedSeq, ProjectConfigUtils.firstNotClosingStatus)
   }
 
   def closedUserStory(sp: Int, technical: Seq[TechnicalTask] = Nil)(implicit config: ProjectConfig) = {
     val id = nextId
-    UserStory(id, s"User Story $id", Some(sp), technical.toList, ProjectConfigUtils.firstClosingStatus)
+    UserStory(id, s"User Story $id", Some(sp), technical.toIndexedSeq, ProjectConfigUtils.firstClosingStatus)
   }
 
   def openedTechnicalTask(optionalSP: Option[Int])(implicit config: ProjectConfig) = {

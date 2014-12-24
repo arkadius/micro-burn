@@ -3,17 +3,18 @@ package org.github.jiraburn.repository
 import java.io.File
 
 import com.typesafe.config.ConfigFactory
-import org.github.jiraburn.domain.{TaskEvent, ProjectConfig, TaskEventsGenerator}
+import org.github.jiraburn.domain.ProjectConfig
+import org.github.jiraburn.domain.generator.TaskEventsGenerator
 import org.scalacheck.Gen
 import org.scalatest.prop.GeneratorDrivenPropertyChecks
 import org.scalatest.{FlatSpec, Matchers}
 
-class TaskEventsRepositoryTest extends FlatSpec with Matchers with GeneratorDrivenPropertyChecks {
+class TaskEventsRepositoryRandomTest extends FlatSpec with Matchers with GeneratorDrivenPropertyChecks {
 
   implicit val config = ProjectConfig(ConfigFactory.load())
 
   it should "do correct round trip" in {
-    forAll(Gen.nonEmptyListOf(TaskEventsGenerator.taskEventGenerator)) { events =>
+    forAll(Gen.nonEmptyListOf(TaskEventsGenerator.generator)) { events =>
       val sprintRoot = new File(s"target/sprints/foo")
       val file = new File(sprintRoot, "taskEvents.csv")
       if (file.exists())

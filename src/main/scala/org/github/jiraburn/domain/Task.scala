@@ -22,7 +22,7 @@ sealed trait Task { self =>
 case class UserStory(taskId: String,
                      taskName: String,
                      optionalStoryPoints: Option[Int],
-                     technicalTasksWithoutParentId: List[TechnicalTask],
+                     technicalTasksWithoutParentId: IndexedSeq[TechnicalTask],
                      status: Int) extends Task with ComparableWith[UserStory] with HavingNestedTasks[TechnicalTaskWithParentId] {
   override type Self = UserStory
 
@@ -46,11 +46,11 @@ case class UserStory(taskId: String,
 
   def update(taskId: String)(updateTechnical: TechnicalTask => TechnicalTask): UserStory = {
     val updated = updateTechnical(taskById(taskId).technical)
-    val currentIndex = technicalTasksWithoutParentId.zipWithIndex.collectFirst {
-      case (technicalTask, index) if technicalTask.taskId == updated.taskId => index
-    }
-    copy(technicalTasksWithoutParentId = technicalTasksWithoutParentId.updated(currentIndex.get, updated))
+    withUpdateNestedTask(TechnicalTaskWithParentId(updated, taskId))
   }
+
+  override protected def updateNestedTasks(newNestedTasks: Seq[TechnicalTaskWithParentId]): Self =
+    copy(technicalTasksWithoutParentId = newNestedTasks.map(_.technical).toIndexedSeq)
 
   override def diff(other: Self)(implicit timestamp: Date): Seq[TaskEvent] = {
     selfDiff(other) ++ nestedDiff(other)
@@ -116,7 +116,7 @@ object UserStory {
       taskId = added.taskId,
       taskName = added.taskName,
       optionalStoryPoints = added.optionalStoryPoints,
-      technicalTasksWithoutParentId = Nil,
+      technicalTasksWithoutParentId = IndexedSeq.empty,
       status = added.status)
   }
 }

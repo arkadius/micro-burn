@@ -39,7 +39,7 @@ class SprintTest extends FlatSpec with Matchers with Inside {
     val userStory = SampleTasks.openedUserStory(1, Seq(technical))
     val sprint = SampleSprint.withEmptyEvents(userStory)
 
-    val completedUserStory = userStory.copy(technicalTasksWithoutParentId = List(technical.close)).close
+    val completedUserStory = userStory.copy(technicalTasksWithoutParentId = IndexedSeq(technical.close)).close
 
     val afterUpdate = sprint.updateTasks(completedUserStory)
 
@@ -52,11 +52,11 @@ class SprintTest extends FlatSpec with Matchers with Inside {
     val userStory = SampleTasks.openedUserStory(3, Seq(firstTechnical, secTechnical))
     val sprint = SampleSprint.withEmptyEvents(userStory)
 
-    val completedFirstUserStory = userStory.copy(technicalTasksWithoutParentId = List(firstTechnical.close, secTechnical))
+    val completedFirstUserStory = userStory.copy(technicalTasksWithoutParentId = IndexedSeq(firstTechnical.close, secTechnical))
     val afterFirstFinish = sprint.updateTasks(completedFirstUserStory)
     afterFirstFinish.storyPointsChangesValues shouldEqual Seq(0, 1)
 
-    val completedAllUserStory = completedFirstUserStory.copy(technicalTasksWithoutParentId = List(firstTechnical.close, secTechnical.close)).close
+    val completedAllUserStory = completedFirstUserStory.copy(technicalTasksWithoutParentId = IndexedSeq(firstTechnical.close, secTechnical.close)).close
     val afterAllFinish = afterFirstFinish.updateTasks(completedAllUserStory)
     afterAllFinish.storyPointsChangesValues shouldEqual Seq(0, 1, 3)
   }
@@ -68,18 +68,18 @@ class SprintTest extends FlatSpec with Matchers with Inside {
     val sprint = SampleSprint.withEmptyEvents(userStory)
 
     val secTechnicalClosed = secTechnical.close
-    val withSecClosed = userStory.copy(technicalTasksWithoutParentId = List(firstTechnical, secTechnicalClosed))
+    val withSecClosed = userStory.copy(technicalTasksWithoutParentId = IndexedSeq(firstTechnical, secTechnicalClosed))
     val afterSecClose = sprint.updateTasks(withSecClosed)
     afterSecClose.storyPointsChangesValues shouldEqual Seq(0, 1)
 
     val secTechnicalWithChangedScope = secTechnicalClosed.copy(optionalStoryPoints = Some(2))
-    val changedScope = withSecClosed.copy(technicalTasksWithoutParentId = List(firstTechnical, secTechnicalWithChangedScope))
+    val changedScope = withSecClosed.copy(technicalTasksWithoutParentId = IndexedSeq(firstTechnical, secTechnicalWithChangedScope))
     val afterScopeChange = afterSecClose.updateTasks(changedScope)
     inside(afterScopeChange) {
       case _ => afterScopeChange.storyPointsChangesValues shouldEqual Seq(0, 1, 2)
     }
 
-    val completedAllUserStory = changedScope.copy(technicalTasksWithoutParentId = List(firstTechnical.close, secTechnicalWithChangedScope)).close
+    val completedAllUserStory = changedScope.copy(technicalTasksWithoutParentId = IndexedSeq(firstTechnical.close, secTechnicalWithChangedScope)).close
     val afterAllFinish = afterScopeChange.updateTasks(completedAllUserStory)
     afterAllFinish.storyPointsChangesValues shouldEqual Seq(0, 1, 2, 3)
   }

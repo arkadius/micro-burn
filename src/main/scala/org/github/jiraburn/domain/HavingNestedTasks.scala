@@ -20,6 +20,15 @@ trait HavingNestedTasks[NestedTaskType <: Task with ComparableWith[NestedTaskTyp
     }.sum
   }
 
+  def withUpdateNestedTask(updated: NestedTaskType): Self = {
+    val currentIndex = nestedTasks.zipWithIndex.collectFirst {
+      case (userStory, index) if userStory.taskId == updated.taskId => index
+    }
+    updateNestedTasks(nestedTasks.updated(currentIndex.get, updated))
+  }
+
+  protected def updateNestedTasks(newNestedTasks: Seq[NestedTaskType]): Self
+
   def nestedDiff(other: Self)(implicit timestamp: Date): Seq[TaskEvent] = {
     val allTaskIds = this.tasksIds ++ other.tasksIds
     for {

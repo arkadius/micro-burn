@@ -1,10 +1,11 @@
-package org.github.jiraburn.domain
+package org.github.jiraburn.domain.generator
 
+import org.github.jiraburn.domain.{TechnicalTask, UserStory}
 import org.scalacheck.Gen
 
 object TasksGenerator {
 
-  import collection.convert.wrapAsScala._
+  import scala.collection.convert.wrapAsScala._
 
   def technicalTaskGenerator(optionalStoryPoints: Option[Int]): Gen[TechnicalTask] = {
     for {
@@ -37,7 +38,7 @@ object TasksGenerator {
       status <- Gen.posNum[Int]
     } yield UserStory(
       taskId = taskId.toString, taskName = taskName, optionalStoryPoints = optionalStoryPoints,
-      technicalTasksWithoutParentId = technicalTasks, status = status
+      technicalTasksWithoutParentId = technicalTasks.toIndexedSeq, status = status
     )
   }
 

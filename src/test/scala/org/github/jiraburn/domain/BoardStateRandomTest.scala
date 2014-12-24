@@ -2,6 +2,7 @@ package org.github.jiraburn.domain
 
 import java.util.Date
 
+import org.github.jiraburn.domain.generator.{BoardStateGenerator, BoardChangesGenerator}
 import org.scalacheck.Gen
 import org.scalatest.prop.GeneratorDrivenPropertyChecks
 import org.scalatest.{FlatSpec, Matchers}

@@ -1,7 +1,8 @@
-package org.github.jiraburn.domain
+package org.github.jiraburn.domain.generator
 
 import java.util.Date
 
+import org.github.jiraburn.domain.BoardState
 import org.scalacheck.Gen
 
 object BoardStateGenerator {

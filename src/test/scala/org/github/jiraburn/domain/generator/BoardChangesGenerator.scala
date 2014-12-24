@@ -1,5 +1,6 @@
-package org.github.jiraburn.domain
+package org.github.jiraburn.domain.generator
 
+import org.github.jiraburn.domain.{BoardState, TechnicalTask, UserStory}
 import org.scalacheck.Gen
 
 object BoardChangesGenerator {
@@ -20,14 +21,14 @@ object BoardChangesGenerator {
       technical <- Gen.oneOf(parent.technicalTasksWithoutParentId.toSeq)
       updatedTechnical <- Gen.oneOf(updateStatus(technical), updateStoryPoints(technical))
       updated = parent.update(technical.taskId)(_ => updatedTechnical)
-    } yield board.withUpdateUserStory(updated)
+    } yield board.withUpdateNestedTask(updated)
 
   private def removeTechnicalTaskGenerator(board: BoardState): Gen[BoardState] =
     for {
       parent <- Gen.oneOf(board.userStories.toSeq)
       technicalTaskId <- Gen.oneOf(parent.technicalTasksWithoutParentId.toSeq.map(_.taskId))
       updated = parent.remove(technicalTaskId)      
-    } yield board.withUpdateUserStory(updated)
+    } yield board.withUpdateNestedTask(updated)
   
   private def addTechnicalTaskGenerator(board: BoardState): Gen[BoardState] =
     for {
@@ -35,7 +36,7 @@ object BoardChangesGenerator {
       technicalStoryPoints <- Gen.chooseNum(0, parent.storyPointsWithoutSubTasks)
       technical <- TasksGenerator.technicalTaskGenerator(Some(technicalStoryPoints))
       updated = parent.add(technical)
-    } yield board.withUpdateUserStory(updated)
+    } yield board.withUpdateNestedTask(updated)
 
   private def updateStatus(userStory: UserStory): Gen[UserStory] =
     for {
@@ -51,7 +52,7 @@ object BoardChangesGenerator {
     for {
       task <- Gen.oneOf(board.userStories.toSeq)
       updated <- Gen.oneOf(updateStatus(task), updateStoryPoints(task))
-    } yield board.withUpdateUserStory(updated)
+    } yield board.withUpdateNestedTask(updated)
 
   private def removeUserStoryGenerator(board: BoardState): Gen[BoardState] =
     for {

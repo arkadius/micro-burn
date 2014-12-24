@@ -41,7 +41,7 @@ class JiraTasksDataProvider(config: JiraConfig) extends TasksDataProvider {
   }
 
   private def createUserStory(parentTask: TaskWithParentId, subTasks: List[TaskWithParentId]): UserStory = {
-    UserStory(parentTask.taskId, parentTask.taskName, parentTask.storyPoints, subTasks.map(createTechnicalTask), parentTask.status)
+    UserStory(parentTask.taskId, parentTask.taskName, parentTask.storyPoints, subTasks.map(createTechnicalTask).toIndexedSeq, parentTask.status)
   }
 
   private def createTechnicalTask(subTask: TaskWithParentId): TechnicalTask = {
