@@ -8,10 +8,10 @@ object TasksGenerator {
 
   def technicalTaskGenerator(optionalStoryPoints: Option[Int]): Gen[TechnicalTask] = {
     for {
-      taskId <- Gen.identifier
+      taskId <- Gen.uuid
       taskName <- Gen.identifier
       status <- Gen.posNum[Int]
-    } yield TechnicalTask(taskId = taskId, taskName = taskName, optionalStoryPoints = optionalStoryPoints, status = status)
+    } yield TechnicalTask(taskId = taskId.toString, taskName = taskName, optionalStoryPoints = optionalStoryPoints, status = status)
   }
 
   private val technicalTasksAndStoryPointsGenerator: Gen[(List[TechnicalTask], Option[Int])] = {
@@ -31,12 +31,12 @@ object TasksGenerator {
 
   val userStoryGenerator: Gen[UserStory] = {
     for {
-      taskId <- Gen.identifier
+      taskId <- Gen.uuid
       taskName <- Gen.identifier
       (technicalTasks, optionalStoryPoints) <- technicalTasksAndStoryPointsGenerator
       status <- Gen.posNum[Int]
     } yield UserStory(
-      taskId = taskId, taskName = taskName, optionalStoryPoints = optionalStoryPoints,
+      taskId = taskId.toString, taskName = taskName, optionalStoryPoints = optionalStoryPoints,
       technicalTasksWithoutParentId = technicalTasks.toSet, status = status
     )
   }

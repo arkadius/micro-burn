@@ -8,7 +8,7 @@ trait HavingNestedTasks[NestedTaskType <: Task with ComparableWith[NestedTaskTyp
   protected def nestedTasks: Set[NestedTaskType]
   
   protected lazy val taskById: Map[String, NestedTaskType] =
-    nestedTasks.groupBy(_.taskId).mapValues(_.head).toMap
+    nestedTasks.toSeq.map { task => task.taskId -> task }.toMap
 
   private def tasksIds: Set[String] = taskById.keySet
 

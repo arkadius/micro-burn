@@ -62,7 +62,7 @@ case class UserStory(taskId: String,
   }
 
   override def toString: String = {
-    s"""UserStory(id = $taskId
+    s"""UserStory(id = ${taskId.take(5)}
        |${technicalTasksWithoutParentId.map(_.toString).mkString(",\n")}
        |)""".stripMargin
   }
@@ -101,7 +101,7 @@ case class TechnicalTask(taskId: String,
                          optionalStoryPoints: Option[Int],
                          status: Int) {
   override def toString: String = {
-    s"  Technical($taskId)"
+    s"  Technical(${taskId.take(5)})"
   }
 }
 

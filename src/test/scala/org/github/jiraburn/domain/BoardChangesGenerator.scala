@@ -53,7 +53,7 @@ object BoardChangesGenerator {
       updated <- Gen.oneOf(updateStatus(task), updateStoryPoints(task))
     } yield board.copy(userStories = board.userStories.filterNot(_.taskId == task.taskId) + updated)
 
-  def removeUserStoryGenerator(board: BoardState): Gen[BoardState] =
+  private def removeUserStoryGenerator(board: BoardState): Gen[BoardState] =
     for {
       taskId <- Gen.oneOf(board.userStories.map(_.taskId).toSeq)
     } yield board.copy(userStories = board.userStories.filterNot(_.taskId == taskId))
@@ -64,7 +64,7 @@ object BoardChangesGenerator {
     } yield board.copy(userStories = board.userStories + userStory)
   
   def changesGenerator(board: BoardState): Gen[BoardState] =
-    removeUserStoryGenerator(board)
+    addUserStoryGenerator(board)
 //    Gen.oneOf(
 //      updateTechnicalTaskGenerator(board),
 //      removeTechnicalTaskGenerator(board),
