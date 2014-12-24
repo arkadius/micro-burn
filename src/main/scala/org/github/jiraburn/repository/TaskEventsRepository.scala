@@ -105,7 +105,7 @@ class TaskEventsCsvRepository(taskEventsFile: File) extends TaskEventsRepository
 
   override def loadTaskEvents: Seq[TaskEvent] =
     if (!taskEventsFile.exists()) {
-      Nil
+      IndexedSeq.empty
     } else {
       val csv = CSVReader.open(taskEventsFile)(csvFormat)
       try {

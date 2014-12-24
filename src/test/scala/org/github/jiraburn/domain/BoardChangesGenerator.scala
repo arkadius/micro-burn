@@ -20,14 +20,14 @@ object BoardChangesGenerator {
       technical <- Gen.oneOf(parent.technicalTasksWithoutParentId.toSeq)
       updatedTechnical <- Gen.oneOf(updateStatus(technical), updateStoryPoints(technical))
       updated = parent.update(technical.taskId)(_ => updatedTechnical)
-    } yield board.copy(userStories = board.userStories.filterNot(_.taskId == parent.taskId) :+ updated)
+    } yield board.withUpdateUserStory(updated)
 
   private def removeTechnicalTaskGenerator(board: BoardState): Gen[BoardState] =
     for {
       parent <- Gen.oneOf(board.userStories.toSeq)
       technicalTaskId <- Gen.oneOf(parent.technicalTasksWithoutParentId.toSeq.map(_.taskId))
       updated = parent.remove(technicalTaskId)      
-    } yield board.copy(userStories = board.userStories.filterNot(_.taskId == parent.taskId) :+ updated)
+    } yield board.withUpdateUserStory(updated)
   
   private def addTechnicalTaskGenerator(board: BoardState): Gen[BoardState] =
     for {
@@ -35,7 +35,7 @@ object BoardChangesGenerator {
       technicalStoryPoints <- Gen.chooseNum(0, parent.storyPointsWithoutSubTasks)
       technical <- TasksGenerator.technicalTaskGenerator(Some(technicalStoryPoints))
       updated = parent.add(technical)
-    } yield board.copy(userStories = board.userStories.filterNot(_.taskId == parent.taskId) :+ updated)
+    } yield board.withUpdateUserStory(updated)
 
   private def updateStatus(userStory: UserStory): Gen[UserStory] =
     for {
@@ -51,7 +51,7 @@ object BoardChangesGenerator {
     for {
       task <- Gen.oneOf(board.userStories.toSeq)
       updated <- Gen.oneOf(updateStatus(task), updateStoryPoints(task))
-    } yield board.copy(userStories = board.userStories.filterNot(_.taskId == task.taskId) :+ updated)
+    } yield board.withUpdateUserStory(updated)
 
   private def removeUserStoryGenerator(board: BoardState): Gen[BoardState] =
     for {
@@ -64,13 +64,12 @@ object BoardChangesGenerator {
     } yield board.copy(userStories = board.userStories :+ userStory)
   
   def changesGenerator(board: BoardState): Gen[BoardState] =
-    addUserStoryGenerator(board)
-//    Gen.oneOf(
-//      updateTechnicalTaskGenerator(board),
-//      removeTechnicalTaskGenerator(board),
-//      addTechnicalTaskGenerator(board),
-//      updateUserStoryGenerator(board),
-//      removeUserStoryGenerator(board),
-//      addUserStoryGenerator(board)
-//    )
+    Gen.oneOf(
+      updateTechnicalTaskGenerator(board),
+      removeTechnicalTaskGenerator(board),
+      addTechnicalTaskGenerator(board),
+      updateUserStoryGenerator(board),
+      removeUserStoryGenerator(board),
+      addUserStoryGenerator(board)
+    )
 }

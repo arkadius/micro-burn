@@ -54,11 +54,14 @@ case class BoardState(userStories: Seq[UserStory], date: Date) extends HavingNes
       throw new IllegalArgumentException(s"User story missing: ${event.parentUserStoryId}")
     }
     val updated = updateParent(parent)
-    new BoardState(userStoriesWithUpdateTask(updated), event.date)
+    withUpdateUserStory(updated).copy(date = event.date)
   }
 
-  private def userStoriesWithUpdateTask(updated: UserStory): Seq[UserStory] = {
-    userStories.filterNot(_.taskId == updated.taskId) :+ updated
+  def withUpdateUserStory(updated: UserStory): BoardState = {
+    val currentIndex = userStories.zipWithIndex.collectFirst {
+      case (userStory, index) if userStory.taskId == updated.taskId => index
+    }
+    copy(userStories = userStories.updated(currentIndex.get, updated))
   }
 
   def columnsState(implicit config: ProjectConfig): DateWithColumnsState = {

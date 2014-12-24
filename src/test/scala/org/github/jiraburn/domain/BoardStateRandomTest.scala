@@ -30,11 +30,9 @@ class BoardStateRandomTest extends FlatSpec with GeneratorDrivenPropertyChecks w
             val boardAfterEventsAccumulation = events.foldLeft(prevBoard) { (board, event) =>
               board.plus(event)
             }
-//            withMoreReadeableClue(prevBoard, events, boardAfterGeneratedChanges, boardAfterEventsAccumulation)
-//            {
-//              deepCheck(boardAfterEventsAccumulation, boardAfterGeneratedChanges)
-//              boardAfterEventsAccumulation shouldEqual boardAfterGeneratedChanges
-//            }
+            withMoreReadeableClue(prevBoard, events, boardAfterGeneratedChanges, boardAfterEventsAccumulation) { // mocno zwalnia testy
+              boardAfterEventsAccumulation shouldEqual boardAfterGeneratedChanges
+            }
             boardAfterEventsAccumulation
         }
     }
@@ -59,14 +57,23 @@ class BoardStateRandomTest extends FlatSpec with GeneratorDrivenPropertyChecks w
                 |
                 |$boardAfterEventsAccumulation
                 |***** END ******
-                |""".stripMargin)(f)
+                |""".stripMargin) {
+      deepCheck(boardAfterEventsAccumulation, boardAfterGeneratedChanges)
+      deepCheck(boardAfterGeneratedChanges, boardAfterEventsAccumulation)
+      f
+    }
   }
 
   private def deepCheck(boardAfterEventsAccumulation: BoardState, boardAfterGeneratedChanges: BoardState) {
+    boardAfterEventsAccumulation.date shouldEqual boardAfterGeneratedChanges.date
     boardAfterEventsAccumulation.userStories.foreach { one =>
-      val two = boardAfterGeneratedChanges.userStories.find(_.taskId == one.taskId).get
+      val twoFiltered = boardAfterGeneratedChanges.userStories.filter(_.taskId == one.taskId)
+      twoFiltered should have length 1
+      val two = twoFiltered.head
       one.technicalTasksWithoutParentId.foreach { oneTech =>
-        val twoTech = two.technicalTasksWithoutParentId.find(_.taskId == oneTech.taskId).get
+        val twoTechFiltered = two.technicalTasksWithoutParentId.filter(_.taskId == oneTech.taskId)
+        twoTechFiltered should have length 1
+        val twoTech = twoTechFiltered.head
         oneTech.taskName shouldEqual twoTech.taskName
         oneTech.optionalStoryPoints shouldEqual twoTech.optionalStoryPoints
         oneTech.status shouldEqual twoTech.status
@@ -82,7 +89,7 @@ class BoardStateRandomTest extends FlatSpec with GeneratorDrivenPropertyChecks w
   private val initialBoardAndChangesGenerator: Gen[InitialBoardAndChanges] =
     for {
       initialBoardState <- BoardStateGenerator.generator(new Date(0))
-      nChanges <- Gen.posNum[Int]
+      nChanges <- Gen.chooseNum(1, 10)
       changes = {
         // rozwiązanie leniwe ze Gen.sequence(streamOfGen) powodowało, że dostawaliśmy zmiany w stosunku do innych niż w wyniku tablic
         lazy val boardStatesStream = Stream.iterate[Option[BoardState]](Some(initialBoardState)) { optionalPrevBoard =>

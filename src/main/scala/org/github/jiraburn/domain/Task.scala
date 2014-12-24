@@ -46,7 +46,10 @@ case class UserStory(taskId: String,
 
   def update(taskId: String)(updateTechnical: TechnicalTask => TechnicalTask): UserStory = {
     val updated = updateTechnical(taskById(taskId).technical)
-    copy(technicalTasksWithoutParentId = technicalTasksWithoutParentId.filterNot(_.taskId == taskId) :+ updated)
+    val currentIndex = technicalTasksWithoutParentId.zipWithIndex.collectFirst {
+      case (technicalTask, index) if technicalTask.taskId == updated.taskId => index
+    }
+    copy(technicalTasksWithoutParentId = technicalTasksWithoutParentId.updated(currentIndex.get, updated))
   }
 
   override def diff(other: Self)(implicit timestamp: Date): Seq[TaskEvent] = {
