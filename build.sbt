@@ -1,6 +1,6 @@
 organization  := "org.github"
 
-name := "jira-burn"
+name := "micro-burn"
 
 version       := "0.1"
 
