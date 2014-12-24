@@ -5,7 +5,7 @@ import java.util.Date
 trait HavingNestedTasks[NestedTaskType <: Task with ComparableWith[NestedTaskType]] { self =>
   type Self >: self.type <: HavingNestedTasks[NestedTaskType]
 
-  protected def nestedTasks: Set[NestedTaskType]
+  protected def nestedTasks: Seq[NestedTaskType]
   
   protected lazy val taskById: Map[String, NestedTaskType] =
     nestedTasks.toSeq.map { task => task.taskId -> task }.toMap

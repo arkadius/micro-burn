@@ -11,7 +11,7 @@ object SampleSprint {
   )
 
   def withEmptyEvents(userStories: UserStory*): Sprint = {
-    Sprint.withEmptyEvents("foo", sampleDetails, BoardState(userStories.toSet, new Date(2000)))
+    Sprint.withEmptyEvents("foo", sampleDetails, BoardState(userStories, new Date(2000)))
   }
   
 }

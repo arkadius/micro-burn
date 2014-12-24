@@ -44,7 +44,7 @@ class ProjectActorTest extends FlatSpec with Matchers {
     val sprint = SampleSprint.withEmptyEvents(userStory)
     val projectActor = actorWithInitialSprint(sprint)
 
-    val userStoriesWithClosed = Set(userStory.copy(status = ProjectConfigUtils.firstClosingStatus))
+    val userStoriesWithClosed = Seq(userStory.copy(status = ProjectConfigUtils.firstClosingStatus))
     val beforeSprintsEnd = new Date(sprint.details.end.getTime-1)
     projectActor ! UpdateSprint(sprint.id, userStoriesWithClosed, finishSprint = false, beforeSprintsEnd)
 

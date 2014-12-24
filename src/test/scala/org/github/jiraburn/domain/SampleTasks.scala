@@ -9,14 +9,14 @@ object SampleTasks {
     currentId.toString
   }
 
-  def openedUserStory(sp: Int, technical: Set[TechnicalTask] = Set.empty)(implicit config: ProjectConfig) = {
+  def openedUserStory(sp: Int, technical: Seq[TechnicalTask] = Nil)(implicit config: ProjectConfig) = {
     val id = nextId
-    UserStory(id, s"User Story $id", Some(sp), technical, ProjectConfigUtils.firstNotClosingStatus)
+    UserStory(id, s"User Story $id", Some(sp), technical.toList, ProjectConfigUtils.firstNotClosingStatus)
   }
 
-  def closedUserStory(sp: Int, technical: Set[TechnicalTask] = Set.empty)(implicit config: ProjectConfig) = {
+  def closedUserStory(sp: Int, technical: Seq[TechnicalTask] = Nil)(implicit config: ProjectConfig) = {
     val id = nextId
-    UserStory(id, s"User Story $id", Some(sp), technical, ProjectConfigUtils.firstClosingStatus)
+    UserStory(id, s"User Story $id", Some(sp), technical.toList, ProjectConfigUtils.firstClosingStatus)
   }
 
   def openedTechnicalTask(optionalSP: Option[Int])(implicit config: ProjectConfig) = {

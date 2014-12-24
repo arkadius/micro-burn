@@ -22,11 +22,11 @@ sealed trait Task { self =>
 case class UserStory(taskId: String,
                      taskName: String,
                      optionalStoryPoints: Option[Int],
-                     technicalTasksWithoutParentId: Set[TechnicalTask],
+                     technicalTasksWithoutParentId: List[TechnicalTask],
                      status: Int) extends Task with ComparableWith[UserStory] with HavingNestedTasks[TechnicalTaskWithParentId] {
   override type Self = UserStory
 
-  protected val nestedTasks: Set[TechnicalTaskWithParentId] = technicalTasksWithoutParentId.map(TechnicalTaskWithParentId(_, taskId))
+  protected val nestedTasks: Seq[TechnicalTaskWithParentId] = technicalTasksWithoutParentId.map(TechnicalTaskWithParentId(_, taskId))
 
   override def parentUserStoryId: String = taskId
 
@@ -36,7 +36,7 @@ case class UserStory(taskId: String,
 
   def add(technical: TechnicalTask): UserStory = {
     require(!taskById.contains(technical.taskId))
-    copy(technicalTasksWithoutParentId = technicalTasksWithoutParentId + technical)
+    copy(technicalTasksWithoutParentId = technicalTasksWithoutParentId :+ technical)
   }
 
   def remove(taskId: String): UserStory = {
@@ -46,7 +46,7 @@ case class UserStory(taskId: String,
 
   def update(taskId: String)(updateTechnical: TechnicalTask => TechnicalTask): UserStory = {
     val updated = updateTechnical(taskById(taskId).technical)
-    copy(technicalTasksWithoutParentId = technicalTasksWithoutParentId.filterNot(_.taskId == taskId) + updated)
+    copy(technicalTasksWithoutParentId = technicalTasksWithoutParentId.filterNot(_.taskId == taskId) :+ updated)
   }
 
   override def diff(other: Self)(implicit timestamp: Date): Seq[TaskEvent] = {
@@ -113,7 +113,7 @@ object UserStory {
       taskId = added.taskId,
       taskName = added.taskName,
       optionalStoryPoints = added.optionalStoryPoints,
-      technicalTasksWithoutParentId = Set.empty,
+      technicalTasksWithoutParentId = Nil,
       status = added.status)
   }
 }

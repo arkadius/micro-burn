@@ -37,7 +37,7 @@ object TasksGenerator {
       status <- Gen.posNum[Int]
     } yield UserStory(
       taskId = taskId.toString, taskName = taskName, optionalStoryPoints = optionalStoryPoints,
-      technicalTasksWithoutParentId = technicalTasks.toSet, status = status
+      technicalTasksWithoutParentId = technicalTasks, status = status
     )
   }
 

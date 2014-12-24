@@ -15,7 +15,7 @@ class BoardStateRepositoryTest extends FlatSpec with Matchers {
   it should "work round trip" in {
     val firstTechnical = SampleTasks.openedTechnicalTask(Some(2))
     val secTechnical = SampleTasks.openedTechnicalTask(None)
-    val userStories = Seq(SampleTasks.openedUserStory(3, Set(firstTechnical, secTechnical)))
+    val userStories = Seq(SampleTasks.openedUserStory(3, Seq(firstTechnical, secTechnical)))
     val sprint = SampleSprint.withEmptyEvents(userStories : _*)
     val repo = BoardStateRepository(new File(s"target/sprints/${sprint.id}"))
 
