@@ -4,8 +4,8 @@ import net.liftmodules.JQueryModule
 import net.liftweb.common._
 import net.liftweb.http._
 import net.liftweb.http.js.jquery.JQueryArtifacts
-import org.github.micoburn.ApplicationContext
-import org.github.micoburn.rest.RestRoutes
+import org.github.microburn.ApplicationContext
+import org.github.microburn.rest.RestRoutes
 
 
 /**
