@@ -65,11 +65,14 @@ class ProjectActorTest extends FlatSpec with Matchers {
   }
 
   private def sprintActivenessCheck(sprintId: String, projectActor: ProjectActor): LAFuture[Boolean] = {
-    val sprintWithStatesFuture = (projectActor ?? GetSprintsWithStates).mapTo[Seq[SprintWithState]]
-    sprintWithStatesFuture.map { sprintWithStates =>
+    for {
+      projectState <- (projectActor ?? GetProjectState).mapTo[ProjectState]
+      sprintWithStates = projectState.sprints
+    } yield {
       sprintWithStates should have length 1
       sprintWithStates.head.sprintId shouldEqual sprintId
       sprintWithStates.head.isActive
     }
   }
+
 }

@@ -13,8 +13,8 @@ class SprintActor(var sprint: Sprint)
   implicit val configImplicit = config
 
   override protected def messageHandler: PartialFunction[Any, Unit] = {
-    case IsActive =>
-      reply(sprint.isActive)
+    case GetDetails =>
+      reply(sprint.details)
     case UpdateSprint(sprintId, userStories, finishSprint, timestamp) =>
       require(sprintId == sprint.id)
       val result = sprint.update(userStories, finishSprint)(timestamp)
@@ -29,9 +29,9 @@ class SprintActor(var sprint: Sprint)
   }
 }
 
-case object IsActive
-
 case class SprintChanged(sprintId: String)
+
+case object GetDetails
 
 class SprintActorFactory(config: ProjectConfig, changeNotifyingActor: LiftActor) {
   def fromRepo(sprintId: String): Option[SprintActor] = {

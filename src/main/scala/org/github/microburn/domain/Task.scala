@@ -32,7 +32,7 @@ case class UserStory(taskId: String,
 
   override def isTechnicalTask: Boolean = false
 
-  override def taskAdded(implicit timestamp: Date): Seq[TaskAdded] = flattenTasks.map(TaskAdded.apply)
+  override def taskAdded(implicit timestamp: Date): Seq[TaskAdded] = flattenTasks.map(TaskAdded(_))
 
   def add(technical: TechnicalTask): UserStory = {
     require(!taskById.contains(technical.taskId))

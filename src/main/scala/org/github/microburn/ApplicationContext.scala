@@ -3,11 +3,12 @@ package org.github.microburn
 import java.io.File
 
 import com.typesafe.config.ConfigFactory
-import net.liftweb.actor.MockLiftActor
+import net.liftweb.actor.{LiftActor, MockLiftActor}
 import org.github.microburn.domain.actors.ProjectActor
 import org.github.microburn.service.{ProjectUpdater, SprintColumnsHistoryProvider}
 
-class ApplicationContext private(val updater: ProjectUpdater,
+class ApplicationContext private(val projectActor: LiftActor,
+                                 val updater: ProjectUpdater,
                                  val columnsHistoryProvider: SprintColumnsHistoryProvider,
                                  appConfig: ApplicationConfig) {
   def jettyPort: Int = appConfig.jettyPort
@@ -27,6 +28,7 @@ object ApplicationContext {
     )(appConfig.projectConfig)
 
     new ApplicationContext(
+      projectActor            = projectActor,
       updater                 = updater,
       columnsHistoryProvider  = columnsHistoryProvider,
       appConfig               = appConfig)

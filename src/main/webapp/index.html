@@ -2,24 +2,18 @@
 <html xmlns="http://www.w3.org/1999/xhtml">
   <head><meta content="text/html; charset=UTF-8" http-equiv="content-type" /><title>Home</title></head>
   <body class="lift:content_id=main">
-    <div id="main" data-lift="surround?with=default;at=content" ng-app="LiftChat">
-      <h2>Sprint 35</h2>
-      <div ng-controller="ChatController" data-lift="Angular.bind?type=ChatBinder">
-        <!--div data-lift="comet?type=NewUserNotifier"></div>
-        <ul>
-          <li ng-repeat="msg in chat.msgs track by $index">{{msg}}</li>
-
-          <input type="text" ng-model="chatInput"/>
-          <button ng-click="onSend()">Send</button>
-        </ul>
-
-        <div ng-repeat="user in newUsers">{{user}} joined the chat!</div-->
-        <div id="chart"></div>
-      </div>
-
-      <script type="application/javascript" src="js/LiftChat.js"></script>
+    <div id="main" data-lift="surround?with=default;at=content">
       <script type="application/javascript" src="js/SprintChart.js"></script>
-      <script data-lift="ChatServices"></script>
+      <h2>Sprint 35</h2>
+      <div ng-app="MicroBurn">
+        <div ng-controller="ProjectController" data-lift="Angular.bind?type=ProjectStateBinder">
+          <select>
+              <option ng-repeat="sprint in projectState.sprints | reverse" value="{{sprint.sprintId}}">{{sprint.details.name}}</option>
+          </select>
+
+          <div id="chart"></div>
+        </div>
+      </div>
     </div>
   </body>
 </html>

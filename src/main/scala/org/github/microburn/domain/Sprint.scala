@@ -8,7 +8,7 @@ case class Sprint(id: String,
                   currentBoard: BoardState,
                   private val events: Seq[TaskEvent]) {
 
-  def isActive = details.isActive
+  private def isActive = details.isActive
 
   def initialDate: Date = initialBoard.date
 
