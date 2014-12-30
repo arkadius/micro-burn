@@ -18,7 +18,7 @@ class JiraTasksDataProviderTest extends FlatSpec with RestIntegrationTest with M
   it should "get user stories" in {
 //    val config = ConfigFactory.parseFile(new File("application.conf")).withFallback(ConfigUtils.withToDefaultsFallback)
     val config = ConfigUtils.withToDefaultsFallback
-    val jiraConfig = JiraConfig(config)
+    val jiraConfig = JiraConfig(config.getConfig("jira"))
     val provider = new JiraTasksDataProvider(jiraConfig)
     val result = provider.userStories("fooSprintId").await(5 seconds)
     println(result)

@@ -1,11 +1,13 @@
 package org.github.micoburn.domain
 
+import java.io.File
+
 import com.typesafe.config.Config
 
 import scalaz._
 import Scalaz._
 
-case class ProjectConfig(boardColumns: List[BoardColumn]) {
+case class ProjectConfig(boardColumns: List[BoardColumn], dataRoot: File) {
   private val statuses = (for {
     column <- boardColumns
     status <- column.statusIds
@@ -26,6 +28,7 @@ object ProjectConfig {
       statusIds = columnConfig.getIntList("statusIds").map(_.toInt).toList
       color = columnConfig.hasPath("color").option(columnConfig.getString("color")).getOrElse("")
     } yield BoardColumn(index, name, statusIds, color)
-    ProjectConfig(columns.toList)
+    val dataRoot = new File(config.getString("data.project.root"))
+    ProjectConfig(columns.toList, dataRoot)
   }
 }

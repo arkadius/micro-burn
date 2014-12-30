@@ -33,7 +33,7 @@ case object IsActive
 
 case class SprintChanged(sprintId: String)
 
-class SprintActorFactory(projectRoot: File, config: ProjectConfig, changeNotifyingActor: LiftActor) {
+class SprintActorFactory(config: ProjectConfig, changeNotifyingActor: LiftActor) {
   def fromRepo(sprintId: String): Option[SprintActor] = {
     val repo = createRepo(sprintId)
     repo.loadSprint.map { sprint =>
@@ -53,7 +53,7 @@ class SprintActorFactory(projectRoot: File, config: ProjectConfig, changeNotifyi
   }
 
   private def createRepo(sprintId: String): SprintRepository = {
-    val sprintRoot = new File(projectRoot, sprintId)
+    val sprintRoot = new File(config.dataRoot, sprintId)
     SprintRepository(sprintRoot, sprintId)
   }
 }

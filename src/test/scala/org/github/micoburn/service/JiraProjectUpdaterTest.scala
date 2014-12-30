@@ -23,10 +23,10 @@ class JiraProjectUpdaterTest extends FlatSpec with RestIntegrationTest with Dire
   it should "fetch inital project state" in {
 //    val config = ConfigFactory.parseFile(new File("application.conf")).withFallback(ConfigUtils.withToDefaultsFallback)
     val config = ConfigUtils.withToDefaultsFallback
-    val projectRoot = new File(config.getString("data.project.root"))
-    Path(projectRoot).deleteRecursively()
-    val projectActor = new ProjectActor(projectRoot, ProjectConfig(config), new MockLiftActor)
-    val jiraConfig = JiraConfig(config)
+    val projectConfig = ProjectConfig(config)
+    Path(projectConfig.dataRoot).deleteRecursively()
+    val projectActor = new ProjectActor(projectConfig, new MockLiftActor)
+    val jiraConfig = JiraConfig(config.getConfig("jira"))
     val providers = IntegrationProviders(new JiraSprintsDataProvider(jiraConfig), new JiraTasksDataProvider(jiraConfig))
     val updater = new ProjectUpdater(projectActor, providers, updatePeriodSeconds = 123)
     updater.updateProject().await(10 seconds)

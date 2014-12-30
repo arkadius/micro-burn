@@ -11,12 +11,12 @@ case class JiraConfig(jiraUrl: Req,
 object JiraConfig {
   def apply(config: Config): JiraConfig = {
     JiraConfig(
-      jiraUrl           = config.getString("jira.url"),
-      greenhopperUrl    = config.getString("jira.greenhopper.url"),
-      user              = config.getString("jira.user"),
-      password          = config.getString("jira.password"),
-      storyPointsField  = config.getString("jira.greenhopper.storyPointsField"),
-      rapidViewId       = config.getInt("jira.greenhopper.rapidViewId")
+      jiraUrl           = config.getString("url"),
+      greenhopperUrl    = config.getString("greenhopper.url"),
+      user              = config.getString("user"),
+      password          = config.getString("password"),
+      storyPointsField  = config.getString("greenhopper.storyPointsField"),
+      rapidViewId       = config.getInt(   "greenhopper.rapidViewId")
     )
   }
 

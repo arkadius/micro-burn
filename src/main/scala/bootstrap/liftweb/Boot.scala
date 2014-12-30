@@ -15,7 +15,7 @@ import org.github.micoburn.rest.RestRoutes
 class Boot {
   def boot {
     // where to search snippet
-    LiftRules.addToPackages("org.github.micorburn")
+    LiftRules.addToPackages("org.github.microburn")
 
     //Show the spinny image when an Ajax call starts
     LiftRules.ajaxStart =

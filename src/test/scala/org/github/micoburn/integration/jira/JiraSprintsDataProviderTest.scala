@@ -19,7 +19,7 @@ class JiraSprintsDataProviderTest extends FlatSpec with RestIntegrationTest with
   it should "get sprints ids" in {
 //    val config = ConfigFactory.parseFile(new File("application.conf")).withFallback(ConfigUtils.withToDefaultsFallback)
     val config = ConfigUtils.withToDefaultsFallback
-    val jiraConfig = JiraConfig(config)
+    val jiraConfig = JiraConfig(config.getConfig("jira"))
     val provider = new JiraSprintsDataProvider(jiraConfig)
     val result = provider.allSprintIds.await(5 seconds)
     result shouldEqual Seq(21, 22)
@@ -28,7 +28,7 @@ class JiraSprintsDataProviderTest extends FlatSpec with RestIntegrationTest with
   it should "get sprint details" in {
 //    val config = ConfigFactory.parseFile(new File("application.conf")).withFallback(ConfigUtils.withToDefaultsFallback)
     val config = ConfigUtils.withToDefaultsFallback
-    val jiraConfig = JiraConfig(config)
+    val jiraConfig = JiraConfig(config.getConfig("jira"))
     val provider = new JiraSprintsDataProvider(jiraConfig)
     val result = provider.sprintDetails("21").await(5 seconds)
     println("result: " + result)

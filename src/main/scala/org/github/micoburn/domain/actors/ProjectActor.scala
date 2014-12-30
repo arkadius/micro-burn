@@ -11,11 +11,11 @@ import org.github.micoburn.repository.ProjectRepository
 
 import scalaz.Scalaz._
 
-class ProjectActor(projectRoot: File, config: ProjectConfig, sprintChangeNotifyingActor: LiftActor) extends LiftActor {
+class ProjectActor(config: ProjectConfig, sprintChangeNotifyingActor: LiftActor) extends LiftActor {
   import org.github.micoburn.util.concurrent.FutureEnrichments._
 
-  private val sprintFactory = new SprintActorFactory(projectRoot, config, sprintChangeNotifyingActor)
-  private val projectRepo = ProjectRepository(projectRoot)
+  private val sprintFactory = new SprintActorFactory(config, sprintChangeNotifyingActor)
+  private val projectRepo = ProjectRepository(config.dataRoot)
 
   private var sprintActors: Map[String, SprintActor] = (
     for {
@@ -64,12 +64,3 @@ case class SprintHistory(initialStoryPointsSum: Int,
                          initialDate: Date,
                          columnStates: Seq[DateWithColumnsState],
                          sprintDetails: SprintDetails)
-
-object ProjectActor {
-  def apply(sprintChangeNotifyingActor: LiftActor): ProjectActor = {
-    val config = ConfigFactory.load()
-    val projectRoot = new File(config.getString("data.project.root"))
-    val projectConfig = ProjectConfig(config)
-    new ProjectActor(projectRoot, projectConfig, sprintChangeNotifyingActor)
-  }
-}
