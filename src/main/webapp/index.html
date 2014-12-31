@@ -4,13 +4,11 @@
   <body class="lift:content_id=main">
     <div id="main" data-lift="surround?with=default;at=content">
       <script type="application/javascript" src="js/SprintChart.js"></script>
-      <h2>Sprint 35</h2>
       <div ng-app="MicroBurn">
         <div ng-controller="ProjectController" data-lift="Angular.bind?type=ProjectStateBinder">
-          <select>
-              <option ng-repeat="sprint in projectState.sprints | reverse" value="{{sprint.sprintId}}">{{sprint.details.name}}</option>
+          <select ng-model="selectedSprint"
+                  ng-options="item.details.name for item in projectState.sprints | orderBy:'details.start':true track by item.sprintId">
           </select>
-
           <div id="chart"></div>
         </div>
       </div>
