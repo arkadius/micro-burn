@@ -3,9 +3,9 @@ micro-burn
 
 # Overview
 
-micro-burn is simple microservice providing burndownchart. At this moment it has Jira Agile integration. If you want to contribute and add new provider, take a look at [Example provider implementation](https://github.com/arkadius/micro-burn/tree/master/src/main/scala/org/github/microburn/integration/jira) and send me a PR.
+micro-burn is simple microservice providing burndownchart. At this moment it has **Jira Agile** integration. If you want to contribute and add new provider, take a look at [Example provider implementation](https://github.com/arkadius/micro-burn/tree/master/src/main/scala/org/github/microburn/integration/jira) and send me a PR.
 
-Q: Why to write another burdownchart if Jira Agile already have it?
+Q: Why to write another burdownchart if Jira Agile already have it?<br>
 A: Because Jira Agile's burdownchart has some drawbacks:
 * it doesn't report points for completion of subtasks
 * it treats new added to sprint tasks as a sprint regress
@@ -55,33 +55,26 @@ jira {
 
 # Configuration Q&A
 
-Q: How to configure board columns?
-
+Q: How to configure board columns?<br>
 A: The simplest way is to copy-paste them from result of ${greenhopper.url}/xboard/work/allData.json?rapidViewId=${greenhopper.rapidViewId} (is available at path: /columnsData/columns)
 
-
-Q: Hot to get rapidViewId?
-
+Q: Hot to get *rapidViewId*?<br>
 A: Is available in board's url
 
-
-Q: Hot to get storyPointsField?
-
+Q: Hot to get *storyPointsField*?<br>
 A: From the same place where board columns – (at path /issuesData/issues[1]/estimateStatistic/statFieldId)
 
-Q: How to change port?
+Q: How to change port?<br>
+A: Override the value of *jetty.port*
 
-A: Override the value of jetty.port
-
-Q: Where are other settings?
-
+Q: Where are other settings?<br>
 A: All defaults are available at [defaults.conf](https://github.com/arkadius/micro-burn/blob/master/src/main/resources/defaults.conf)
 
 # Implementation notice
 
-As a web framework was used great scala framework [lift](https://github.com/lift/framework) with best Comet support.
-For a bridge with Angular was used [lift-ng](https://github.com/joescii/lift-ng)
-Charts where drawed in [rickshaw](https://github.com/shutterstock/rickshaw)
+As a web framework was used great scala framework [lift](https://github.com/lift/framework) with best Comet support.<br>
+For a bridge with Angular was used [lift-ng](https://github.com/joescii/lift-ng).<br>
+Charts where drawed in [rickshaw](https://github.com/shutterstock/rickshaw).<br>
 
 micro-burn is a microservice. It does mean, that it integrates with 3rd-part tools by REST API. Application uses event souring – in the date folder there are kept: initially fetched board state, last (snapshot state) and task events in CSV format. It does mean, that application will show only changes which were collected during its run. All archive changes will be unavailable.
 
