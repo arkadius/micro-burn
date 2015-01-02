@@ -1,6 +1,6 @@
-var app = angular.module("MicroBurnApp", ["lift-ng"]);
+var app = angular.module("MicroBurnApp", ["MicroBurnServices"]);
 
-app.controller("ProjectCtrl", ['$scope', function ($scope) {
+app.controller("ProjectCtrl", ['$scope', 'historySvc', function ($scope, historySvc) {
   $scope.projectState = {
     sprints: [],
     series: []
@@ -14,10 +14,8 @@ app.controller("ProjectCtrl", ['$scope', function ($scope) {
     if (!sprint)
       return;
 
-    $.getJSON("history?sprintId=" + sprint.sprintId, function (response) {
-      $scope.$apply(function () {
-        $scope.series = response.series;
-      });
+    historySvc.getHistory(sprint.sprintId).then(function (history) {
+      $scope.series = history.series;
     });
   });
 

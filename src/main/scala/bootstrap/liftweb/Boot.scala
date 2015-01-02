@@ -5,7 +5,6 @@ import net.liftweb.common._
 import net.liftweb.http._
 import net.liftweb.http.js.jquery.JQueryArtifacts
 import org.github.microburn.ApplicationContext
-import org.github.microburn.rest.RestRoutes
 
 
 /**
@@ -37,6 +36,5 @@ class Boot {
 
     val context = ApplicationContext()
     context.updater.start()
-    LiftRules.statelessDispatch.append(new RestRoutes(context.columnsHistoryProvider))
   }
 }

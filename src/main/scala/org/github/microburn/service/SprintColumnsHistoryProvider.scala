@@ -5,7 +5,7 @@ import java.util.Date
 import net.liftweb.actor.{LAFuture, LiftActor}
 import net.liftweb.common.Box
 import org.github.microburn.domain.actors.{GetStoryPointsHistory, SprintHistory}
-import org.github.microburn.domain.{DateWithColumnsState, ProjectConfig, SprintDetails}
+import org.github.microburn.domain.{DateWithColumnsState, ProjectConfig}
 import org.joda.time.DateTime
 
 import scalaz.Scalaz._
@@ -14,13 +14,13 @@ class SprintColumnsHistoryProvider(projectActor: LiftActor, initialFetchToSprint
   import org.github.microburn.util.concurrent.FutureEnrichments._
   import org.github.microburn.util.concurrent.LiftActorEnrichments._
   
-  def columnsHistory(sprintId: String): LAFuture[Box[ColumnsHistoryWithDetails]] = {
+  def columnsHistory(sprintId: String): LAFuture[Box[ColumnsHistory]] = {
     (projectActor ?? GetStoryPointsHistory(sprintId)).mapTo[Box[SprintHistory]].map { historyBox =>
       historyBox.map(extractColumnsHistory)
     }
   }
   
-  private def extractColumnsHistory(history: SprintHistory): ColumnsHistoryWithDetails = {
+  private def extractColumnsHistory(history: SprintHistory): ColumnsHistory = {
     val toPrepend = computePrepend(history).toSeq
     val toAppend = computeToAppend(history)
     val fullHistory = toPrepend ++ history.columnStates ++ toAppend
@@ -32,7 +32,7 @@ class SprintColumnsHistoryProvider(projectActor: LiftActor, initialFetchToSprint
 
     val estimate = computeEstimate(history)
 
-    ColumnsHistoryWithDetails(history.sprintDetails, columnsHistory :+ estimate)
+    ColumnsHistory(columnsHistory :+ estimate)
   }
 
   private def computePrepend(history: SprintHistory): Option[DateWithColumnsState] = {
@@ -71,7 +71,7 @@ class SprintColumnsHistoryProvider(projectActor: LiftActor, initialFetchToSprint
 }
 
 //TODO: wrócić do nazw domenowych zamiast series, x, y - color i przeliczanie do sekund powinno być po stronie front-endu
-case class ColumnsHistoryWithDetails(detail: SprintDetails, series: List[ColumnWithStoryPointsHistory])
+case class ColumnsHistory(series: List[ColumnWithStoryPointsHistory])
 
 case class ColumnWithStoryPointsHistory(name: String, color: String, data: List[DateWithStoryPointsForSingleColumn])
 
