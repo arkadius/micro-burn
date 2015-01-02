@@ -81,4 +81,6 @@ assemblyMergeStrategy in assembly := {
 
 mainClass in assembly := Some("Main")
 
+assemblyJarName in assembly := s"${name.value}-${version.value}"
+
 Revolver.settings
