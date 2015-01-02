@@ -50,19 +50,19 @@ jira {
   }
 }
 ```
-* run java -jar micro-burn-${version}.jar
+* run `java -jar micro-burn-${version}.jar`
 * open in browser: http://localhost:8080
 
 # Configuration Q&A
 
 Q: How to configure board columns?<br>
-A: The simplest way is to copy-paste them from result of ${greenhopper.url}/xboard/work/allData.json?rapidViewId=${greenhopper.rapidViewId} (is available at path: /columnsData/columns)
+A: The simplest way is to copy-paste them from result of *${greenhopper.url}/xboard/work/allData.json?rapidViewId=${greenhopper.rapidViewId}* (is available at path: */columnsData/columns*)
 
 Q: Hot to get *rapidViewId*?<br>
 A: Is available in board's url
 
 Q: Hot to get *storyPointsField*?<br>
-A: From the same place where board columns – (at path /issuesData/issues[1]/estimateStatistic/statFieldId)
+A: From the same place where board columns – (at path */issuesData/issues[1]/estimateStatistic/statFieldId*)
 
 Q: How to change port?<br>
 A: Override the value of *jetty.port*
