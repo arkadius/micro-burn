@@ -79,7 +79,7 @@ assemblyMergeStrategy in assembly := {
     oldStrategy(x)
 }
 
-mainClass in assembly := Some("Main")
+mainClass in assembly := Some("org.github.microburn.Main")
 
 assemblyJarName in assembly := s"${name.value}-${version.value}.jar"
 
