@@ -9,7 +9,9 @@ import org.scalatest.{FlatSpec, Matchers}
 
 class BoardStateRandomTest extends FlatSpec with GeneratorDrivenPropertyChecks with Matchers {
 
-  it should "retun empty result for the same boards" in {
+  implicit val testConfig = PropertyCheckConfig(minSuccessful = 10)
+
+  it should "return empty result for the same boards" in {
     forAll(BoardStateGenerator.generator(new Date(0))) { generated =>
       generated.diff(generated) shouldBe empty
     }
