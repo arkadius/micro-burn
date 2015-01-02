@@ -14,7 +14,7 @@ A: Because Jira Agile's burdownchart has some drawbacks:
 # Run
 
 * Download the [latest](https://github.com/arkadius/micro-burn/releases/latest) release
-* create application.conf configuration file, example:
+* create *application.conf* configuration file, example:
 ```conf
 board.columns = [
   {
