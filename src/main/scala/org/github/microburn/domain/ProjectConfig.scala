@@ -16,7 +16,7 @@ case class ProjectConfig(boardColumns: List[BoardColumn], dataRoot: File) {
   def boardColumnIndex(status: Int): Int = statuses(status).index
 }
 
-case class BoardColumn(index: Int, name: String, statusIds: List[Int], color: String)
+case class BoardColumn(index: Int, name: String, statusIds: List[Int])
 
 object ProjectConfig {
   import collection.convert.wrapAll._
@@ -26,8 +26,7 @@ object ProjectConfig {
       (columnConfig, index) <- config.getConfigList("board.columns").zipWithIndex
       name = columnConfig.getString("name")
       statusIds = columnConfig.getIntList("statusIds").map(_.toInt).toList
-      color = columnConfig.hasPath("color").option(columnConfig.getString("color")).getOrElse("")
-    } yield BoardColumn(index, name, statusIds, color)
+    } yield BoardColumn(index, name, statusIds)
     val dataRoot = new File(config.getString("data.project.root"))
     ProjectConfig(columns.toList, dataRoot)
   }

@@ -41,7 +41,7 @@ app.directive('sprintChart', function () {
 
       var graph = new Rickshaw.Graph({
         element: element.children("#chart")[0],
-        height: 500,
+        height: 600,
         min: "auto",
         padding: {
           right: 0.02,
@@ -49,6 +49,7 @@ app.directive('sprintChart', function () {
           top: 0.05
         },
         renderer: "line",
+        unstack: true,
         interpolation: "step-after",
         series: series
       });
@@ -69,7 +70,8 @@ app.directive('sprintChart', function () {
 
       var legend = new Rickshaw.Graph.Legend({
         graph: graph,
-        element: element.children("#legend")[0]
+        element: element.children("#legend")[0],
+        naturalOrder: true
       });
 
       var highlighter = new Rickshaw.Graph.Behavior.Series.Toggle({
@@ -110,8 +112,17 @@ app.directive('sprintChart', function () {
         while (series.length) { // przepisujemy, bo wykres ma uchwyt do serii
           series.pop();
         }
-        while (history.series.length) {
-          series.push(history.series.pop());
+        for (var i = 0; i < history.series.length; i++) {
+          var column = history.series[i];
+          if (column.name == 'Estimate') {
+            column.color = "rgba(255, 0, 0, 0.9)";
+          } else if (i == history.series.length - 1) { // DONE
+            column.color = "rgba(0, 0, 0, 0.9)";
+          } else {
+            var opacityIndex = i;
+            column.color = "rgba(0, 0, 255, 0." + opacityIndex + ")";
+          }
+          series.push(column);
         }
 
         graph.render();

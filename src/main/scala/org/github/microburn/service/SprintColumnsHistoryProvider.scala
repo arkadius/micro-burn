@@ -6,7 +6,7 @@ import net.liftweb.actor.{LAFuture, LiftActor}
 import net.liftweb.common.Box
 import org.github.microburn.domain.actors.{GetStoryPointsHistory, SprintHistory}
 import org.github.microburn.domain.{DateWithColumnsState, ProjectConfig}
-import org.joda.time.{DateTime, Duration}
+import org.joda.time.DateTime
 
 import scalaz.Scalaz._
 
@@ -34,8 +34,8 @@ class SprintColumnsHistoryProvider(projectActor: LiftActor, initialFetchToSprint
 
     val estimate = computeEstimate(startDate, endDate, history.initialStoryPointsSum)
 
-    val columns = columnsHistory :+ estimate
-    ColumnsHistory(startDate.getMillis, columns.reverse) // reverse - dla poprawnej kolejności w legendzie
+    val columns = estimate :: columnsHistory
+    ColumnsHistory(startDate.getMillis, columns)
   }
 
   private def computeToPrepend(history: SprintHistory): Option[DateWithColumnsState] = {
@@ -63,19 +63,18 @@ class SprintColumnsHistoryProvider(projectActor: LiftActor, initialFetchToSprint
         val storyPoints = allColumnsInfo.storyPointsForColumn(column.index)
         HistoryProbe(allColumnsInfo.date.getTime, storyPoints)
       }.toList
-      ColumnHistory(column.name, column.color, storyPointsForColumn)
+      ColumnHistory(column.name, storyPointsForColumn)
     }
   }
 
   private def computeEstimate(start: DateTime, end: DateTime, storyPointsSum: Int): ColumnHistory = {
     val estimates = EstimateComputer.estimatesBetween(start, end, storyPointsSum)
-    ColumnHistory("Estimate", "red", estimates)
+    ColumnHistory("Estimate", estimates)
   }
 }
 
-//TODO: wrócić do nazw domenowych zamiast series, x, y - color i przeliczanie do sekund powinno być po stronie front-endu
 case class ColumnsHistory(startDate: Long, series: List[ColumnHistory])
 
-case class ColumnHistory(name: String, color: String, data: List[HistoryProbe])
+case class ColumnHistory(name: String, data: List[HistoryProbe])
 
 case class HistoryProbe(x: Long, y: Int)
