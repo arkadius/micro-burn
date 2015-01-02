@@ -6,7 +6,6 @@ micro-burn
 micro-burn is simple microservice providing burndownchart. At this moment it has Jira Agile integration. If you want to contribute and add new provider, take a look at [Example provider implementation](https://github.com/arkadius/micro-burn/tree/master/src/main/scala/org/github/microburn/integration/jira) and send me a PR.
 
 Q: Why to write another burdownchart if Jira Agile already have it?
-
 A: Because Jira Agile's burdownchart has some drawbacks:
 * it doesn't report points for completion of subtasks
 * it treats new added to sprint tasks as a sprint regress
