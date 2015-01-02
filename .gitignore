@@ -9,4 +9,5 @@ tags
 .*.swp
 .*.swo
 application.conf
+data
 secret.conf
