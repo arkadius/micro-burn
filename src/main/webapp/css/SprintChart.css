@@ -1,0 +1,15 @@
+#sprint-chart-container {
+    position: relative;
+    font-family: Arial, Helvetica, sans-serif;
+}
+
+#sprint-chart-container > #chart {
+    position: relative;
+    left: 40px;
+}
+#sprint-chart-container > #y-axis {
+    position: absolute;
+    top: 0;
+    bottom: 0;
+    width: 40px;
+}

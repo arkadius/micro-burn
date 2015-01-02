@@ -1,7 +1,9 @@
-var app = angular.module("MicroBurn", ["lift-ng"]);
-app.controller("ProjectController", ['$scope', function ($scope) {
+var app = angular.module("MicroBurnApp", ["lift-ng"]);
+
+app.controller("ProjectCtrl", ['$scope', function ($scope) {
   $scope.projectState = {
-    sprints: []
+    sprints: [],
+    series: []
   };
 
   $scope.$watch("projectState", function (projectState) {
@@ -9,33 +11,61 @@ app.controller("ProjectController", ['$scope', function ($scope) {
   });
 
   $scope.$watch("selectedSprint", function (sprint) {
-    $("#chart").empty();
-
-    if (typeof sprint === 'undefined')
+    if (!sprint)
       return;
 
     $.getJSON("history?sprintId=" + sprint.sprintId, function (response) {
-      var graph = new Rickshaw.Graph({
-        element: document.querySelector("#chart"),
-        renderer: "line",
-        interpolation: "step-after",
-        series: response.series
+      $scope.$apply(function () {
+        $scope.series = response.series;
       });
-
-      var time = new Rickshaw.Fixtures.Time();
-      var xAxes = new Rickshaw.Graph.Axis.Time({
-        graph: graph,
-        timeUnit: time.unit('day')
-      });
-
-      var yAxes = new Rickshaw.Graph.Axis.Y({
-        graph: graph
-      });
-
-      graph.render();
     });
   });
 
 }]);
 
+app.directive('sprintChart', function () {
+  return {
+    template: "<div id='y-axis'></div>" +
+              "<div id='chart'></div>",
+    link: function (scope, element, attrs) {
+      scope.$watch("series", function(series){
+        if (!series)
+          return;
 
+        element.attr("id", "sprint-chart-container");
+        var chartElement = element.children("#chart");
+        chartElement.empty();
+        var yAxisElement = element.children("#y-axis");
+        yAxisElement.empty();
+
+        var graph = new Rickshaw.Graph({
+          element: chartElement[0],
+          height: 500,
+          min: "auto",
+          padding: {
+            right: 0.02,
+            bottom: 0.05,
+            top: 0.05
+          },
+          renderer: "line",
+          interpolation: "step-after",
+          series: series
+        });
+
+        var time = new Rickshaw.Fixtures.Time();
+        var xAxes = new Rickshaw.Graph.Axis.Time({
+          graph: graph,
+          timeUnit: time.unit('day')
+        });
+
+        var yAxes = new Rickshaw.Graph.Axis.Y({
+          element: yAxisElement[0],
+          graph: graph,
+          orientation: "left"
+        });
+
+        graph.render();
+      });
+    }
+  };
+});
