@@ -51,7 +51,7 @@ jira {
 }
 ```
 * run `java -jar micro-burn-${version}.jar`
-* open in browser: http://localhost:8080
+* open in browser: [http://localhost:8080](http://localhost:8080)
 
 # Configuration Q&A
 
