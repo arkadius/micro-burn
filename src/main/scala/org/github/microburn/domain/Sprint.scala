@@ -59,11 +59,9 @@ object SprintDetails {
 }
 
 case class SprintUpdateResult(private val stateBeforeUpdate: BoardState, updatedSprint: Sprint, newAddedEvents: Seq[TaskEvent], sprintFinished: Boolean, timestamp: Date) {
-  def importantChange: Boolean =  importantDetailsChange || importantBoardChange
-
   def importantDetailsChange: Boolean = sprintFinished // co ze zmianą nazwy/dat?
   
-  def importantBoardChange: Boolean = newAddedEvents.nonEmpty
+  def importantBoardStateChange: Boolean = newAddedEvents.nonEmpty
 }
 
 object Sprint {

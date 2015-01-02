@@ -1,9 +1,5 @@
 package org.github.microburn.service
 
-import java.io.File
-
-import com.typesafe.config.ConfigFactory
-import net.liftweb.actor.MockLiftActor
 import org.github.microburn.ConfigUtils
 import org.github.microburn.domain.ProjectConfig
 import org.github.microburn.domain.actors.ProjectActor
@@ -25,7 +21,7 @@ class JiraProjectUpdaterTest extends FlatSpec with RestIntegrationTest with Dire
     val config = ConfigUtils.withToDefaultsFallback
     val projectConfig = ProjectConfig(config)
     Path(projectConfig.dataRoot).deleteRecursively()
-    val projectActor = new ProjectActor(projectConfig, new MockLiftActor)
+    val projectActor = new ProjectActor(projectConfig)
     val jiraConfig = JiraConfig(config.getConfig("jira"))
     val providers = IntegrationProviders(new JiraSprintsDataProvider(jiraConfig), new JiraTasksDataProvider(jiraConfig))
     val updater = new ProjectUpdater(projectActor, providers, updatePeriodSeconds = 123)

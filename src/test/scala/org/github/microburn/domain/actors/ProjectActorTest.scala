@@ -60,7 +60,7 @@ class ProjectActorTest extends FlatSpec with Matchers {
     Path(projectRoot).deleteRecursively()
     SprintRepository(new File(projectRoot, sprint.id), sprint.id).saveSprint(sprint)
 
-    val projectActor = new ProjectActor(config, new MockLiftActor)
+    val projectActor = new ProjectActor(config)
     projectActor
   }
 

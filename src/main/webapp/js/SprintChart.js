@@ -10,15 +10,23 @@ app.controller("ProjectCtrl", ['$scope', 'historySvc', function ($scope, history
     $scope.selectedSprint = projectState.sprints[projectState.sprints.length-1];
   });
 
+  var refreshChart = function () {
+    historySvc.getHistory($scope.selectedSprint.id).then(function (history) {
+      $scope.series = history.series;
+    });
+  };
+
   $scope.$watch("selectedSprint", function (sprint) {
     if (!sprint)
       return;
-
-    historySvc.getHistory(sprint.id).then(function (history) {
-      $scope.series = history.series;
-    });
+    refreshChart();
   });
 
+  $scope.$on("boardStateChanged", function (event, sprintId) {
+    if (sprintId == $scope.selectedSprint.id) {
+      refreshChart();
+    }
+  });
 }]);
 
 app.directive('sprintChart', function () {

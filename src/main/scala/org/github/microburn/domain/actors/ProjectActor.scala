@@ -9,10 +9,10 @@ import net.liftweb.http.ListenerManager
 import org.github.microburn.domain._
 import org.github.microburn.repository.ProjectRepository
 
-class ProjectActor(config: ProjectConfig, sprintChangeNotifyingActor: LiftActor) extends LiftActor with ListenerManager {
+class ProjectActor(config: ProjectConfig) extends LiftActor with ListenerManager {
   import org.github.microburn.util.concurrent.FutureEnrichments._
 
-  private val sprintFactory = new SprintActorFactory(config, sprintChangeNotifyingActor)
+  private val sprintFactory = new SprintActorFactory(config, this)
   private val projectRepo = ProjectRepository(config.dataRoot)
 
   private var sprintActors: Map[String, SprintActor] = (
@@ -43,6 +43,8 @@ class ProjectActor(config: ProjectConfig, sprintChangeNotifyingActor: LiftActor)
         (sprintActor !< getHistory).map(Full(_))
       }.getOrElse(LAFuture[Box[_]](() => Failure("Sprint with given id does not exist")))
       reply(future)
+    case boardStateChanged: BoardStateChanged =>
+      sendListenersMessage(boardStateChanged)
   }
 
   override protected def createUpdate: Any = prepareProjectState

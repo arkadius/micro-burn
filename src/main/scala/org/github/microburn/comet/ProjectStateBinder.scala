@@ -4,7 +4,7 @@ import net.liftmodules.ng.{BindingToClient, SimpleNgModelBinder}
 import net.liftweb.actor.LAFuture
 import net.liftweb.http.CometListener
 import org.github.microburn.ApplicationContext
-import org.github.microburn.domain.actors.ProjectState
+import org.github.microburn.domain.actors.{BoardStateChanged, ProjectState}
 
 class ProjectStateBinder
   extends SimpleNgModelBinder("projectState", ProjectState(Nil))
@@ -19,5 +19,7 @@ class ProjectStateBinder
     case f:LAFuture[_] =>
       val projectStateFuture = f.asInstanceOf[LAFuture[ProjectState]]
       projectStateFuture.onSuccess(this ! _)
+    case BoardStateChanged(sprintId) =>
+      scope.emit("boardStateChanged", sprintId)
   }
 }

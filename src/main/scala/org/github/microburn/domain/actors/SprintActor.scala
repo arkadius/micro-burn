@@ -20,8 +20,8 @@ class SprintActor(var sprint: Sprint)
       val result = sprint.update(userStories, finishSprint)(timestamp)
       sprint = result.updatedSprint
       repo.saveUpdateResult(result)
-      if (result.importantChange)
-        changeNotifyingActor ! SprintChanged(sprint.id)
+      if (result.importantBoardStateChange)
+        changeNotifyingActor ! BoardStateChanged(sprint.id)
       reply(sprint.id)
     case GetStoryPointsHistory(sprintId: String) =>
       require(sprintId == sprint.id)
@@ -29,7 +29,7 @@ class SprintActor(var sprint: Sprint)
   }
 }
 
-case class SprintChanged(sprintId: String)
+case class BoardStateChanged(sprintId: String)
 
 case object GetDetails
 
