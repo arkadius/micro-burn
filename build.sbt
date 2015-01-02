@@ -1,5 +1,7 @@
 import com.banno.license.Plugin.LicenseKeys._
 import com.banno.license.Licenses._
+import sbtrelease._
+import ReleaseStateTransformations._
 
 licenseSettings
 
@@ -8,6 +10,18 @@ license := apache2("Copyright 2015 the original author or authors.")
 removeExistingHeaderBlock := true
 
 releaseSettings
+
+ReleaseKeys.releaseProcess := Seq[ReleaseStep](
+  checkSnapshotDependencies,              // : ReleaseStep
+  inquireVersions,                        // : ReleaseStep
+  runTest,                                // : ReleaseStep
+  setReleaseVersion,                      // : ReleaseStep
+  commitReleaseVersion,                   // : ReleaseStep, performs the initial git checks
+  tagRelease,                             // : ReleaseStep
+  setNextVersion,                         // : ReleaseStep
+  commitNextVersion,                      // : ReleaseStep
+  pushChanges                             // : ReleaseStep, also checks that an upstream branch is properly configured
+)
 
 organization  := "org.github"
 
