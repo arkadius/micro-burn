@@ -59,9 +59,12 @@ app.directive('sprintChart', function () {
         });
 
         var time = new Rickshaw.Fixtures.Time();
-        var xAxes = new Rickshaw.Graph.Axis.Time({
+        var toDays = function(millis) {
+          return Math.floor(millis / (1000 * 60 * 60 * 24))
+        };
+        var xAxes = new Rickshaw.Graph.Axis.X({
           graph: graph,
-          timeUnit: time.unit('day')
+          tickFormat: toDays
         });
 
         var yAxes = new Rickshaw.Graph.Axis.Y({

@@ -6,7 +6,7 @@ import net.liftweb.actor.{LAFuture, LiftActor}
 import net.liftweb.common.Box
 import org.github.microburn.domain.actors.{GetStoryPointsHistory, SprintHistory}
 import org.github.microburn.domain.{DateWithColumnsState, ProjectConfig}
-import org.joda.time.DateTime
+import org.joda.time.{Duration, Days, Seconds, DateTime}
 
 import scalaz.Scalaz._
 
@@ -19,9 +19,9 @@ class SprintColumnsHistoryProvider(projectActor: LiftActor, initialFetchToSprint
       historyBox.map(extractColumnsHistory)
     }
   }
-  
+
   private def extractColumnsHistory(history: SprintHistory): ColumnsHistory = {
-    val toPrepend = computePrepend(history).toSeq
+    val toPrepend = computeToPrepend(history).toSeq
     val toAppend = computeToAppend(history)
     val fullHistory = toPrepend ++ history.columnStates ++ toAppend
 
@@ -29,13 +29,15 @@ class SprintColumnsHistoryProvider(projectActor: LiftActor, initialFetchToSprint
     val withBaseAdded = fullHistory.map(_.multiply(-1).plus(baseIndexOnSum))
 
     val columnsHistory = unzipByColumn(withBaseAdded)
+    val startDate = new DateTime(history.sprintDetails.start)
+    val endDate = new DateTime(history.sprintDetails.end)
 
-    val estimate = computeEstimate(history)
+    val estimate = computeEstimate(startDate, endDate, history.initialStoryPointsSum)
 
-    ColumnsHistory(columnsHistory :+ estimate)
+    ColumnsHistory((columnsHistory :+ estimate).map(_.toProbes(startDate)))
   }
 
-  private def computePrepend(history: SprintHistory): Option[DateWithColumnsState] = {
+  private def computeToPrepend(history: SprintHistory): Option[DateWithColumnsState] = {
     val initialDate = new DateTime(history.initialDate)
     val startDatePlusAcceptableDelay = new DateTime(history.sprintDetails.start).plusMinutes(initialFetchToSprintStartAcceptableDelayMinutes)
     val initialAfterStartPlusDelay = initialDate.isAfter(startDatePlusAcceptableDelay)
@@ -53,35 +55,38 @@ class SprintColumnsHistoryProvider(projectActor: LiftActor, initialFetchToSprint
     }
   }
 
-  private def unzipByColumn(zipped: Seq[DateWithColumnsState]): List[ColumnWithStoryPointsHistory] = {
+  private def unzipByColumn(zipped: Seq[DateWithColumnsState]): List[ColumnHistory] = {
     val boardColumnsWithDroppedFirst = config.boardColumns.drop(1)
     boardColumnsWithDroppedFirst.map { column =>
       val storyPointsForColumn = zipped.map { allColumnsInfo =>
         val storyPoints = allColumnsInfo.storyPointsForColumn(column.index)
-        DateWithStoryPointsForSingleColumn(allColumnsInfo.date, storyPoints)
+        DateWithStoryPoints(new DateTime(allColumnsInfo.date), storyPoints)
       }.toList
-      ColumnWithStoryPointsHistory(column.name, column.color, storyPointsForColumn)
+      ColumnHistory(column.name, column.color, storyPointsForColumn)
     }
   }
 
-  private def computeEstimate(history: SprintHistory): ColumnWithStoryPointsHistory = {
-    val estimates = EstimateComputer.estimatesBetween(new DateTime(history.sprintDetails.start), new DateTime(history.sprintDetails.end), history.initialStoryPointsSum)
-    ColumnWithStoryPointsHistory("Estimate", "red", estimates)
+  private def computeEstimate(start: DateTime, end: DateTime, storyPointsSum: Int): ColumnHistory = {
+    val estimates = EstimateComputer.estimatesBetween(start, end, storyPointsSum)
+    ColumnHistory("Estimate", "red", estimates)
   }
 }
 
 //TODO: wrócić do nazw domenowych zamiast series, x, y - color i przeliczanie do sekund powinno być po stronie front-endu
-case class ColumnsHistory(series: List[ColumnWithStoryPointsHistory])
+case class ColumnsHistory(series: List[ColumnHistoryProbes])
 
-case class ColumnWithStoryPointsHistory(name: String, color: String, data: List[DateWithStoryPointsForSingleColumn])
-
-case class DateWithStoryPointsForSingleColumn(x: Long, y: Int)
-
-object DateWithStoryPointsForSingleColumn {
-  def apply(date: Date, storyPoints: Int): DateWithStoryPointsForSingleColumn =
-    DateWithStoryPointsForSingleColumn(toSeconds(date), storyPoints)
-
-  private def toSeconds(date: Date): Long = {
-    date.getTime / 1000
+case class ColumnHistory(name: String, color: String, data: List[DateWithStoryPoints]) {
+  def toProbes(startDate: DateTime): ColumnHistoryProbes = {
+    ColumnHistoryProbes(name, color, data = data.map(_.toProbe(startDate)))
   }
 }
+
+case class DateWithStoryPoints(date: DateTime, storyPoints: Int) {
+  def toProbe(startDate: DateTime): StoryPointsProbe = {
+    StoryPointsProbe(new Duration(startDate, date).getMillis, storyPoints)
+  }
+}
+
+case class ColumnHistoryProbes(name: String, color: String, data: List[StoryPointsProbe])
+
+case class StoryPointsProbe(x: Long, y: Int)
