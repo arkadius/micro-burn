@@ -64,10 +64,10 @@ class ProjectActor(config: ProjectConfig, sprintChangeNotifyingActor: LiftActor)
 case object GetProjectState
 
 case class ProjectState(sprints: Seq[SprintWithDetails]) extends NgModel {
-  def sprintIds: Set[String] = sprints.map(_.sprintId).toSet
+  def sprintIds: Set[String] = sprints.map(_.id).toSet
 }
 
-case class SprintWithDetails(sprintId: String, details: SprintDetails) {
+case class SprintWithDetails(id: String, details: SprintDetails) {
   def isActive: Boolean = details.isActive
 }
 

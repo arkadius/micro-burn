@@ -8,7 +8,7 @@
       <div ng-app="MicroBurnApp">
         <div ng-controller="ProjectCtrl" data-lift="Angular.bind?type=ProjectStateBinder">
           <select ng-model="selectedSprint"
-                  ng-options="item.details.name for item in projectState.sprints | orderBy:'details.start':true track by item.sprintId">
+                  ng-options="sprint.details.name for sprint in projectState.sprints | orderBy:'details.start':true track by sprint.id">
           </select>
           <div sprint-chart></div>
         </div>

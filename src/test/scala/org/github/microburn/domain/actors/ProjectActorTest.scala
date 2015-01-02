@@ -70,7 +70,7 @@ class ProjectActorTest extends FlatSpec with Matchers {
       sprintWithStates = projectState.sprints
     } yield {
       sprintWithStates should have length 1
-      sprintWithStates.head.sprintId shouldEqual sprintId
+      sprintWithStates.head.id shouldEqual sprintId
       sprintWithStates.head.isActive
     }
   }

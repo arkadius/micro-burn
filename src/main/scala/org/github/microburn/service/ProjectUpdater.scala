@@ -39,7 +39,7 @@ class ProjectUpdater(projectActor: LiftActor, providers: IntegrationProviders, u
 
   private def parallelCurrentAndUpdatedSprints: LAFuture[(ProjectState, Seq[Long])] = {
     val currentStateFuture = (projectActor ?? GetProjectState).mapTo[ProjectState]
-      .withLoggingFinished("current sprint ids: " + _.sprints.map(_.sprintId).mkString(", "))
+      .withLoggingFinished("current sprint ids: " + _.sprints.map(_.id).mkString(", "))
     val updatedIdsFuture = providers.sprintsProvider.allSprintIds.withLoggingFinished("updated sprints ids: " + _.mkString(", "))
     for {
       currentState <- currentStateFuture
@@ -75,8 +75,8 @@ class ProjectUpdater(projectActor: LiftActor, providers: IntegrationProviders, u
     val updateResults = current.sprints.collect {
       case withDetails if withDetails.isActive =>
         for {
-          (details, userStories) <- parallelSprintDetailsAndUserStories(withDetails.sprintId)
-          updateResult <- (projectActor ?? UpdateSprint(withDetails.sprintId, userStories, !details.isActive, timestamp)).mapTo[String]
+          (details, userStories) <- parallelSprintDetailsAndUserStories(withDetails.id)
+          updateResult <- (projectActor ?? UpdateSprint(withDetails.id, userStories, !details.isActive, timestamp)).mapTo[String]
         } yield updateResult
     }
     collectWithWellEmptyListHandling(updateResults)

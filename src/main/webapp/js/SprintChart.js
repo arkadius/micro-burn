@@ -14,7 +14,7 @@ app.controller("ProjectCtrl", ['$scope', 'historySvc', function ($scope, history
     if (!sprint)
       return;
 
-    historySvc.getHistory(sprint.sprintId).then(function (history) {
+    historySvc.getHistory(sprint.id).then(function (history) {
       $scope.series = history.series;
     });
   });
