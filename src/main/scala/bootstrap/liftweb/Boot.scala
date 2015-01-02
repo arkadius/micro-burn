@@ -32,7 +32,7 @@ class Boot {
     JQueryModule.init()
 
     net.liftmodules.ng.Angular.init()
-    net.liftmodules.ng.AngularJS.init()
+    net.liftmodules.ng.AngularJS.init("cookies")
 
     val context = ApplicationContext()
     context.updater.start()

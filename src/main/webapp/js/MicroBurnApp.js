@@ -1,4 +1,4 @@
-var app = angular.module("MicroBurnApp", ["MicroBurnServices"]);
+var app = angular.module("MicroBurnApp", ["MicroBurnServices", 'ngCookies']);
 
 app.controller("ProjectCtrl", ['$scope', 'historySvc', function ($scope, historySvc) {
   $scope.projectState = {
@@ -28,7 +28,7 @@ app.controller("ProjectCtrl", ['$scope', 'historySvc', function ($scope, history
   });
 }]);
 
-app.directive('sprintChart', function () {
+app.directive('sprintChart', ['$cookies', function ($cookies) {
   return {
     template: "<div id='y-axis'></div>" +
               "<div id='chart'></div>" +
@@ -74,11 +74,6 @@ app.directive('sprintChart', function () {
         naturalOrder: true
       });
 
-      var highlighter = new Rickshaw.Graph.Behavior.Series.Toggle({
-        graph: graph,
-        legend: legend
-      });
-
       var detail = new Rickshaw.Graph.HoverDetail({
         graph: graph,
         xFormatter: function(x) {
@@ -104,7 +99,7 @@ app.directive('sprintChart', function () {
         }
       });
 
-      scope.$watch("history", function(history){
+      scope.$watch("history", function(history) {
         if (!history)
           return;
 
@@ -119,15 +114,39 @@ app.directive('sprintChart', function () {
           } else if (i == history.series.length - 1) { // DONE
             column.color = "rgba(0, 0, 0, 0.9)";
           } else {
-            var opacityIndex = i;
-            column.color = "rgba(0, 0, 255, 0." + opacityIndex + ")";
+            column.color = "rgba(0, 0, 255, 0." + i + ")";
+          }
+          if ($cookies["disabled_" + i]) {
+            column.disabled = true;
           }
           series.push(column);
         }
 
         graph.render();
         legend.render();
+
+        new Rickshaw.Graph.Behavior.Series.Toggle({ // to musi być wywyołand po przerenderowaniu legendy
+          graph: graph,
+          legend: legend
+        });
+        series.forEach(function (s, index) { // nadpisujemy metody dodane przez Toggle, żeby zapisywać sesję
+          s.disable = function () {
+            if (series.length <= 1) {
+              throw('only one series left');
+            }
+            s.disabled = true;
+            scope.$apply(function () {
+              $cookies["disabled_" + index] = '1';
+            });
+          };
+          s.enable = function () {
+            s.disabled = false;
+            scope.$apply(function () {
+              delete $cookies["disabled_" + index];
+            });
+          };
+        });
       });
     }
   };
-});
+}]);
