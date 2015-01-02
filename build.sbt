@@ -7,13 +7,11 @@ license := apache2("Copyright 2015 the original author or authors.")
 
 removeExistingHeaderBlock := true
 
-compileInputs in (Compile,compile)  <<= compileInputs in (Compile,compile)  dependsOn formatLicenseHeaders
+releaseSettings
 
 organization  := "org.github"
 
 name := "micro-burn"
-
-version       := "0.1"
 
 scalaVersion  := "2.11.4"
 
