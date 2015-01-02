@@ -1,3 +1,14 @@
+import com.banno.license.Plugin.LicenseKeys._
+import com.banno.license.Licenses._
+
+licenseSettings
+
+license := apache2("Copyright 2015 the original author or authors.")
+
+removeExistingHeaderBlock := true
+
+compileInputs in (Compile,compile)  <<= compileInputs in (Compile,compile)  dependsOn formatLicenseHeaders
+
 organization  := "org.github"
 
 name := "micro-burn"
@@ -30,7 +41,7 @@ libraryDependencies ++= {
     "com.typesafe" % "config" % "1.2.1",
     "net.databinder.dispatch" %% "dispatch-json4s-native" % "0.11.2",
     "net.liftmodules"      %%   s"ng_${liftEdition}" % "0.6.2",
-    "net.liftmodules"      %%   s"ng-js_${liftEdition}" % "0.2_1.3.",
+    "net.liftmodules"      %%   s"ng-js_${liftEdition}" % "0.2_1.3.8",
     "net.liftmodules"      %%   s"lift-jquery-module_2.6" % "2.8",
     "net.liftweb"          %%  "lift-webkit"      % liftV,
     "org.eclipse.jetty"     %  "jetty-server"     % jettyV,
