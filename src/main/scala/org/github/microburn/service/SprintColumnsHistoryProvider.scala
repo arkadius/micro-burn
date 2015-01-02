@@ -6,7 +6,7 @@ import net.liftweb.actor.{LAFuture, LiftActor}
 import net.liftweb.common.Box
 import org.github.microburn.domain.actors.{GetStoryPointsHistory, SprintHistory}
 import org.github.microburn.domain.{DateWithColumnsState, ProjectConfig}
-import org.joda.time.{Duration, Days, Seconds, DateTime}
+import org.joda.time.{DateTime, Duration}
 
 import scalaz.Scalaz._
 
@@ -34,7 +34,8 @@ class SprintColumnsHistoryProvider(projectActor: LiftActor, initialFetchToSprint
 
     val estimate = computeEstimate(startDate, endDate, history.initialStoryPointsSum)
 
-    ColumnsHistory((columnsHistory :+ estimate).map(_.toProbes(startDate)))
+    val columns = columnsHistory :+ estimate
+    ColumnsHistory(startDate.getMillis, columns.reverse) // reverse - dla poprawnej kolejności w legendzie
   }
 
   private def computeToPrepend(history: SprintHistory): Option[DateWithColumnsState] = {
@@ -60,7 +61,7 @@ class SprintColumnsHistoryProvider(projectActor: LiftActor, initialFetchToSprint
     boardColumnsWithDroppedFirst.map { column =>
       val storyPointsForColumn = zipped.map { allColumnsInfo =>
         val storyPoints = allColumnsInfo.storyPointsForColumn(column.index)
-        DateWithStoryPoints(new DateTime(allColumnsInfo.date), storyPoints)
+        HistoryProbe(allColumnsInfo.date.getTime, storyPoints)
       }.toList
       ColumnHistory(column.name, column.color, storyPointsForColumn)
     }
@@ -73,20 +74,8 @@ class SprintColumnsHistoryProvider(projectActor: LiftActor, initialFetchToSprint
 }
 
 //TODO: wrócić do nazw domenowych zamiast series, x, y - color i przeliczanie do sekund powinno być po stronie front-endu
-case class ColumnsHistory(series: List[ColumnHistoryProbes])
+case class ColumnsHistory(startDate: Long, series: List[ColumnHistory])
 
-case class ColumnHistory(name: String, color: String, data: List[DateWithStoryPoints]) {
-  def toProbes(startDate: DateTime): ColumnHistoryProbes = {
-    ColumnHistoryProbes(name, color, data = data.map(_.toProbe(startDate)))
-  }
-}
+case class ColumnHistory(name: String, color: String, data: List[HistoryProbe])
 
-case class DateWithStoryPoints(date: DateTime, storyPoints: Int) {
-  def toProbe(startDate: DateTime): StoryPointsProbe = {
-    StoryPointsProbe(new Duration(startDate, date).getMillis, storyPoints)
-  }
-}
-
-case class ColumnHistoryProbes(name: String, color: String, data: List[StoryPointsProbe])
-
-case class StoryPointsProbe(x: Long, y: Int)
+case class HistoryProbe(x: Long, y: Int)

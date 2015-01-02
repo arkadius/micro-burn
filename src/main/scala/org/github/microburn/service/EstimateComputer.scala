@@ -10,12 +10,12 @@ import scalaz._
 
 object EstimateComputer {
 
-  def estimatesBetween(start: DateTime, end: DateTime, storyPointsSum: Int): List[DateWithStoryPoints] = {
+  def estimatesBetween(start: DateTime, end: DateTime, storyPointsSum: Int): List[HistoryProbe] = {
     val intervalsAndSums = intervalAndSumMillisAfterThem(businessWeekIntervals(start, end))
     val sumOfIntervalsMillis = intervalsAndSums.lastOption.map(_.sumAfter).getOrElse(0L)
     storyPointsSum.to(0, step = -1).map { storyPoints =>
       val date = momentInIntervals(intervalsAndSums, (sumOfIntervalsMillis * (1 - storyPoints.toDouble / storyPointsSum)).toLong)
-      DateWithStoryPoints(date, storyPoints)
+      HistoryProbe(date.getMillis, storyPoints)
     }.toList        
   }
 

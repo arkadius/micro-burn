@@ -2,8 +2,7 @@ var app = angular.module("MicroBurnApp", ["MicroBurnServices"]);
 
 app.controller("ProjectCtrl", ['$scope', 'historySvc', function ($scope, historySvc) {
   $scope.projectState = {
-    sprints: [],
-    series: []
+    sprints: []
   };
 
   $scope.$watch("projectState", function (projectState) {
@@ -12,7 +11,7 @@ app.controller("ProjectCtrl", ['$scope', 'historySvc', function ($scope, history
 
   var refreshChart = function () {
     historySvc.getHistory($scope.selectedSprint.id).then(function (history) {
-      $scope.series = history.series;
+      $scope.history = history;
     });
   };
 
@@ -32,10 +31,11 @@ app.controller("ProjectCtrl", ['$scope', 'historySvc', function ($scope, history
 app.directive('sprintChart', function () {
   return {
     template: "<div id='y-axis'></div>" +
-              "<div id='chart'></div>",
+              "<div id='chart'></div>" +
+              "<div id='legend'></div>",
     link: function (scope, element, attrs) {
-      scope.$watch("series", function(series){
-        if (!series)
+      scope.$watch("history", function(history){
+        if (!history)
           return;
 
         element.attr("id", "sprint-chart-container");
@@ -43,6 +43,8 @@ app.directive('sprintChart', function () {
         chartElement.empty();
         var yAxisElement = element.children("#y-axis");
         yAxisElement.empty();
+        var legendElement = element.children("#legend");
+        legendElement.empty();
 
         var graph = new Rickshaw.Graph({
           element: chartElement[0],
@@ -55,12 +57,11 @@ app.directive('sprintChart', function () {
           },
           renderer: "line",
           interpolation: "step-after",
-          series: series
+          series: history.series
         });
 
-        var time = new Rickshaw.Fixtures.Time();
         var toDays = function(millis) {
-          return Math.floor(millis / (1000 * 60 * 60 * 24))
+          return Math.floor((millis - history.startDate) / (1000 * 60 * 60 * 24))
         };
         var xAxes = new Rickshaw.Graph.Axis.X({
           graph: graph,
@@ -71,6 +72,41 @@ app.directive('sprintChart', function () {
           element: yAxisElement[0],
           graph: graph,
           orientation: "left"
+        });
+
+        var legend = new Rickshaw.Graph.Legend({
+          graph: graph,
+          element: legendElement[0]
+        });
+
+        var highlighter = new Rickshaw.Graph.Behavior.Series.Toggle({
+          graph: graph,
+          legend: legend
+        });
+
+        var detail = new Rickshaw.Graph.HoverDetail({
+          graph: graph,
+          xFormatter: function(x) {
+            var d = new Date(x),
+              month = '' + (d.getMonth() + 1),
+              day = '' + d.getDate(),
+              year = d.getFullYear(),
+              hour = '' + d.getHours(),
+              min = '' + d.getMinutes();
+
+
+            if (month.length < 2) month = '0' + month;
+            if (day.length < 2) day = '0' + day;
+            if (hour.length < 2) hour = '0' + hour;
+            if (min.length < 2) min = '0' + min;
+
+            var formattedDay = [year, month, day].join('-');
+            var formattedTime = [hour, min].join(':');
+            return [formattedDay, formattedTime].join("&nbsp;");
+          },
+          yFormatter: function(y) {
+            return y;
+          }
         });
 
         graph.render();
