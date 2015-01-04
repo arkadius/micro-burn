@@ -1,5 +1,7 @@
 package org.github.microburn.service
 
+import java.util.Locale
+
 import org.github.microburn.ConfigUtils
 import org.github.microburn.domain.ProjectConfig
 import org.github.microburn.domain.actors.ProjectActor
@@ -23,7 +25,7 @@ class JiraProjectUpdaterTest extends FlatSpec with RestIntegrationTest with Dire
     Path(projectConfig.dataRoot).deleteRecursively()
     val projectActor = new ProjectActor(projectConfig)
     val jiraConfig = JiraConfig(config.getConfig("jira"))
-    val providers = IntegrationProviders(new JiraSprintsDataProvider(jiraConfig), new JiraTasksDataProvider(jiraConfig))
+    val providers = IntegrationProviders(new JiraSprintsDataProvider(jiraConfig, Locale.ENGLISH), new JiraTasksDataProvider(jiraConfig))
     val updater = new ProjectUpdater(projectActor, providers, updatePeriodSeconds = 123)
     updater.updateProject().await(10 seconds)
   }

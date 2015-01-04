@@ -16,6 +16,7 @@
 package org.github.microburn.integration.jira
 
 import java.text.SimpleDateFormat
+import java.util.Locale
 
 import dispatch._
 import net.liftweb.actor.LAFuture
@@ -23,7 +24,7 @@ import org.github.microburn.domain.SprintDetails
 import org.github.microburn.integration.SprintsDataProvider
 import org.json4s._
 
-class JiraSprintsDataProvider(config: JiraConfig) extends SprintsDataProvider {
+class JiraSprintsDataProvider(config: JiraConfig, locale: java.util.Locale = Locale.getDefault(Locale.Category.FORMAT)) extends SprintsDataProvider {
   import org.github.microburn.util.concurrent.FutureEnrichments._
   import scala.concurrent.ExecutionContext.Implicits.global
 
@@ -50,5 +51,5 @@ class JiraSprintsDataProvider(config: JiraConfig) extends SprintsDataProvider {
     }
   }
 
-  private def dateFormat = new SimpleDateFormat("dd/MMM/yy HH:mm")
+  private def dateFormat = new SimpleDateFormat("dd/MMM/yy HH:mm", locale)
 }

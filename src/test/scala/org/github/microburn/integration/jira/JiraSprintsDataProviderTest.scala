@@ -1,5 +1,7 @@
 package org.github.microburn.integration.jira
 
+import java.util.Locale
+
 import akka.actor.ActorSystem
 import com.typesafe.config.ConfigFactory
 import org.github.microburn.ConfigUtils
@@ -20,7 +22,7 @@ class JiraSprintsDataProviderTest extends FlatSpec with RestIntegrationTest with
 //    val config = ConfigFactory.parseFile(new File("application.conf")).withFallback(ConfigUtils.withToDefaultsFallback)
     val config = ConfigUtils.withToDefaultsFallback
     val jiraConfig = JiraConfig(config.getConfig("jira"))
-    val provider = new JiraSprintsDataProvider(jiraConfig)
+    val provider = new JiraSprintsDataProvider(jiraConfig, Locale.ENGLISH)
     val result = provider.allSprintIds.await(5 seconds)
     result shouldEqual Seq(21, 22)
   }
@@ -29,13 +31,13 @@ class JiraSprintsDataProviderTest extends FlatSpec with RestIntegrationTest with
 //    val config = ConfigFactory.parseFile(new File("application.conf")).withFallback(ConfigUtils.withToDefaultsFallback)
     val config = ConfigUtils.withToDefaultsFallback
     val jiraConfig = JiraConfig(config.getConfig("jira"))
-    val provider = new JiraSprintsDataProvider(jiraConfig)
+    val provider = new JiraSprintsDataProvider(jiraConfig, Locale.ENGLISH)
     val result = provider.sprintDetails("21").await(5 seconds)
     println("result: " + result)
     result shouldEqual SprintDetails(
       "Sprint 1",
-      new DateTime(2013, 11, 20, 14, 30).toDate, // 20/lis/13 14:30
-      new DateTime(2013, 11, 27, 14, 30).toDate, // 27/lis/13 14:30
+      new DateTime(2013, 11, 20, 14, 30).toDate, // 20/nov/13 14:30
+      new DateTime(2013, 11, 27, 14, 30).toDate, // 27/nov/13 14:30
       isActive = false
     )
   }
