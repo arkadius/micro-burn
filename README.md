@@ -1,6 +1,8 @@
 micro-burn
 ==========
 
+[![Build Status](https://travis-ci.org/arkadius/micro-burn.svg?branch=master)](https://travis-ci.org/arkadius/micro-burn)
+
 # Overview
 
 micro-burn is simple microservice providing burndownchart. At this moment it has **Jira Agile** integration. If you want to contribute and add new provider, take a look at [Example provider implementation](https://github.com/arkadius/micro-burn/tree/master/src/main/scala/org/github/microburn/integration/jira) and send me a PR.
