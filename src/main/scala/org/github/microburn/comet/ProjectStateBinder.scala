@@ -28,9 +28,9 @@ class ProjectStateBinder
 
   override protected def registerWith = ApplicationContext().projectActor
 
-  override def lowPriority: PartialFunction[Any, Unit] = resendState orElse super.lowPriority
+  override def lowPriority: PartialFunction[Any, Unit] = handleInternal orElse super.lowPriority
 
-  private def resendState: PartialFunction[Any, Unit] = {
+  private def handleInternal: PartialFunction[Any, Unit] = {
     case f:LAFuture[_] =>
       val projectStateFuture = f.asInstanceOf[LAFuture[ProjectState]]
       projectStateFuture.onSuccess(this ! _)
