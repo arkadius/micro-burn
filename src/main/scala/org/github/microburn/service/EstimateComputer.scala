@@ -15,13 +15,10 @@
  */
 package org.github.microburn.service
 
-import java.util.Date
-
 import org.joda.time._
 
 import scala.collection.immutable.Seq
 import scalaz.Scalaz._
-import scalaz._
 
 object EstimateComputer {
 
@@ -51,13 +48,9 @@ object EstimateComputer {
   }
 
   private[service] def intervalAndSumMillisAfterThem(intervals: List[Interval]): Seq[IntervalAndSumMillis] = {
-    lazy val intervalsStream: Stream[IntervalAndSumMillis] =
-      IntervalAndSumMillis(intervals.head, 0) #::
-        (intervalsStream zip intervals.tail).map {
-          case (sum, nextInterval) =>
-            IntervalAndSumMillis(nextInterval, sum.sumAfter)
-        }
-    intervalsStream.toList
+    intervals.tail.scanLeft(IntervalAndSumMillis(intervals.head, 0)) { (sum, nextInterval) =>
+      IntervalAndSumMillis(nextInterval, sum.sumAfter)
+    }
   }
 
   private def momentInIntervals(intervalsAndSums: Seq[IntervalAndSumMillis], millis: Long): DateTime = {

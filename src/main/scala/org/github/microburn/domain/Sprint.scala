@@ -50,16 +50,13 @@ case class Sprint(id: String,
       .sortBy { case (date, group) => date }
       .map { case (date, group) => group }
 
-    lazy val boardStateStream: Stream[BoardState] =
-      initialBoard #::
-        (boardStateStream zip eventsSortedAndGrouped).map {
-          case (prevBoard, currEventsGroup) =>
-            currEventsGroup.foldLeft(prevBoard) { (boardAcc, event) =>
-              boardAcc.plus(event)
-            }
-        }
+    val boardStatesCumulative = eventsSortedAndGrouped.scanLeft(initialBoard) { (prevBoard, currEventsGroup) =>
+      currEventsGroup.foldLeft(prevBoard) { (boardAcc, event) =>
+        boardAcc.plus(event)
+      }
+    }
 
-    boardStateStream.map(_.columnsState).toSeq
+    boardStatesCumulative.map(_.columnsState)
   }
 }
 

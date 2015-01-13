@@ -20,15 +20,13 @@ class BoardStateRandomTest extends FlatSpec with GeneratorDrivenPropertyChecks w
   it should "do round-trip" in {
     forAll(initialBoardAndChangesGenerator) {
       case InitialBoardAndChanges(initialBoard, changes) =>
-        lazy val boardAndEventsStream: Stream[(BoardState, Seq[TaskEvent])] =
-          (initialBoard, Nil) #::
-            (boardAndEventsStream zip changes).map {
-              case ((prevBoard, events), changedBoard) =>
-                val newAddedEvents = prevBoard.diff(changedBoard)
-                (changedBoard, newAddedEvents)
-            }
+        val boardsAndEvents = changes.scanLeft(initialBoard, Seq.empty[TaskEvent]) {
+          case ((prevBoard, events), changedBoard) =>
+            val newAddedEvents = prevBoard.diff(changedBoard)
+            (changedBoard, newAddedEvents)
+        }
 
-        boardAndEventsStream.drop(1).foldLeft(initialBoard) {
+        boardsAndEvents.drop(1).foldLeft(initialBoard) {
           case (prevBoard, (boardAfterGeneratedChanges, events)) =>
             val boardAfterEventsAccumulation = events.foldLeft(prevBoard) { (board, event) =>
               board.plus(event)
