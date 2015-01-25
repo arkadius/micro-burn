@@ -45,19 +45,20 @@ unmanagedResourceDirectories in Compile += { baseDirectory.value / "src/main/web
 seq(net.virtualvoid.sbt.graph.Plugin.graphSettings : _*)
 
 libraryDependencies ++= {
-  val liftV = "3.0-M2"
+  val liftV = "3.0-M3"
   val liftEdition = liftV.substring(0,3)
 //  val jettyV = "9.3.0.M1" <- jakiś busy waiting się dzieje
   val jettyV = "8.1.16.v20140903"
   Seq(
     "com.typesafe" % "config" % "1.2.1",
     "net.databinder.dispatch" %% "dispatch-json4s-native" % "0.11.2",
-    "net.liftmodules"      %%   s"ng_${liftEdition}" % "0.6.2",
-    "net.liftmodules"      %%   s"ng-js_${liftEdition}" % "0.2_1.3.8",
+    "net.liftmodules"      %%   s"ng_$liftEdition" % "0.6.3",
+    "net.liftmodules"      %%   s"ng-js_$liftEdition" % "0.2_1.3.8",
     "net.liftmodules"      %%   s"lift-jquery-module_2.6" % "2.8",
     "net.liftweb"          %%  "lift-webkit"      % liftV,
     "org.eclipse.jetty"     %  "jetty-server"     % jettyV,
     "org.eclipse.jetty"     %  "jetty-webapp"     % jettyV,
+    "javax.servlet"         %  "javax.servlet-api" % "3.1.0",
     "com.github.tototoshi" %%  "scala-csv"        % "1.1.2",
     "ch.qos.logback"        %  "logback-classic"  % "1.1.2",
     "org.scalatest"        %%  "scalatest"        % "2.2.2" % "test",

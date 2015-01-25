@@ -71,8 +71,7 @@ class ProjectActor(config: ProjectConfig) extends LiftActor with ListenerManager
           SprintWithDetails(sprintId, details)
         }
     }.toSeq
-    collectWithWellEmptyListHandling(sprintWithStateFutures).map { sprints =>
-//      Thread.sleep(5000)
+    LAFuture.collect(sprintWithStateFutures : _*).map { sprints =>
       ProjectState(sprints.sortBy(_.details.start))
     }
   }

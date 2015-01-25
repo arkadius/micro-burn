@@ -20,11 +20,11 @@ import java.util.Date
 import net.liftweb.actor.{LAFuture, LiftActor}
 import net.liftweb.common.Failure
 import net.liftweb.util.Schedule
+import net.liftweb.util.Helpers._
 import org.github.microburn.domain.actors._
 import org.github.microburn.domain.{SprintDetails, UserStory}
 import org.github.microburn.integration.{SprintsDataProvider, TasksDataProvider}
 import org.github.microburn.util.logging.Slf4jLogging
-import org.joda.time.Seconds
 
 class ProjectUpdater(projectActor: LiftActor, providers: IntegrationProviders, updatePeriodSeconds: Int) extends Slf4jLogging {
 
@@ -40,7 +40,7 @@ class ProjectUpdater(projectActor: LiftActor, providers: IntegrationProviders, u
         case Failure(msg, ex, _) => error(s"Error while updating project data: ${ex.map(_.getMessage).openOr(msg)}")
         case _ =>
       }
-      Schedule.schedule(() => repeat(), Seconds.seconds(updatePeriodSeconds).toPeriod)
+      Schedule.schedule(() => repeat(), updatePeriodSeconds.seconds)
     }
   }
 
@@ -82,7 +82,7 @@ class ProjectUpdater(projectActor: LiftActor, providers: IntegrationProviders, u
         createResult <- (projectActor !< CreateNewSprint(sprintId.toString, details, userStories, timestamp)).mapTo[String]
       } yield createResult
     }
-    collectWithWellEmptyListHandling(createResults)
+    LAFuture.collect(createResults : _*)
   }
 
   private def updateActiveSprints(current: ProjectState)
@@ -94,7 +94,7 @@ class ProjectUpdater(projectActor: LiftActor, providers: IntegrationProviders, u
           updateResult <- (projectActor ?? UpdateSprint(withDetails.id, userStories, !details.isActive, timestamp)).mapTo[String]
         } yield updateResult
     }
-    collectWithWellEmptyListHandling(updateResults)
+    LAFuture.collect(updateResults : _*)
   }
 
   private def parallelSprintDetailsAndUserStories(sprintId: String): LAFuture[(SprintDetails, Seq[UserStory])] = {

@@ -27,13 +27,6 @@ import scala.util.Success
 object FutureEnrichments {
   import scala.concurrent.ExecutionContext.Implicits.global
 
-  def collectWithWellEmptyListHandling[T](futures: Seq[LAFuture[T]]): LAFuture[List[T]] = {
-    if (futures.nonEmpty)
-      LAFuture.collect(futures : _*)
-    else
-      LAFuture[List[T]](() => Nil)
-  }
-
   implicit class EnrichedLAFuture[T](laFuture: LAFuture[T]) extends Slf4jLogging {
     def mapTo[TT: ClassTag]: LAFuture[TT] = {
       laFuture.map(_.asInstanceOf[TT])
