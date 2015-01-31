@@ -17,8 +17,7 @@ package org.github.microburn.repository
 
 import java.io.File
 
-import com.typesafe.config.ConfigFactory
-import org.github.microburn.ConfigUtils
+import org.github.microburn.TestConfig
 import org.github.microburn.domain.ProjectConfig
 import org.github.microburn.domain.generator.TaskEventsGenerator
 import org.scalacheck.Gen
@@ -27,7 +26,7 @@ import org.scalatest.{FlatSpec, Matchers}
 
 class TaskEventsRepositoryRandomTest extends FlatSpec with Matchers with GeneratorDrivenPropertyChecks {
 
-  implicit val config = ProjectConfig(ConfigUtils.withToDefaultsFallback)
+  implicit val config = ProjectConfig(TestConfig.withDefaultsFallback())
 
   it should "do correct round trip" in {
     forAll(Gen.nonEmptyListOf(TaskEventsGenerator.generator)) { events =>

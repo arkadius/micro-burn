@@ -23,7 +23,7 @@ object BoardChangesGenerator {
   private def updateStatus(technicalTask: TechnicalTask): Gen[TechnicalTask] =
     for {
       status <- Gen.posNum[Int]
-    } yield technicalTask.copy(status = status)
+    } yield technicalTask.copy(status = status.toString)
 
   private def updateStoryPoints(technicalTask: TechnicalTask): Gen[TechnicalTask] =
     for {
@@ -56,7 +56,7 @@ object BoardChangesGenerator {
   private def updateStatus(userStory: UserStory): Gen[UserStory] =
     for {
       status <- Gen.posNum[Int]
-    } yield userStory.copy(status = status) 
+    } yield userStory.copy(status = status.toString)
   
   private def updateStoryPoints(userStory: UserStory): Gen[UserStory] = 
     for {

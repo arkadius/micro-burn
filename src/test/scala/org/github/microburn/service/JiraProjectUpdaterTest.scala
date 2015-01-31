@@ -17,7 +17,7 @@ package org.github.microburn.service
 
 import java.util.Locale
 
-import org.github.microburn.ConfigUtils
+import org.github.microburn.TestConfig
 import org.github.microburn.domain.ProjectConfig
 import org.github.microburn.domain.actors.ProjectActor
 import org.github.microburn.integration._
@@ -34,8 +34,7 @@ class JiraProjectUpdaterTest extends FlatSpec with RestIntegrationTest with Dire
   override def route: Route = JiraSprintsDataProviderTest.route ~ JiraTasksDataProviderTest.route
 
   it should "fetch inital project state" in {
-//    val config = ConfigFactory.parseFile(new File("application.conf")).withFallback(ConfigUtils.withToDefaultsFallback)
-    val config = ConfigUtils.withToDefaultsFallback
+    val config = TestConfig.jiraConfigWithDefaultsFallback()
     val projectConfig = ProjectConfig(config)
     Path(projectConfig.dataRoot).deleteRecursively()
     val projectActor = new ProjectActor(projectConfig)

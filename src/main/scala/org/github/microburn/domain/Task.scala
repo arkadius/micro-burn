@@ -27,7 +27,7 @@ sealed trait Task { self =>
 
   def taskName: String
   def optionalStoryPoints: Option[Int]
-  def status: Int
+  def status: String
 
   def taskAdded(implicit timestamp: Date): Seq[TaskAdded]
   def storyPointsWithoutSubTasks: Int
@@ -38,7 +38,7 @@ case class UserStory(taskId: String,
                      taskName: String,
                      optionalStoryPoints: Option[Int],
                      technicalTasksWithoutParentId: IndexedSeq[TechnicalTask],
-                     status: Int) extends Task with ComparableWith[UserStory] with HavingNestedTasks[TechnicalTaskWithParentId] {
+                     status: String) extends Task with ComparableWith[UserStory] with HavingNestedTasks[TechnicalTaskWithParentId] {
   override type Self = UserStory
 
   protected val nestedTasks: Seq[TechnicalTaskWithParentId] = technicalTasksWithoutParentId.map(TechnicalTaskWithParentId(_, taskId))
@@ -92,7 +92,7 @@ case class TechnicalTaskWithParentId(technical: TechnicalTask,
   override def taskId: String = technical.taskId
   override def taskName: String = technical.taskName
   override def optionalStoryPoints: Option[Int] = technical.optionalStoryPoints
-  override def status: Int = technical.status
+  override def status: String = technical.status
 
   override def isTechnicalTask: Boolean = true
   override def storyPointsWithoutSubTasks: Int = technical.optionalStoryPoints.getOrElse(0)
@@ -117,7 +117,7 @@ trait ComparableWith[OtherTaskType <: Task with ComparableWith[_]] { self: Task 
 case class TechnicalTask(taskId: String,
                          taskName: String,
                          optionalStoryPoints: Option[Int],
-                         status: Int) {
+                         status: String) {
   override def toString: String = {
     s"  Technical(${taskId.take(5)})"
   }

@@ -19,7 +19,7 @@ import java.util.Locale
 
 import akka.actor.ActorSystem
 import com.typesafe.config.ConfigFactory
-import org.github.microburn.ConfigUtils
+import org.github.microburn.TestConfig
 import org.github.microburn.domain.SprintDetails
 import org.github.microburn.integration.RestIntegrationTest
 import org.joda.time.DateTime
@@ -34,8 +34,7 @@ class JiraSprintsDataProviderTest extends FlatSpec with RestIntegrationTest with
   override protected val route: Route = JiraSprintsDataProviderTest.route
 
   it should "get sprints ids" in {
-//    val config = ConfigFactory.parseFile(new File("application.conf")).withFallback(ConfigUtils.withToDefaultsFallback)
-    val config = ConfigUtils.withToDefaultsFallback
+    val config = TestConfig.jiraConfigWithDefaultsFallback()
     val jiraConfig = JiraConfig(config.getConfig("jira"))
     val provider = new JiraSprintsDataProvider(jiraConfig, Locale.ENGLISH)
     val result = provider.allSprintIds.await(5 seconds)
@@ -43,8 +42,7 @@ class JiraSprintsDataProviderTest extends FlatSpec with RestIntegrationTest with
   }
 
   it should "get sprint details" in {
-//    val config = ConfigFactory.parseFile(new File("application.conf")).withFallback(ConfigUtils.withToDefaultsFallback)
-    val config = ConfigUtils.withToDefaultsFallback
+    val config = TestConfig.jiraConfigWithDefaultsFallback()
     val jiraConfig = JiraConfig(config.getConfig("jira"))
     val provider = new JiraSprintsDataProvider(jiraConfig, Locale.ENGLISH)
     val result = provider.sprintDetails("21").await(5 seconds)

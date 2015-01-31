@@ -13,18 +13,12 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package org.github.microburn.domain
+package org.github.microburn.integration.trello
 
-import com.typesafe.config.ConfigFactory
-import org.github.microburn.TestConfig
-import org.scalatest.{Matchers, FlatSpec, FunSuite}
+import net.liftweb.actor.LAFuture
+import org.github.microburn.domain.UserStory
+import org.github.microburn.integration.BoardStateProvider
 
-class ProjectConfigTest extends FlatSpec with Matchers {
-
-  it should "create project config from conf" in {
-    val config = ProjectConfig(TestConfig.withDefaultsFallback())
-
-    config.boardColumns should have length 5
-  }
-
+class TrelloBoardStateProvider(config: TrelloConfig) extends BoardStateProvider {
+  override def currentUserStories: LAFuture[Seq[UserStory]] = ???
 }

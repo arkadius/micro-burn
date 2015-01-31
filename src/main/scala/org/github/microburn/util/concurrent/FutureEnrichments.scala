@@ -16,7 +16,7 @@
 package org.github.microburn.util.concurrent
 
 import net.liftweb.actor.LAFuture
-import net.liftweb.common.{Empty, Failure, Full}
+import net.liftweb.common._
 import org.github.microburn.util.logging.Slf4jLogging
 
 import scala.concurrent.duration.FiniteDuration

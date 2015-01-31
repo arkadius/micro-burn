@@ -18,24 +18,21 @@ package org.github.microburn.domain.actors
 import java.io.File
 import java.util.Date
 
-import com.typesafe.config.ConfigFactory
+import net.liftweb.actor.LAFuture
 import net.liftweb.common.Box
-import org.github.microburn.{ConfigUtils, ApplicationContext}
+import org.github.microburn.TestConfig
 import org.github.microburn.domain._
 import org.github.microburn.repository.SprintRepository
-import net.liftweb.actor.{LAFuture, MockLiftActor}
-import org.github.microburn.service.SprintColumnsHistoryProvider
-import org.github.microburn.util.concurrent.{LiftActorEnrichments, FutureEnrichments}
 import org.scalatest.{FlatSpec, Matchers}
 
-import scala.reflect.io.Path
 import scala.concurrent.duration._
+import scala.reflect.io.Path
 
 class ProjectActorTest extends FlatSpec with Matchers {
-  import FutureEnrichments._
-  import LiftActorEnrichments._
+  import org.github.microburn.util.concurrent.FutureEnrichments._
+  import org.github.microburn.util.concurrent.LiftActorEnrichments._
 
-  implicit val config = ProjectConfig(ConfigUtils.withToDefaultsFallback)
+  implicit val config = ProjectConfig(TestConfig.withDefaultsFallback())
 
   it should "reply with correct active actors" in {
     val sprint = SampleSprint.withEmptyEvents()

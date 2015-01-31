@@ -17,9 +17,10 @@ package org.github.microburn.repository
 
 import java.io.File
 import java.text.{ParseException, SimpleDateFormat}
-import java.util.Date
+import java.util.{TimeZone, Date}
 
 import com.github.tototoshi.csv._
+import net.liftweb.json.DefaultFormats
 import org.github.microburn.domain.{TaskUpdated, TaskRemoved, TaskAdded, TaskEvent}
 
 import scala.util.control.NonFatal
@@ -67,7 +68,7 @@ class TaskEventsCsvRepository(taskEventsFile: File) extends TaskEventsRepository
     val isTechnicalTask     = fields(3).toBoolean
     def taskName            = fields(4)
     def optionalStoryPoints = parseOptionalInt(fields(5))
-    def status              = fields(6).toInt
+    def status              = fields(6)
     val date                = dateFormat.parse(fields(7))
     fields(0) match {
       case ADDED   => TaskAdded(taskId = taskId, parentUserStoryId = parentUserStoryId, isTechnicalTask = isTechnicalTask,
@@ -81,7 +82,11 @@ class TaskEventsCsvRepository(taskEventsFile: File) extends TaskEventsRepository
 
   private def parseOptionalInt(str: String): Option[Int] =  str.nonEmpty.option(str.toInt)
 
-  private def dateFormat = new SimpleDateFormat("yyyy-MM-dd'T'HH:mm:ss.SSS")
+  private def dateFormat = {
+    val f = new SimpleDateFormat("yyyy-MM-dd'T'HH:mm:ss.SSS'Z'")
+    f.setTimeZone(TimeZone.getTimeZone("UTC"))
+    f
+  }
 
   override def appendTasksEvents(events: Seq[TaskEvent]): Unit = {
     val csv = prepareWriter()

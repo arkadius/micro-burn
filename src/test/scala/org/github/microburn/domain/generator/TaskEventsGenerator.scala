@@ -33,7 +33,7 @@ object TaskEventsGenerator {
       date <- Gen.posNum[Long].map(new Date(_))
     } yield TaskAdded(
       taskId = taskId, parentUserStoryId = parentUserStoryId, isTechnicalTask = isTechnicalTask,
-      taskName = taskName, optionalStoryPoints = optionalStoryPoints, status = status, date = date
+      taskName = taskName, optionalStoryPoints = optionalStoryPoints, status = status.toString, date = date
     )
   }
 
@@ -48,7 +48,7 @@ object TaskEventsGenerator {
       date <- Gen.posNum[Long].map(new Date(_))
     } yield TaskUpdated(
       taskId = taskId, parentUserStoryId = parentUserStoryId, isTechnicalTask = isTechnicalTask,
-      taskName = taskName, optionalStoryPoints = optionalStoryPoints, status = status, date = date
+      taskName = taskName, optionalStoryPoints = optionalStoryPoints, status = status.toString, date = date
     )
   }
 

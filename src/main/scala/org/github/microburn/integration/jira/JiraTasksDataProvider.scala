@@ -44,7 +44,7 @@ class JiraTasksDataProvider(config: JiraConfig) extends TasksDataProvider {
           case _ => None
         }
         val JString(status) = fields \ "status" \ "id"
-        TaskWithParentId(taskId, taskName, storyPoints, parentId, status.toInt)
+        TaskWithParentId(taskId, taskName, storyPoints, parentId, status)
       }
       val groupedByParent = tasks.groupBy(_.parentId).toMap
       val userStoryTasks = tasks.filter(_.parentId.isEmpty)
@@ -63,5 +63,5 @@ class JiraTasksDataProvider(config: JiraConfig) extends TasksDataProvider {
     TechnicalTask(subTask.taskId, subTask.taskName, subTask.storyPoints, subTask.status)
   }
 
-  case class TaskWithParentId(taskId: String, taskName: String, storyPoints: Option[Int], parentId: Option[String], status: Int)
+  case class TaskWithParentId(taskId: String, taskName: String, storyPoints: Option[Int], parentId: Option[String], status: String)
 }

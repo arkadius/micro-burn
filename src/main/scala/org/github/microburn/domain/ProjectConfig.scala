@@ -28,10 +28,10 @@ case class ProjectConfig(boardColumns: List[BoardColumn], dataRoot: File) {
     status <- column.statusIds
   } yield status -> column).toMap
 
-  def boardColumnIndex(status: Int): Int = statuses(status).index
+  def boardColumnIndex(status: String): Int = statuses(status).index
 }
 
-case class BoardColumn(index: Int, name: String, statusIds: List[Int])
+case class BoardColumn(index: Int, name: String, statusIds: List[String])
 
 object ProjectConfig {
   import collection.convert.wrapAll._
@@ -40,7 +40,7 @@ object ProjectConfig {
     val columns = for {
       (columnConfig, index) <- config.getConfigList("board.columns").zipWithIndex
       name = columnConfig.getString("name")
-      statusIds = columnConfig.getIntList("statusIds").map(_.toInt).toList
+      statusIds = columnConfig.getStringList("statusIds").toList
     } yield BoardColumn(index, name, statusIds)
     val dataRoot = new File(config.getString("data.project.root"))
     ProjectConfig(columns.toList, dataRoot)

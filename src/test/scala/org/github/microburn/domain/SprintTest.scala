@@ -18,12 +18,12 @@ package org.github.microburn.domain
 import java.util.Date
 
 import com.typesafe.config.ConfigFactory
-import org.github.microburn.{ConfigUtils, ApplicationContext}
+import org.github.microburn.{TestConfig, ApplicationContext}
 import org.scalatest.{Inside, FlatSpec, Matchers}
 
 class SprintTest extends FlatSpec with Matchers with Inside {
 
-  implicit val config = ProjectConfig(ConfigUtils.withToDefaultsFallback)
+  implicit val config = ProjectConfig(TestConfig.withDefaultsFallback())
 
   it should "give correct story points sum" in {
     val sprint = SampleSprint.withEmptyEvents(

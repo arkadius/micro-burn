@@ -27,7 +27,7 @@ object TasksGenerator {
       taskId <- Gen.uuid
       taskName <- Gen.identifier
       status <- Gen.posNum[Int]
-    } yield TechnicalTask(taskId = taskId.toString, taskName = taskName, optionalStoryPoints = optionalStoryPoints, status = status)
+    } yield TechnicalTask(taskId = taskId.toString, taskName = taskName, optionalStoryPoints = optionalStoryPoints, status = status.toString)
   }
 
   private val technicalTasksAndStoryPointsGenerator: Gen[(List[TechnicalTask], Option[Int])] = {
@@ -53,7 +53,7 @@ object TasksGenerator {
       status <- Gen.posNum[Int]
     } yield UserStory(
       taskId = taskId.toString, taskName = taskName, optionalStoryPoints = optionalStoryPoints,
-      technicalTasksWithoutParentId = technicalTasks.toIndexedSeq, status = status
+      technicalTasksWithoutParentId = technicalTasks.toIndexedSeq, status = status.toString
     )
   }
 

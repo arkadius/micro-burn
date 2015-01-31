@@ -13,12 +13,15 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package org.github.microburn
+package org.github.microburn.util
 
-import com.typesafe.config.{Config, ConfigFactory}
+import _root_.dispatch.as
+import com.ning.http.client.Response
+import org.json4s.{JValue, StringInput}
+import org.json4s.native.JsonMethods._
 
-object ConfigUtils {
+package object dispatch {
 
-  def withToDefaultsFallback: Config = ConfigFactory.load().withFallback(ConfigFactory.parseResources("defaults.conf"))
+  def asJsonWithUtf8: (Response) => JValue = as.String.utf8 andThen (s => parse(StringInput(s), useBigDecimalForDouble = true))
 
 }

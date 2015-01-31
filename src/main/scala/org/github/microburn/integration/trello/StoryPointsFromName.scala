@@ -13,18 +13,17 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package org.github.microburn.domain
+package org.github.microburn.integration.trello
 
-import com.typesafe.config.ConfigFactory
-import org.github.microburn.TestConfig
-import org.scalatest.{Matchers, FlatSpec, FunSuite}
+import scalaz._
+import Scalaz._
 
-class ProjectConfigTest extends FlatSpec with Matchers {
+object StoryPointsFromName {
+  private final val NAME_WITH_SP_PATTERN = "(\\(([\\d]*)\\))?\\s*(.*)".r("spWrappedByBraces", "nullableStoryPoints", "name")
 
-  it should "create project config from conf" in {
-    val config = ProjectConfig(TestConfig.withDefaultsFallback())
-
-    config.boardColumns should have length 5
-  }
-
+  def unapply(nameWithOptionalSp: String): Option[(Option[Int], String)] =
+    NAME_WITH_SP_PATTERN.unapplySeq(nameWithOptionalSp).map {
+      case spWrappedByBraces :: nullableStoryPoints :: name :: Nil =>
+        (Option(nullableStoryPoints).map(_.trim).filter(_.nonEmpty).map(_.toInt), name)
+    }
 }
