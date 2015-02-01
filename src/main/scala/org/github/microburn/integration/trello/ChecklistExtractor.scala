@@ -15,11 +15,20 @@
  */
 package org.github.microburn.integration.trello
 
-import net.liftweb.actor.LAFuture
-import org.github.microburn.domain.{BoardColumn, UserStory}
+import org.json4s.JsonAST._
 
-class TrelloListsCardsProvider(config: TrelloConfig) {
+object ChecklistExtractor {
 
-  def cards(column: BoardColumn): LAFuture[Seq[UserStory]] = ???
+  def extract(jv: JValue): Seq[ChecklistItem] = {
+    (jv \\ "checkItems").children.map { item =>
+      val JString(id) = item \ "id"
+      val JString(StoryPointsFromName(optionalSp, name)) = item \ "name"
+      val JString(state) = item \ "state"
+      val completedStatus = state == "complete"
+      ChecklistItem(id, name, optionalSp, completedStatus)
+    }
+  }
 
 }
+
+case class ChecklistItem(id: String, name: String, optionalSp: Option[BigDecimal], completedStatus: Boolean)

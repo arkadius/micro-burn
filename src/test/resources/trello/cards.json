@@ -1,0 +1,55 @@
+[
+  {
+    "id": "closedCardId",
+    "closed": true,
+    "dateLastActivity": "2014-12-14T00:00:00.000Z",
+    "name": "Closed card name",
+    "idList": "doneId",
+    "checklists": [
+      {
+        "checkItems": [
+          {
+            "state": "complete",
+            "id": "completeItemId",
+            "name": "Complete item name"
+          }
+        ]
+      }
+    ]
+  },
+  {
+    "id": "openedCardWithMultipleChecklistsId",
+    "closed": false,
+    "dateLastActivity": "2014-12-15T00:00:00.000Z",
+    "name": "(1.5) Opened card with multiple checklists name",
+    "idList": "inProgressId",
+    "checklists": [
+      {
+        "checkItems": [
+          {
+            "state": "incomplete",
+            "id": "incompleteItemId",
+            "name": "(0.5) Incomplete item name"
+          }
+        ]
+      },
+      {
+        "checkItems": [
+          {
+            "state": "incomplete",
+            "id": "incompleteItemWithNonAsciiCharsId",
+            "name": "Incomplete item with ąż name"
+          }
+        ]
+      }
+    ]
+  },
+  {
+    "id": "openedCardWithoutChecklists",
+    "closed": false,
+    "dateLastActivity": "2014-12-16T00:00:00.000Z",
+    "name": "Opened card with checklist name",
+    "idList": "todoId",
+    "checklists": []
+  }
+]

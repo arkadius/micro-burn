@@ -16,16 +16,15 @@
 package org.github.microburn.repository
 
 import java.io.File
-import java.text.{ParseException, SimpleDateFormat}
-import java.util.{TimeZone, Date}
+import java.text.ParseException
+import java.util.Date
 
 import com.github.tototoshi.csv._
-import net.liftweb.json.DefaultFormats
-import org.github.microburn.domain.{TaskUpdated, TaskRemoved, TaskAdded, TaskEvent}
+import org.github.microburn.domain.{TaskAdded, TaskEvent, TaskRemoved, TaskUpdated}
+import org.github.microburn.util.date._
 
 import scala.util.control.NonFatal
 import scalaz.Scalaz._
-import scalaz._
 
 trait TaskEventsRepository {
   def appendTasksEvents(events: Seq[TaskEvent]): Unit
@@ -69,7 +68,7 @@ class TaskEventsCsvRepository(taskEventsFile: File) extends TaskEventsRepository
     def taskName            = fields(4)
     def optionalStoryPoints = parseOptionalDecimal(fields(5))
     def status              = fields(6)
-    val date                = dateFormat.parse(fields(7))
+    val date                = utcDateFormat.parse(fields(7))
     fields(0) match {
       case ADDED   => TaskAdded(taskId = taskId, parentUserStoryId = parentUserStoryId, isTechnicalTask = isTechnicalTask,
         taskName = taskName, optionalStoryPoints = optionalStoryPoints, status = status, date = date)
@@ -87,15 +86,9 @@ class TaskEventsCsvRepository(taskEventsFile: File) extends TaskEventsRepository
   }
 
   private def prepareFields(fields: Seq[Any]): Seq[Any] = fields.map {
-    case date: Date => dateFormat.format(date)
+    case date: Date => utcDateFormat.format(date)
     case optional: Option[_] => optional.getOrElse("")
     case other => other
-  }
-
-  private def dateFormat = {
-    val f = new SimpleDateFormat("yyyy-MM-dd'T'HH:mm:ss.SSS'Z'")
-    f.setTimeZone(TimeZone.getTimeZone("UTC"))
-    f
   }
 
   override def appendTasksEvents(events: Seq[TaskEvent]): Unit = {
