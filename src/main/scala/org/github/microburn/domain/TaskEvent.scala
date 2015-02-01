@@ -28,7 +28,7 @@ case class TaskAdded(taskId: String,
                      parentUserStoryId: String,
                      isTechnicalTask: Boolean,
                      taskName: String,
-                     optionalStoryPoints: Option[Int],
+                     optionalStoryPoints: Option[BigDecimal],
                      status: String,
                      date: Date) extends TaskEvent
 
@@ -41,7 +41,7 @@ case class TaskUpdated(taskId: String,
                        parentUserStoryId: String,
                        isTechnicalTask: Boolean,
                        taskName: String,
-                       optionalStoryPoints: Option[Int],
+                       optionalStoryPoints: Option[BigDecimal],
                        status: String,
                        date: Date) extends TaskEvent
 

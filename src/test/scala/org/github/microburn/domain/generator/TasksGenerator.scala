@@ -22,7 +22,7 @@ object TasksGenerator {
 
   import scala.collection.convert.wrapAsScala._
 
-  def technicalTaskGenerator(optionalStoryPoints: Option[Int]): Gen[TechnicalTask] = {
+  def technicalTaskGenerator(optionalStoryPoints: Option[BigDecimal]): Gen[TechnicalTask] = {
     for {
       taskId <- Gen.uuid
       taskName <- Gen.identifier
@@ -30,11 +30,11 @@ object TasksGenerator {
     } yield TechnicalTask(taskId = taskId.toString, taskName = taskName, optionalStoryPoints = optionalStoryPoints, status = status.toString)
   }
 
-  private val technicalTasksAndStoryPointsGenerator: Gen[(List[TechnicalTask], Option[Int])] = {
+  private val technicalTasksAndStoryPointsGenerator: Gen[(List[TechnicalTask], Option[BigDecimal])] = {
     for {
       technicalTasksCount <- Gen.posNum[Int]
-      optionalStoryPointsParts <- Gen.option(Gen.listOfN(technicalTasksCount , Gen.posNum[Int]))
-      userStorySelfStoryPoints <- Gen.posNum[Int]
+      optionalStoryPointsParts <- Gen.option(Gen.listOfN(technicalTasksCount , StoryPointsGenerator.spGenerator))
+      userStorySelfStoryPoints <- StoryPointsGenerator.spGenerator
       sum = optionalStoryPointsParts.map { parts =>
         parts.sum + userStorySelfStoryPoints
       }

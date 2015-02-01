@@ -125,7 +125,7 @@ app.directive('sprintChart', ['$cookies', function ($cookies) {
         graph.render();
         legend.render();
 
-        new Rickshaw.Graph.Behavior.Series.Toggle({ // to musi być wywyołand po przerenderowaniu legendy
+        new Rickshaw.Graph.Behavior.Series.Toggle({ // to musi być wywyołane po przerenderowaniu legendy
           graph: graph,
           legend: legend
         });

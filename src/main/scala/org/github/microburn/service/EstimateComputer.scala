@@ -18,17 +18,35 @@ package org.github.microburn.service
 import org.joda.time._
 
 import scala.collection.immutable.Seq
+import scala.math.BigDecimal.RoundingMode
 import scalaz.Scalaz._
 
 object EstimateComputer {
 
-  def estimatesBetween(start: DateTime, end: DateTime, storyPointsSum: Int): List[HistoryProbe] = {
+  def estimatesBetween(start: DateTime, end: DateTime, storyPointsSum: BigDecimal): List[HistoryProbe] = {
+    if (storyPointsSum == BigDecimal(0)) {
+      List(
+        HistoryProbe(start.getMillis, 0),
+        HistoryProbe(end.getMillis, 0)
+      )
+    } else {
+      estimatesForNonZeroStoryPointsSum(start, end, storyPointsSum)
+    }
+  }
+
+  private def estimatesForNonZeroStoryPointsSum(start: DateTime, end: DateTime, storyPointsSum: BigDecimal): List[HistoryProbe] = {
     val intervalsAndSums = intervalAndSumMillisAfterThem(businessWeekIntervals(start, end))
     val sumOfIntervalsMillis = intervalsAndSums.lastOption.map(_.sumAfter).getOrElse(0L)
-    storyPointsSum.to(0, step = -1).map { storyPoints =>
-      val date = momentInIntervals(intervalsAndSums, (sumOfIntervalsMillis * (1 - storyPoints.toDouble / storyPointsSum)).toLong)
-      HistoryProbe(date.getMillis, storyPoints)
-    }.toList        
+    val steps = computeSteps(storyPointsSum)
+    steps.map { storyPoints =>
+      val date = momentInIntervals(intervalsAndSums, (sumOfIntervalsMillis * (1 - storyPoints / storyPointsSum)).toLong)
+      HistoryProbe(date.getMillis, storyPoints.toFloat)
+    }.toList
+  }
+
+  private def computeSteps(storyPointsSum: BigDecimal) = {
+    val additionalStepForNonWhole = (!storyPointsSum.isWhole()).option(storyPointsSum)
+    additionalStepForNonWhole.toSeq ++ storyPointsSum.setScale(0, RoundingMode.FLOOR).to(0, step = -1)
   }
 
   private[service] def businessWeekIntervals(start: DateTime, end: DateTime): List[Interval] = {

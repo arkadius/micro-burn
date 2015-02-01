@@ -27,7 +27,7 @@ object BoardChangesGenerator {
 
   private def updateStoryPoints(technicalTask: TechnicalTask): Gen[TechnicalTask] =
     for {
-      optionalStoryPoints <- Gen.option(Gen.posNum[Int])
+      optionalStoryPoints <- StoryPointsGenerator.optionalSpGenerator
     } yield technicalTask.copy(optionalStoryPoints = optionalStoryPoints)
 
   private def updateTechnicalTaskGenerator(board: BoardState): Gen[BoardState] =
@@ -48,7 +48,7 @@ object BoardChangesGenerator {
   private def addTechnicalTaskGenerator(board: BoardState): Gen[BoardState] =
     for {
       parent <- Gen.oneOf(board.userStories.toSeq)
-      technicalStoryPoints <- Gen.chooseNum(0, parent.storyPointsWithoutSubTasks)
+      technicalStoryPoints <- StoryPointsGenerator.chooseAtMost(parent.storyPointsWithoutSubTasks)
       technical <- TasksGenerator.technicalTaskGenerator(Some(technicalStoryPoints))
       updated = parent.add(technical)
     } yield board.withUpdateNestedTask(updated)
@@ -60,7 +60,7 @@ object BoardChangesGenerator {
   
   private def updateStoryPoints(userStory: UserStory): Gen[UserStory] = 
     for {
-      optionalStoryPoints <- Gen.option(Gen.posNum[Int])
+      optionalStoryPoints <- StoryPointsGenerator.optionalSpGenerator
     } yield userStory.copy(optionalStoryPoints = optionalStoryPoints)
   
   private def updateUserStoryGenerator(board: BoardState): Gen[BoardState] =

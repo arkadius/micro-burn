@@ -27,7 +27,7 @@ case class Sprint(id: String,
 
   def initialDate: Date = initialBoard.date
 
-  def initialStoryPointsSum: Int = initialBoard.userStoriesStoryPointsSum
+  def initialStoryPointsSum: BigDecimal = initialBoard.userStoriesStoryPointsSum
 
   def update(updatedUserStories: Seq[UserStory], finishSprint: Boolean)
             (timestamp: Date): SprintUpdateResult = {

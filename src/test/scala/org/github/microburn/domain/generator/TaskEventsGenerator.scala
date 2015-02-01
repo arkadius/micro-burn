@@ -28,7 +28,7 @@ object TaskEventsGenerator {
       parentUserStoryId <- Gen.identifier
       isTechnicalTask <- Gen.oneOf(true, false)
       taskName <- Gen.identifier
-      optionalStoryPoints <- Gen.option(Gen.posNum[Int])
+      optionalStoryPoints <- StoryPointsGenerator.optionalSpGenerator
       status <- Gen.posNum[Int]
       date <- Gen.posNum[Long].map(new Date(_))
     } yield TaskAdded(
@@ -43,7 +43,7 @@ object TaskEventsGenerator {
       parentUserStoryId <- Gen.identifier
       isTechnicalTask <- Gen.oneOf(true, false)
       taskName <- Gen.identifier
-      optionalStoryPoints <- Gen.option(Gen.posNum[Int])
+      optionalStoryPoints <- StoryPointsGenerator.optionalSpGenerator
       status <- Gen.posNum[Int]
       date <- Gen.posNum[Long].map(new Date(_))
     } yield TaskUpdated(

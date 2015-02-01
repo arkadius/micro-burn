@@ -76,13 +76,13 @@ class SprintColumnsHistoryProvider(projectActor: LiftActor, initialFetchToSprint
     boardColumnsWithDroppedFirst.map { column =>
       val storyPointsForColumn = zipped.map { allColumnsInfo =>
         val storyPoints = allColumnsInfo.storyPointsForColumn(column.index)
-        HistoryProbe(allColumnsInfo.date.getTime, storyPoints)
+        HistoryProbe(allColumnsInfo.date.getTime, storyPoints.toFloat)
       }.toList
       ColumnHistory(column.name, storyPointsForColumn)
     }
   }
 
-  private def computeEstimate(start: DateTime, end: DateTime, storyPointsSum: Int): ColumnHistory = {
+  private def computeEstimate(start: DateTime, end: DateTime, storyPointsSum: BigDecimal): ColumnHistory = {
     val estimates = EstimateComputer.estimatesBetween(start, end, storyPointsSum)
     ColumnHistory("Estimate", estimates)
   }
@@ -92,4 +92,4 @@ case class ColumnsHistory(startDate: Long, series: List[ColumnHistory])
 
 case class ColumnHistory(name: String, data: List[HistoryProbe])
 
-case class HistoryProbe(x: Long, y: Int)
+case class HistoryProbe(x: Long, y: Float)

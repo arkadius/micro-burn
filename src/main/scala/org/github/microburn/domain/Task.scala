@@ -26,17 +26,17 @@ sealed trait Task { self =>
   def isTechnicalTask: Boolean
 
   def taskName: String
-  def optionalStoryPoints: Option[Int]
+  def optionalStoryPoints: Option[BigDecimal]
   def status: String
 
   def taskAdded(implicit timestamp: Date): Seq[TaskAdded]
-  def storyPointsWithoutSubTasks: Int
+  def storyPointsWithoutSubTasks: BigDecimal
   def boardColumnIndex(implicit config: ProjectConfig): Int = config.boardColumnIndex(status)
 }
 
 case class UserStory(taskId: String,
                      taskName: String,
-                     optionalStoryPoints: Option[Int],
+                     optionalStoryPoints: Option[BigDecimal],
                      technicalTasksWithoutParentId: IndexedSeq[TechnicalTask],
                      status: String) extends Task with ComparableWith[UserStory] with HavingNestedTasks[TechnicalTaskWithParentId] {
   override type Self = UserStory
@@ -73,10 +73,10 @@ case class UserStory(taskId: String,
 
   def flattenTasks: List[Task] = this :: nestedTasks.toList
 
-  override def storyPointsWithoutSubTasks: Int = {
-    val storyPointsOfMine = optionalStoryPoints.getOrElse(0)
+  override def storyPointsWithoutSubTasks: BigDecimal = {
+    val storyPointsOfMine = optionalStoryPoints.getOrElse(BigDecimal(0))
     val diff = storyPointsOfMine - nestedTasksStoryPointsSum
-    Math.max(0, diff)
+    diff.max(0)
   }
 
   override def toString: String = {
@@ -91,11 +91,11 @@ case class TechnicalTaskWithParentId(technical: TechnicalTask,
                                      parentUserStoryId: String) extends Task with ComparableWith[TechnicalTaskWithParentId] {
   override def taskId: String = technical.taskId
   override def taskName: String = technical.taskName
-  override def optionalStoryPoints: Option[Int] = technical.optionalStoryPoints
+  override def optionalStoryPoints: Option[BigDecimal] = technical.optionalStoryPoints
   override def status: String = technical.status
 
   override def isTechnicalTask: Boolean = true
-  override def storyPointsWithoutSubTasks: Int = technical.optionalStoryPoints.getOrElse(0)
+  override def storyPointsWithoutSubTasks: BigDecimal = technical.optionalStoryPoints.getOrElse(0)
 
   override def taskAdded(implicit timestamp: Date): Seq[TaskAdded] = Seq(TaskAdded(this))
 
@@ -116,7 +116,7 @@ trait ComparableWith[OtherTaskType <: Task with ComparableWith[_]] { self: Task 
 
 case class TechnicalTask(taskId: String,
                          taskName: String,
-                         optionalStoryPoints: Option[Int],
+                         optionalStoryPoints: Option[BigDecimal],
                          status: String) {
   override def toString: String = {
     s"  Technical(${taskId.take(5)})"

@@ -22,7 +22,7 @@ case class BoardState(userStories: Seq[UserStory], date: Date) extends HavingNes
 
   override protected def nestedTasks: Seq[UserStory] = userStories
 
-  def userStoriesStoryPointsSum: Int = nestedTasksStoryPointsSum
+  def userStoriesStoryPointsSum: BigDecimal = nestedTasksStoryPointsSum
 
   def diff(other: BoardState): Seq[TaskEvent] = nestedDiff(other)(other.date)
 

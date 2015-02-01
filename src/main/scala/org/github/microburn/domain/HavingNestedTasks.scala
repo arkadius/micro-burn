@@ -29,7 +29,7 @@ trait HavingNestedTasks[NestedTaskType <: Task with ComparableWith[NestedTaskTyp
 
   protected def nestedTask(taskId: String): Option[NestedTaskType] = taskById.get(taskId)
 
-  protected def nestedTasksStoryPointsSum: Int = {
+  protected def nestedTasksStoryPointsSum: BigDecimal = {
     nestedTasks.flatMap { task =>
       task.optionalStoryPoints
     }.sum

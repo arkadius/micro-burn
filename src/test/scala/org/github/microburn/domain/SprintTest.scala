@@ -108,7 +108,7 @@ class SprintTest extends FlatSpec with Matchers with Inside {
   implicit class EnhancedSprint(sprint: Sprint) {
     def updateTasks(updatedTasks: UserStory*) = sprint.update(updatedTasks, finishSprint = false)(nextDate).updatedSprint
 
-    def storyPointsChangesValues(implicit config: ProjectConfig): Seq[Int] = sprint.columnStatesHistory.map { dateWithStoryPoints =>
+    def storyPointsChangesValues(implicit config: ProjectConfig): Seq[BigDecimal] = sprint.columnStatesHistory.map { dateWithStoryPoints =>
       dateWithStoryPoints.storyPointsForColumn(ProjectConfigUtils.closingColumnIndex)
     }
   }

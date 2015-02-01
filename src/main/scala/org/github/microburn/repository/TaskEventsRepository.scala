@@ -67,7 +67,7 @@ class TaskEventsCsvRepository(taskEventsFile: File) extends TaskEventsRepository
     val parentUserStoryId   = fields(2)
     val isTechnicalTask     = fields(3).toBoolean
     def taskName            = fields(4)
-    def optionalStoryPoints = parseOptionalInt(fields(5))
+    def optionalStoryPoints = parseOptionalDecimal(fields(5))
     def status              = fields(6)
     val date                = dateFormat.parse(fields(7))
     fields(0) match {
@@ -80,7 +80,17 @@ class TaskEventsCsvRepository(taskEventsFile: File) extends TaskEventsRepository
     }
   }
 
-  private def parseOptionalInt(str: String): Option[Int] =  str.nonEmpty.option(str.toInt)
+  private def parseOptionalDecimal(str: String): Option[BigDecimal] =  try {
+    str.nonEmpty.option(BigDecimal(str))
+  } catch {
+    case e: NumberFormatException => throw new NumberFormatException(s"Cannot parse $str to decimal")
+  }
+
+  private def prepareFields(fields: Seq[Any]): Seq[Any] = fields.map {
+    case date: Date => dateFormat.format(date)
+    case optional: Option[_] => optional.getOrElse("")
+    case other => other
+  }
 
   private def dateFormat = {
     val f = new SimpleDateFormat("yyyy-MM-dd'T'HH:mm:ss.SSS'Z'")
@@ -115,12 +125,6 @@ class TaskEventsCsvRepository(taskEventsFile: File) extends TaskEventsRepository
     } else {
       CSVWriter.open(taskEventsFile, append = true)(csvFormat)
     }
-  }
-
-  private def prepareFields(fields: Seq[Any]): Seq[Any] = fields.map {
-    case date: Date => dateFormat.format(date)
-    case optional: Option[_] => optional.getOrElse("")
-    case other => other
   }
 
   override def loadTaskEvents: Seq[TaskEvent] =

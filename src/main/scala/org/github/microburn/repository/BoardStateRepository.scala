@@ -43,7 +43,9 @@ class BoardStateFSRepository(sprintRoot: File) extends BoardStateRepository {
   import net.liftweb.json.Extraction._
   import net.liftweb.json._
 
-  implicit val formats = DefaultFormats.withHints(FullTypeHints(List(classOf[Task], classOf[TechnicalTask]))) + IndexedSeqSerializer
+  implicit val formats = DefaultFormats.withHints(FullTypeHints(List(classOf[Task], classOf[TechnicalTask]))) +
+    IndexedSeqSerializer +
+    BigDecimalSerializer
 
   override def saveCurrentUserStories(sprint: Sprint): Unit = {
     sprintRoot.mkdirs()

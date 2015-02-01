@@ -40,7 +40,7 @@ class JiraTasksDataProvider(config: JiraConfig) extends TasksDataProvider {
         }
         val JString(taskName) = fields \ "summary"
         val storyPoints = fields \ config.storyPointsField match {
-          case JDecimal(d) => Some(d.toInt)
+          case JDecimal(d) => Some(d)
           case _ => None
         }
         val JString(status) = fields \ "status" \ "id"
@@ -63,5 +63,5 @@ class JiraTasksDataProvider(config: JiraConfig) extends TasksDataProvider {
     TechnicalTask(subTask.taskId, subTask.taskName, subTask.storyPoints, subTask.status)
   }
 
-  case class TaskWithParentId(taskId: String, taskName: String, storyPoints: Option[Int], parentId: Option[String], status: String)
+  case class TaskWithParentId(taskId: String, taskName: String, storyPoints: Option[BigDecimal], parentId: Option[String], status: String)
 }

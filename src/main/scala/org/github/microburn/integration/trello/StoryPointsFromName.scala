@@ -19,11 +19,23 @@ import scalaz._
 import Scalaz._
 
 object StoryPointsFromName {
-  private final val NAME_WITH_SP_PATTERN = "(\\(([\\d]*)\\))?\\s*(.*)".r("spWrappedByBraces", "nullableStoryPoints", "name")
+  private final val NAME_WITH_SP_PATTERN = "\\(([\\d\\.]*)\\)\\s*(.*)".r("spInsideBraces", "name")
 
-  def unapply(nameWithOptionalSp: String): Option[(Option[Int], String)] =
-    NAME_WITH_SP_PATTERN.unapplySeq(nameWithOptionalSp).map {
-      case spWrappedByBraces :: nullableStoryPoints :: name :: Nil =>
-        (Option(nullableStoryPoints).map(_.trim).filter(_.nonEmpty).map(_.toInt), name)
+  private final val MAX_SCALE: Int = 3 // ten limit jest dlatego, że przy określonej precyzji źle zadziała round-trip dla zapisu-odczytu sp
+
+  def unapply(nameWithOptionalSp: String): Option[(Option[BigDecimal], String)] = {
+    val extracted = NAME_WITH_SP_PATTERN.unapplySeq(nameWithOptionalSp).flatMap {
+      case spInsideBraces :: name :: Nil =>
+        Option(spInsideBraces)
+          .map(_.trim)
+          .filter(_.nonEmpty)
+          .map(BigDecimal(_))
+          .filter(_.scale <= MAX_SCALE).map { storyPoints =>
+          (Some(storyPoints), name)
+        }
+    }.getOrElse {
+      (None, nameWithOptionalSp)
     }
+    Some(extracted)
+  }
 }

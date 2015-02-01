@@ -23,7 +23,11 @@ class StoryPointsFromNameTest extends FlatSpec with TableDrivenPropertyChecks wi
   val checks = Table(
     ("nameWithOptionalSp", "optionalStoryPoints", "name"),
     ("without sp",    None,      "without sp"),
-    ("(123) with sp", Some(123), "with sp")
+    ("(123) with sp", Some(BigDecimal(123)), "with sp"),
+    ("(0.5) with sp", Some(BigDecimal("0.5")), "with sp"),
+    ("(0.25) with sp", Some(BigDecimal("0.25")), "with sp"),
+    ("(0.125) with sp", Some(BigDecimal("0.125")), "with sp"),
+    ("(0.9999) with too much precise sp", None, "(0.9999) with too much precise sp")
   )
 
   it should "extract story points from name well" in {

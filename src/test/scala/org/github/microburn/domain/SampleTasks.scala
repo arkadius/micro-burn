@@ -34,12 +34,12 @@ object SampleTasks {
     UserStory(id, s"User Story $id", Some(sp), technical.toIndexedSeq, ProjectConfigUtils.firstClosingStatus)
   }
 
-  def openedTechnicalTask(optionalSP: Option[Int])(implicit config: ProjectConfig) = {
+  def openedTechnicalTask(optionalSP: Option[BigDecimal])(implicit config: ProjectConfig) = {
     val id = nextId
     TechnicalTask(id, s"Technical Task $id", optionalSP, ProjectConfigUtils.firstNotClosingStatus)
   }
 
-  def closedTechnicalTask(optionalSP: Option[Int])(implicit config: ProjectConfig) = {
+  def closedTechnicalTask(optionalSP: Option[BigDecimal])(implicit config: ProjectConfig) = {
     val id = nextId
     TechnicalTask(id, s"Technical Task $id", optionalSP, ProjectConfigUtils.firstClosingStatus)
   }
