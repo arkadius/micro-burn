@@ -15,16 +15,27 @@
  */
 package org.github.microburn.domain
 
-import com.typesafe.config.ConfigFactory
 import org.github.microburn.TestConfig
-import org.scalatest.{Matchers, FlatSpec, FunSuite}
+import org.scalatest.{FlatSpec, Matchers}
 
 class ProjectConfigTest extends FlatSpec with Matchers {
 
-  it should "create project config from conf" in {
+  it should "create project config from conf having columns with statuses" in {
     val config = ProjectConfig(TestConfig.withDefaultsFallback())
 
     config.boardColumns should have length 5
+  }
+
+  it should "create project config from conf having columns with ids" in {
+    val config = ProjectConfig(TestConfig.trelloConfigWithDefaultsFallback())
+
+    config.boardColumns should have length 3
+    config.boardColumns(0).isBacklogColumn shouldBe true
+    config.boardColumns(0).isDoneColumn shouldBe false
+    config.boardColumns(1).isBacklogColumn shouldBe false
+    config.boardColumns(1).isDoneColumn shouldBe false
+    config.boardColumns(2).isBacklogColumn shouldBe false
+    config.boardColumns(2).isDoneColumn shouldBe true
   }
 
 }
