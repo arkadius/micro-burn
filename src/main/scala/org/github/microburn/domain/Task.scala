@@ -27,18 +27,21 @@ sealed trait Task { self =>
 
   def taskName: String
   def optionalStoryPoints: Option[BigDecimal]
-  def status: String
+  def status: TaskStatus
 
   def taskAdded(implicit timestamp: Date): Seq[TaskAdded]
   def storyPointsWithoutSubTasks: BigDecimal
-  def boardColumnIndex(implicit config: ProjectConfig): Int = config.boardColumnIndex(status)
+  def boardColumnIndex(implicit config: ProjectConfig): Int = status match {
+    case SpecifiedStatus(status) => config.boardColumnIndex(status)
+    case TaskCompletedStatus => config.lastDoneColumnIndex
+  }
 }
 
 case class UserStory(taskId: String,
                      taskName: String,
                      optionalStoryPoints: Option[BigDecimal],
                      technicalTasksWithoutParentId: IndexedSeq[TechnicalTask],
-                     status: String) extends Task with ComparableWith[UserStory] with HavingNestedTasks[TechnicalTaskWithParentId] {
+                     status: TaskStatus) extends Task with ComparableWith[UserStory] with HavingNestedTasks[TechnicalTaskWithParentId] {
   override type Self = UserStory
 
   protected val nestedTasks: Seq[TechnicalTaskWithParentId] = technicalTasksWithoutParentId.map(TechnicalTaskWithParentId(_, taskId))
@@ -92,7 +95,7 @@ case class TechnicalTaskWithParentId(technical: TechnicalTask,
   override def taskId: String = technical.taskId
   override def taskName: String = technical.taskName
   override def optionalStoryPoints: Option[BigDecimal] = technical.optionalStoryPoints
-  override def status: String = technical.status
+  override def status: TaskStatus = technical.status
 
   override def isTechnicalTask: Boolean = true
   override def storyPointsWithoutSubTasks: BigDecimal = technical.optionalStoryPoints.getOrElse(0)
@@ -117,7 +120,7 @@ trait ComparableWith[OtherTaskType <: Task with ComparableWith[_]] { self: Task 
 case class TechnicalTask(taskId: String,
                          taskName: String,
                          optionalStoryPoints: Option[BigDecimal],
-                         status: String) {
+                         status: TaskStatus) {
   override def toString: String = {
     s"  Technical(${taskId.take(5)})"
   }

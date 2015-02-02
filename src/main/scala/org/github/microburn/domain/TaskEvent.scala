@@ -29,7 +29,7 @@ case class TaskAdded(taskId: String,
                      isTechnicalTask: Boolean,
                      taskName: String,
                      optionalStoryPoints: Option[BigDecimal],
-                     status: String,
+                     status: TaskStatus,
                      date: Date) extends TaskEvent
 
 case class TaskRemoved(taskId: String,
@@ -42,7 +42,7 @@ case class TaskUpdated(taskId: String,
                        isTechnicalTask: Boolean,
                        taskName: String,
                        optionalStoryPoints: Option[BigDecimal],
-                       status: String,
+                       status: TaskStatus,
                        date: Date) extends TaskEvent
 
 object TaskAdded {

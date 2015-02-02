@@ -15,10 +15,7 @@
  */
 package org.github.microburn.domain
 
-object ProjectConfigUtils {
-  def completedColumnIndex(implicit config: ProjectConfig): Int = config.boardColumnIndex(firstCompletedStatus)
+sealed trait TaskStatus
 
-  private def firstCompletedStatus(implicit config: ProjectConfig): String = config.boardColumns.last.statusIds.head
-
-  def firstNotCompletedStatus(implicit config: ProjectConfig): String = config.boardColumns.head.statusIds.head
-}
+case class SpecifiedStatus(status: String) extends TaskStatus
+case object TaskCompletedStatus extends TaskStatus

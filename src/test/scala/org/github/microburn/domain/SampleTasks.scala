@@ -26,22 +26,22 @@ object SampleTasks {
 
   def openedUserStory(sp: Int, technical: Seq[TechnicalTask] = Nil)(implicit config: ProjectConfig) = {
     val id = nextId
-    UserStory(id, s"User Story $id", Some(sp), technical.toIndexedSeq, ProjectConfigUtils.firstNotClosingStatus)
+    UserStory(id, s"User Story $id", Some(sp), technical.toIndexedSeq, SpecifiedStatus(ProjectConfigUtils.firstNotCompletedStatus))
   }
 
   def closedUserStory(sp: Int, technical: Seq[TechnicalTask] = Nil)(implicit config: ProjectConfig) = {
     val id = nextId
-    UserStory(id, s"User Story $id", Some(sp), technical.toIndexedSeq, ProjectConfigUtils.firstClosingStatus)
+    UserStory(id, s"User Story $id", Some(sp), technical.toIndexedSeq, TaskCompletedStatus)
   }
 
   def openedTechnicalTask(optionalSP: Option[BigDecimal])(implicit config: ProjectConfig) = {
     val id = nextId
-    TechnicalTask(id, s"Technical Task $id", optionalSP, ProjectConfigUtils.firstNotClosingStatus)
+    TechnicalTask(id, s"Technical Task $id", optionalSP, SpecifiedStatus(ProjectConfigUtils.firstNotCompletedStatus))
   }
 
   def closedTechnicalTask(optionalSP: Option[BigDecimal])(implicit config: ProjectConfig) = {
     val id = nextId
-    TechnicalTask(id, s"Technical Task $id", optionalSP, ProjectConfigUtils.firstClosingStatus)
+    TechnicalTask(id, s"Technical Task $id", optionalSP, TaskCompletedStatus)
   }
 
 }

@@ -20,6 +20,7 @@ import java.text.{ParseException, SimpleDateFormat}
 import java.util.Date
 
 import org.github.microburn.domain._
+import org.github.microburn.util.json.{CaseObjectSerializer, BigDecimalSerializer, IndexedSeqSerializer}
 
 import scala.io.Source
 import scala.util.control.Exception._
@@ -43,9 +44,10 @@ class BoardStateFSRepository(sprintRoot: File) extends BoardStateRepository {
   import net.liftweb.json.Extraction._
   import net.liftweb.json._
 
-  implicit val formats = DefaultFormats.withHints(FullTypeHints(List(classOf[Task], classOf[TechnicalTask]))) +
+  implicit val formats = DefaultFormats.withHints(FullTypeHints(List(classOf[Task], classOf[TechnicalTask], classOf[TaskStatus]))) +
     IndexedSeqSerializer +
-    BigDecimalSerializer
+    BigDecimalSerializer +
+    CaseObjectSerializer(TaskCompletedStatus)
 
   override def saveCurrentUserStories(sprint: Sprint): Unit = {
     sprintRoot.mkdirs()

@@ -16,7 +16,7 @@
 package org.github.microburn.integration.trello
 
 import net.liftweb.actor.LAFuture
-import org.github.microburn.domain.{TechnicalTask, UserStory}
+import org.github.microburn.domain.{SpecifiedStatus, TaskCompletedStatus, TechnicalTask, UserStory}
 import org.github.microburn.integration.support.kanban.BoardStateProvider
 
 import scala.math.BigDecimal.RoundingMode
@@ -46,9 +46,14 @@ class TrelloBoardStateProvider(config: TrelloConfig) extends BoardStateProvider 
   def toUserStory(card: Card): UserStory = {
     val definedIfSignificantPointsPerTechnical = computePointsPerTechnical(card)
     val technicalTasks = card.checkListItems.map { item =>
-      TechnicalTask(item.id, item.name, item.optionalSp orElse definedIfSignificantPointsPerTechnical, card.columnId) // TODO: uwzględniać closed
+      val status = if (card.closed) {
+        TaskCompletedStatus
+      } else {
+        SpecifiedStatus(card.columnId)
+      }
+      TechnicalTask(item.id, item.name, item.optionalSp orElse definedIfSignificantPointsPerTechnical, status)
     }.toIndexedSeq
-    UserStory(card.id, card.name, card.optionalSp, technicalTasks, card.columnId)
+    UserStory(card.id, card.name, card.optionalSp, technicalTasks, SpecifiedStatus(card.columnId))
   }
 
   private def computePointsPerTechnical(card: Card): Option[BigDecimal] = {

@@ -56,15 +56,15 @@ class ProjectActorTest extends FlatSpec with Matchers {
     val sprint = SampleSprint.withEmptyEvents(userStory)
     val projectActor = actorWithInitialSprint(sprint)
 
-    val userStoriesWithClosed = Seq(userStory.copy(status = ProjectConfigUtils.firstClosingStatus))
+    val userStoriesWithClosed = Seq(userStory.copy(status = TaskCompletedStatus))
     val beforeSprintsEnd = new Date(sprint.details.end.getTime-1)
     projectActor ! UpdateSprint(sprint.id, userStoriesWithClosed, finishSprint = false, beforeSprintsEnd)
 
     val sprintHistoryBox = (projectActor ?? GetStoryPointsHistory(sprint.id)).mapTo[Box[SprintHistory]].await(5 seconds)
     val sprintHistory = sprintHistoryBox.openOrThrowException("")
     sprintHistory.initialStoryPointsSum shouldEqual 1
-    val closedColumnHistory = sprintHistory.columnStates.map(_.storyPointsForColumn(ProjectConfigUtils.closingColumnIndex))
-    closedColumnHistory shouldEqual Seq(0, 1)
+    val completedColumnHistory = sprintHistory.columnStates.map(_.storyPointsForColumn(ProjectConfigUtils.completedColumnIndex))
+    completedColumnHistory shouldEqual Seq(0, 1)
   }
 
   private def actorWithInitialSprint(sprint: Sprint): ProjectActor = {

@@ -109,25 +109,25 @@ class SprintTest extends FlatSpec with Matchers with Inside {
     def updateTasks(updatedTasks: UserStory*) = sprint.update(updatedTasks, finishSprint = false)(nextDate).updatedSprint
 
     def storyPointsChangesValues(implicit config: ProjectConfig): Seq[BigDecimal] = sprint.columnStatesHistory.map { dateWithStoryPoints =>
-      dateWithStoryPoints.storyPointsForColumn(ProjectConfigUtils.closingColumnIndex)
+      dateWithStoryPoints.storyPointsForColumn(ProjectConfigUtils.completedColumnIndex)
     }
   }
 
   implicit class EnhancedUserStory(userStory: UserStory) {
     def close(implicit config: ProjectConfig): UserStory = {
       val closedTechnicalTasks = userStory.technicalTasksWithoutParentId.map(_.close)
-      userStory.copy(status = ProjectConfigUtils.firstClosingStatus, technicalTasksWithoutParentId = closedTechnicalTasks)
+      userStory.copy(status = TaskCompletedStatus, technicalTasksWithoutParentId = closedTechnicalTasks)
     }
 
     def reopen(implicit config: ProjectConfig): UserStory = {
       val reopenedTechnicalTasks = userStory.technicalTasksWithoutParentId.map(_.reopen)
-      userStory.copy(status = ProjectConfigUtils.firstNotClosingStatus, technicalTasksWithoutParentId = reopenedTechnicalTasks)
+      userStory.copy(status = SpecifiedStatus(ProjectConfigUtils.firstNotCompletedStatus), technicalTasksWithoutParentId = reopenedTechnicalTasks)
     }
   }
 
   implicit class EnhancedTechnicalTask(technical: TechnicalTask) {
-    def close(implicit config: ProjectConfig): TechnicalTask = technical.copy(status = ProjectConfigUtils.firstClosingStatus)
+    def close(implicit config: ProjectConfig): TechnicalTask = technical.copy(status = TaskCompletedStatus)
 
-    def reopen(implicit config: ProjectConfig): TechnicalTask = technical.copy(status = ProjectConfigUtils.firstNotClosingStatus)
+    def reopen(implicit config: ProjectConfig): TechnicalTask = technical.copy(status = SpecifiedStatus(ProjectConfigUtils.firstNotCompletedStatus))
   }
 }

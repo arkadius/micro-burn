@@ -29,6 +29,14 @@ case class ProjectConfig(boardColumns: List[BoardColumn], dataRoot: File) {
   } yield status -> column).toMap
 
   def boardColumnIndex(status: String): Int = statuses(status).index
+
+  def lastDoneColumnIndex: Int = {
+    val doneColumns = boardColumns.filter(_.isDoneColumn)
+    if (doneColumns.nonEmpty)
+      doneColumns.last.index
+    else
+      boardColumns.last.index
+  }
 }
 
 case class BoardColumn(index: Int, name: String, statusIds: List[String], isBacklogColumn: Boolean, isDoneColumn: Boolean)

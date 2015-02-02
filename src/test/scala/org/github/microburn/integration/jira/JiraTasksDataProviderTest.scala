@@ -18,7 +18,7 @@ package org.github.microburn.integration.jira
 import akka.actor.ActorSystem
 import com.typesafe.config.ConfigFactory
 import org.github.microburn.TestConfig
-import org.github.microburn.domain.{TechnicalTask, UserStory}
+import org.github.microburn.domain.{SpecifiedStatus, TechnicalTask, UserStory}
 import org.github.microburn.integration.RestIntegrationTest
 import org.scalatest.{FlatSpec, Matchers}
 import spray.routing._
@@ -38,10 +38,10 @@ class JiraTasksDataProviderTest extends FlatSpec with RestIntegrationTest with M
     println(result)
 
     result shouldEqual Seq(
-      UserStory("FOO-635","Bar user story", None, IndexedSeq.empty, "1"),
+      UserStory("FOO-635","Bar user story", None, IndexedSeq.empty, SpecifiedStatus("1")),
       UserStory("FOO-452","Foo user story", Some(5), IndexedSeq(
-        TechnicalTask("FOO-631","Foo subtask", Some(2) , "1")
-      ), "3")
+        TechnicalTask("FOO-631","Foo subtask", Some(2) , SpecifiedStatus("1"))
+      ), SpecifiedStatus("3"))
     )
   }
 

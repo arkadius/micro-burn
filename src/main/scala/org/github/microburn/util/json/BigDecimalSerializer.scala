@@ -13,7 +13,7 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package org.github.microburn.repository
+package org.github.microburn.util.json
 
 import net.liftweb.json._
 

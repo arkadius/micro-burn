@@ -17,7 +17,7 @@ package org.github.microburn.domain.generator
 
 import java.util.Date
 
-import org.github.microburn.domain.{TaskAdded, TaskEvent, TaskRemoved, TaskUpdated}
+import org.github.microburn.domain._
 import org.scalacheck.Gen
 
 object TaskEventsGenerator {
@@ -29,11 +29,11 @@ object TaskEventsGenerator {
       isTechnicalTask <- Gen.oneOf(true, false)
       taskName <- Gen.identifier
       optionalStoryPoints <- StoryPointsGenerator.optionalSpGenerator
-      status <- Gen.posNum[Int]
+      status <- TaskStatusGenerator.generator
       date <- Gen.posNum[Long].map(new Date(_))
     } yield TaskAdded(
       taskId = taskId, parentUserStoryId = parentUserStoryId, isTechnicalTask = isTechnicalTask,
-      taskName = taskName, optionalStoryPoints = optionalStoryPoints, status = status.toString, date = date
+      taskName = taskName, optionalStoryPoints = optionalStoryPoints, status = status, date = date
     )
   }
 
@@ -44,11 +44,11 @@ object TaskEventsGenerator {
       isTechnicalTask <- Gen.oneOf(true, false)
       taskName <- Gen.identifier
       optionalStoryPoints <- StoryPointsGenerator.optionalSpGenerator
-      status <- Gen.posNum[Int]
+      status <- TaskStatusGenerator.generator
       date <- Gen.posNum[Long].map(new Date(_))
     } yield TaskUpdated(
       taskId = taskId, parentUserStoryId = parentUserStoryId, isTechnicalTask = isTechnicalTask,
-      taskName = taskName, optionalStoryPoints = optionalStoryPoints, status = status.toString, date = date
+      taskName = taskName, optionalStoryPoints = optionalStoryPoints, status = status, date = date
     )
   }
 

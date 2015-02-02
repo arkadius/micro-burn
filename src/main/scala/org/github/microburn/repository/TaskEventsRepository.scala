@@ -20,7 +20,7 @@ import java.text.ParseException
 import java.util.Date
 
 import com.github.tototoshi.csv._
-import org.github.microburn.domain.{TaskAdded, TaskEvent, TaskRemoved, TaskUpdated}
+import org.github.microburn.domain._
 import org.github.microburn.util.date._
 
 import scala.util.control.NonFatal
@@ -44,6 +44,9 @@ class TaskEventsCsvRepository(taskEventsFile: File) extends TaskEventsRepository
   private final val UPDATED = "updated"
   private final val REMOVED = "removed"
 
+  private final val SPECIFIED_STATUS = "specified"
+  private final val COMPLETED_STATUS = "completed"
+
   private val csvFormat = new CSVFormat {
     override val delimiter: Char = ';'
     override val quoteChar: Char = '"'
@@ -53,12 +56,16 @@ class TaskEventsCsvRepository(taskEventsFile: File) extends TaskEventsRepository
     override val quoting: Quoting = QUOTE_ALL
   }
 
-  private val header    = Seq("operation", "taskId", "parentUserStoryId", "isTechnicalTask", "taskName", "optionalStoryPoints", "status", "date")
+  private val header    = Seq("operation",           "taskId",     "parentUserStoryId", "isTechnicalTask", "taskName",
+                              "optionalStoryPoints", "statusType", "statusValue",       "date")
 
   private def toFields(event: TaskEvent): Seq[Any] = event match {
-    case e:TaskAdded   => Seq(ADDED,       e.taskId, e.parentUserStoryId, e.isTechnicalTask, e.taskName, e.optionalStoryPoints, e.status, e.date)
-    case e:TaskUpdated => Seq(UPDATED,     e.taskId, e.parentUserStoryId, e.isTechnicalTask, e.taskName, e.optionalStoryPoints, e.status, e.date)
-    case e:TaskRemoved => Seq(REMOVED,     e.taskId, e.parentUserStoryId, e.isTechnicalTask, "",         "",                    "",       e.date)
+    case e:TaskAdded   => Seq(ADDED,                 e.taskId,     e.parentUserStoryId, e.isTechnicalTask, e.taskName,
+                              e.optionalStoryPoints, t(e.status),  v(e.status),         e.date)
+    case e:TaskUpdated => Seq(UPDATED,               e.taskId,     e.parentUserStoryId, e.isTechnicalTask, e.taskName,
+                              e.optionalStoryPoints, t(e.status),  v(e.status),         e.date)
+    case e:TaskRemoved => Seq(REMOVED,               e.taskId,     e.parentUserStoryId, e.isTechnicalTask, "",
+                              "",                    "",           "",                  e.date)
   }
 
   private def parseFields(fields: IndexedSeq[String]): TaskEvent = {
@@ -67,8 +74,8 @@ class TaskEventsCsvRepository(taskEventsFile: File) extends TaskEventsRepository
     val isTechnicalTask     = fields(3).toBoolean
     def taskName            = fields(4)
     def optionalStoryPoints = parseOptionalDecimal(fields(5))
-    def status              = fields(6)
-    val date                = utcDateFormat.parse(fields(7))
+    def status              = parseStatus(fields(6), fields(7))
+    val date                = utcDateFormat.parse(fields(8))
     fields(0) match {
       case ADDED   => TaskAdded(taskId = taskId, parentUserStoryId = parentUserStoryId, isTechnicalTask = isTechnicalTask,
         taskName = taskName, optionalStoryPoints = optionalStoryPoints, status = status, date = date)
@@ -78,6 +85,23 @@ class TaskEventsCsvRepository(taskEventsFile: File) extends TaskEventsRepository
       case otherType => throw new ParseException(s"Invalid event type: $otherType", -1)
     }
   }
+
+  private def t(status: TaskStatus): String = status match {
+    case SpecifiedStatus(_)  => SPECIFIED_STATUS
+    case TaskCompletedStatus => COMPLETED_STATUS
+  }
+
+  private def v(status: TaskStatus): String = status match {
+    case SpecifiedStatus(value) => value
+    case TaskCompletedStatus          => ""
+  }
+
+  private def parseStatus(typ: String, value: String): TaskStatus = typ match {
+    case SPECIFIED_STATUS => SpecifiedStatus(value)
+    case COMPLETED_STATUS => TaskCompletedStatus
+    case otherStatusType => throw new ParseException(s"Invalid status type: $otherStatusType", -1)
+  }
+
 
   private def parseOptionalDecimal(str: String): Option[BigDecimal] =  try {
     str.nonEmpty.option(BigDecimal(str))

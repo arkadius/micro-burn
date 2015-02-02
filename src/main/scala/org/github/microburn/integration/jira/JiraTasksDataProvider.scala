@@ -17,7 +17,7 @@ package org.github.microburn.integration.jira
 
 import dispatch.{Http, as}
 import net.liftweb.actor.LAFuture
-import org.github.microburn.domain.{TechnicalTask, UserStory}
+import org.github.microburn.domain.{SpecifiedStatus, TechnicalTask, UserStory}
 import org.github.microburn.integration.support.scrum.TasksDataProvider
 import org.json4s.JsonAST._
 
@@ -56,11 +56,11 @@ class JiraTasksDataProvider(config: JiraConfig) extends TasksDataProvider {
   }
 
   private def createUserStory(parentTask: TaskWithParentId, subTasks: List[TaskWithParentId]): UserStory = {
-    UserStory(parentTask.taskId, parentTask.taskName, parentTask.storyPoints, subTasks.map(createTechnicalTask).toIndexedSeq, parentTask.status)
+    UserStory(parentTask.taskId, parentTask.taskName, parentTask.storyPoints, subTasks.map(createTechnicalTask).toIndexedSeq, SpecifiedStatus(parentTask.status))
   }
 
   private def createTechnicalTask(subTask: TaskWithParentId): TechnicalTask = {
-    TechnicalTask(subTask.taskId, subTask.taskName, subTask.storyPoints, subTask.status)
+    TechnicalTask(subTask.taskId, subTask.taskName, subTask.storyPoints, SpecifiedStatus(subTask.status))
   }
 
   case class TaskWithParentId(taskId: String, taskName: String, storyPoints: Option[BigDecimal], parentId: Option[String], status: String)

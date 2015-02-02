@@ -13,12 +13,11 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package org.github.microburn.domain
+package org.github.microburn.domain.generator
 
-object ProjectConfigUtils {
-  def completedColumnIndex(implicit config: ProjectConfig): Int = config.boardColumnIndex(firstCompletedStatus)
+import org.github.microburn.domain.{TaskCompletedStatus, SpecifiedStatus}
+import org.scalacheck.Gen
 
-  private def firstCompletedStatus(implicit config: ProjectConfig): String = config.boardColumns.last.statusIds.head
-
-  def firstNotCompletedStatus(implicit config: ProjectConfig): String = config.boardColumns.head.statusIds.head
+object TaskStatusGenerator {
+  val generator = Gen.option(Gen.choose(1, 5).map(i => SpecifiedStatus(i.toString))).map(_.getOrElse(TaskCompletedStatus))
 }
