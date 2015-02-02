@@ -13,11 +13,12 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package org.github.microburn.integration
+package org.github.microburn.integration.support.scrum
 
 import net.liftweb.actor.LAFuture
-import org.github.microburn.domain.UserStory
+import org.github.microburn.domain.SprintDetails
 
-trait BoardStateProvider {
-  def currentUserStories: LAFuture[Seq[UserStory]]
+trait SprintsDataProvider {
+  def allSprintIds: LAFuture[Seq[Long]]
+  def sprintDetails(sprintId: String): LAFuture[SprintDetails]
 }

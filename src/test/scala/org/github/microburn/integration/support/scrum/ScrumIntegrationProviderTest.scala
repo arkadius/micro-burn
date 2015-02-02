@@ -13,7 +13,7 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package org.github.microburn.service
+package org.github.microburn.integration.support.scrum
 
 import java.util.Locale
 
@@ -28,7 +28,7 @@ import spray.routing.{Directives, Route}
 import scala.concurrent.duration._
 import scala.reflect.io.Path
 
-class JiraProjectUpdaterTest extends FlatSpec with RestIntegrationTest with Directives with Matchers {
+class ScrumIntegrationProviderTest extends FlatSpec with RestIntegrationTest with Directives with Matchers {
   import org.github.microburn.util.concurrent.FutureEnrichments._
 
   override def route: Route = JiraSprintsDataProviderTest.route ~ JiraTasksDataProviderTest.route
@@ -39,9 +39,11 @@ class JiraProjectUpdaterTest extends FlatSpec with RestIntegrationTest with Dire
     Path(projectConfig.dataRoot).deleteRecursively()
     val projectActor = new ProjectActor(projectConfig)
     val jiraConfig = JiraConfig(config.getConfig("jira"))
-    val providers = IntegrationProviders(new JiraSprintsDataProvider(jiraConfig, Locale.ENGLISH), new JiraTasksDataProvider(jiraConfig))
-    val updater = new ProjectUpdater(projectActor, providers, updatePeriodSeconds = 123)
-    updater.updateProject().await(10 seconds)
+    val provider = new ScrumIntegrationProvider(
+      new JiraSprintsDataProvider(jiraConfig, Locale.ENGLISH),
+      new JiraTasksDataProvider(jiraConfig)
+    )(projectActor)
+    provider.updateProject().await(10.seconds)
   }
 
 }

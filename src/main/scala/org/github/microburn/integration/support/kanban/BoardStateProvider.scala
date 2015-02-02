@@ -13,13 +13,11 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package org.github.microburn.integration
+package org.github.microburn.integration.support.kanban
 
 import net.liftweb.actor.LAFuture
 import org.github.microburn.domain.UserStory
 
-trait TasksDataProvider {
-
-  def userStories(sprintId: String): LAFuture[Seq[UserStory]]
-
+trait BoardStateProvider {
+  def currentUserStories: LAFuture[Seq[UserStory]]
 }

@@ -17,7 +17,7 @@ package org.github.microburn.integration.trello
 
 import net.liftweb.actor.LAFuture
 import org.github.microburn.domain.UserStory
-import org.github.microburn.integration.BoardStateProvider
+import org.github.microburn.integration.support.kanban.BoardStateProvider
 
 class TrelloBoardStateProvider(config: TrelloConfig) extends BoardStateProvider {
   override def currentUserStories: LAFuture[Seq[UserStory]] = ???

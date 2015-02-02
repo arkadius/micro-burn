@@ -36,7 +36,8 @@ object ApplicationContext {
     val config = ConfigFactory.parseFile(new File("application.conf")).withFallback(ConfigFactory.parseResources("defaults.conf"))
     val appConfig = ApplicationConfig(config)
     val projectActor = new ProjectActor(appConfig.projectConfig)
-    val updater = new ProjectUpdater(projectActor, appConfig.integrationProviders, appConfig.updatePeriodSeconds)
+    val integrationProvider = appConfig.integrationProvidersFactory(projectActor)
+    val updater = new ProjectUpdater(integrationProvider, appConfig.updatePeriodSeconds)
     val columnsHistoryProvider = new SprintColumnsHistoryProvider(
       projectActor,
       appConfig.initialFetchToSprintStartAcceptableDelayMinutes

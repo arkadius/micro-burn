@@ -18,7 +18,7 @@ package org.github.microburn.integration.jira
 import dispatch.{Http, as}
 import net.liftweb.actor.LAFuture
 import org.github.microburn.domain.{TechnicalTask, UserStory}
-import org.github.microburn.integration.TasksDataProvider
+import org.github.microburn.integration.support.scrum.TasksDataProvider
 import org.json4s.JsonAST._
 
 class JiraTasksDataProvider(config: JiraConfig) extends TasksDataProvider {

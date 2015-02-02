@@ -21,7 +21,7 @@ import java.util.Locale
 import dispatch._
 import net.liftweb.actor.LAFuture
 import org.github.microburn.domain.SprintDetails
-import org.github.microburn.integration.SprintsDataProvider
+import org.github.microburn.integration.support.scrum.SprintsDataProvider
 import org.json4s._
 
 class JiraSprintsDataProvider(config: JiraConfig, locale: java.util.Locale = Locale.getDefault(Locale.Category.FORMAT)) extends SprintsDataProvider {
