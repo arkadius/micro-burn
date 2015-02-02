@@ -22,7 +22,7 @@
     "closed": false,
     "dateLastActivity": "2014-12-15T00:00:00.000Z",
     "name": "(1.5) Opened card with multiple checklists name",
-    "idList": "inProgressId",
+    "idList": "todoId",
     "checklists": [
       {
         "checkItems": [
@@ -30,6 +30,11 @@
             "state": "incomplete",
             "id": "incompleteItemId",
             "name": "(0.5) Incomplete item name"
+          },
+          {
+            "state": "incomplete",
+            "id": "incompleteItem2Id",
+            "name": "Incomplete item 2 name"
           }
         ]
       },
@@ -49,7 +54,7 @@
     "closed": false,
     "dateLastActivity": "2014-12-16T00:00:00.000Z",
     "name": "Opened card with checklist name",
-    "idList": "todoId",
+    "idList": "backlogId",
     "checklists": []
   }
 ]

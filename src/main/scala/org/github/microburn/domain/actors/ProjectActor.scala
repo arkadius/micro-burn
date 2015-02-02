@@ -19,7 +19,7 @@ import java.util.Date
 
 import net.liftmodules.ng.Angular.NgModel
 import net.liftweb.actor.{LAFuture, LiftActor}
-import net.liftweb.common.{Box, Empty, Failure, Full}
+import net.liftweb.common.{Box, Failure, Full}
 import net.liftweb.http.ListenerManager
 import org.github.microburn.domain._
 import org.github.microburn.repository.ProjectRepository

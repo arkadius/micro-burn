@@ -18,11 +18,10 @@ package org.github.microburn
 import java.io.File
 
 import com.typesafe.config.ConfigFactory
-import net.liftweb.actor.LiftActor
 import org.github.microburn.domain.actors.ProjectActor
 import org.github.microburn.service.{ProjectUpdater, SprintColumnsHistoryProvider}
 
-class ApplicationContext private(val projectActor: LiftActor,
+class ApplicationContext private(val projectActor: ProjectActor,
                                  val updater: ProjectUpdater,
                                  val columnsHistoryProvider: SprintColumnsHistoryProvider,
                                  appConfig: ApplicationConfig) {
@@ -33,7 +32,8 @@ object ApplicationContext {
   def apply(): ApplicationContext = context
 
   private lazy val context = {
-    val config = ConfigFactory.parseFile(new File("application.conf")).withFallback(ConfigFactory.parseResources("defaults.conf"))
+    val configFile = System.getProperty("config", "application.conf")
+    val config = ConfigFactory.parseFile(new File(configFile)).withFallback(ConfigFactory.parseResources("defaults.conf"))
     val appConfig = ApplicationConfig(config)
     val projectActor = new ProjectActor(appConfig.projectConfig)
     val integrationProvider = appConfig.integrationProvidersFactory(projectActor)

@@ -19,8 +19,9 @@ import java.util.Date
 
 import dispatch.{Http, Req}
 import net.liftweb.actor.LAFuture
-import org.github.microburn.util.dispatch._
+import org.github.microburn.integration.support.kanban.StoryPointsFromName
 import org.github.microburn.util.date._
+import org.github.microburn.util.dispatch._
 import org.json4s.JsonAST._
 
 class TrelloCardsProvider(config: TrelloConfig) {

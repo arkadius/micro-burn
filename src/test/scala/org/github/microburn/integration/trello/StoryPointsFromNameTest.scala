@@ -15,6 +15,7 @@
  */
 package org.github.microburn.integration.trello
 
+import org.github.microburn.integration.support.kanban.StoryPointsFromName
 import org.scalatest.prop.TableDrivenPropertyChecks
 import org.scalatest.{Matchers, FlatSpec}
 

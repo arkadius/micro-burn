@@ -17,15 +17,15 @@ package org.github.microburn.service
 
 import java.util.Date
 
-import net.liftweb.actor.{LAFuture, LiftActor}
+import net.liftweb.actor.LAFuture
 import net.liftweb.common.Box
-import org.github.microburn.domain.actors.{GetStoryPointsHistory, SprintHistory}
+import org.github.microburn.domain.actors.{GetStoryPointsHistory, ProjectActor, SprintHistory}
 import org.github.microburn.domain.{DateWithColumnsState, ProjectConfig}
 import org.joda.time.DateTime
 
 import scalaz.Scalaz._
 
-class SprintColumnsHistoryProvider(projectActor: LiftActor, initialFetchToSprintStartAcceptableDelayMinutes: Int)(implicit config: ProjectConfig) {
+class SprintColumnsHistoryProvider(projectActor: ProjectActor, initialFetchToSprintStartAcceptableDelayMinutes: Int)(implicit config: ProjectConfig) {
   import org.github.microburn.util.concurrent.FutureEnrichments._
   import org.github.microburn.util.concurrent.LiftActorEnrichments._
   

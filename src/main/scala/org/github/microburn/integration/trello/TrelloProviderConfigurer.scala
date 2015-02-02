@@ -13,19 +13,17 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package org.github.microburn.integration.jira
+package org.github.microburn.integration.trello
 
 import com.typesafe.config.Config
 import org.github.microburn.domain.actors.ProjectActor
-import org.github.microburn.integration.support.scrum.ScrumIntegrationProvider
+import org.github.microburn.integration.support.kanban.KanbanIntegrationProvider
 import org.github.microburn.integration.{IntegrationProvider, IntegrationProviderConfigurer}
 
-object JiraProviderConfigurer extends IntegrationProviderConfigurer {
-  override def tryConfigure: PartialFunction[Config, ProjectActor => IntegrationProvider] = {
-    case config if config.hasPath("jira") =>
-      val jiraConfig = JiraConfig(config.getConfig("jira"))
-      val sprintsDataProvider = new JiraSprintsDataProvider(jiraConfig)
-      val tasksDataProvider = new JiraTasksDataProvider(jiraConfig)
-      new ScrumIntegrationProvider(sprintsDataProvider, tasksDataProvider)(_)
+object TrelloProviderConfigurer extends IntegrationProviderConfigurer{
+  override def tryConfigure: PartialFunction[Config, (ProjectActor) => IntegrationProvider] = {
+    case config if config.hasPath("trello.token") =>
+      val trelloConfig = TrelloConfig(config.getConfig("trello"))
+      new KanbanIntegrationProvider(new TrelloBoardStateProvider(trelloConfig))(_)
   }
 }

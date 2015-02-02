@@ -13,12 +13,18 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package org.github.microburn.integration
+package org.github.microburn.integration.support.kanban
 
 import net.liftweb.actor.LAFuture
-import org.github.microburn.integration.support.kanban.ScrumSimulator
+import org.github.microburn.domain.actors.ProjectActor
+import org.github.microburn.integration.IntegrationProvider
 
-trait IntegrationProvider {
-  def updateProject(): LAFuture[_]
-  def optionalScrumSimulatorFactory: Option[ScrumSimulator]
+class KanbanIntegrationProvider(boardStateProvider: BoardStateProvider)(projectActor: ProjectActor) extends IntegrationProvider{
+  import org.github.microburn.util.concurrent.FutureEnrichments._
+
+  override def updateProject(): LAFuture[_] = {
+    boardStateProvider.currentUserStories.withLoggingFinished(s"user stories count: " + _.size)
+  }
+
+  override def optionalScrumSimulatorFactory: Option[ScrumSimulator] = None
 }

@@ -13,12 +13,10 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package org.github.microburn.integration
+package org.github.microburn.integration.support.kanban
 
-import net.liftweb.actor.LAFuture
-import org.github.microburn.integration.support.kanban.ScrumSimulator
+import net.liftweb.actor.LiftActor
 
-trait IntegrationProvider {
-  def updateProject(): LAFuture[_]
-  def optionalScrumSimulatorFactory: Option[ScrumSimulator]
+class ScrumSimulator extends LiftActor {
+  override protected def messageHandler: PartialFunction[Any, Unit] = ???
 }

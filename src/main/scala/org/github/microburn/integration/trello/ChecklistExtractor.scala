@@ -15,12 +15,17 @@
  */
 package org.github.microburn.integration.trello
 
+import org.github.microburn.integration.support.kanban.StoryPointsFromName
 import org.json4s.JsonAST._
 
 object ChecklistExtractor {
 
   def extract(jv: JValue): Seq[ChecklistItem] = {
-    (jv \\ "checkItems").children.map { item =>
+    val items = jv.foldField(IndexedSeq.empty[JValue]) {
+      case (acc, JField("checkItems", JArray(arr))) => acc ++ arr
+      case (acc, _) => acc
+    }
+    items.map { item =>
       val JString(id) = item \ "id"
       val JString(StoryPointsFromName(optionalSp, name)) = item \ "name"
       val JString(state) = item \ "state"

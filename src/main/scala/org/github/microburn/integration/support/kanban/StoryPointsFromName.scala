@@ -13,13 +13,12 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package org.github.microburn.integration.trello
+package org.github.microburn.integration.support.kanban
 
-import scalaz._
-import Scalaz._
+import scala.util.matching.Regex
 
 object StoryPointsFromName {
-  private final val NAME_WITH_SP_PATTERN = "\\(([\\d\\.]*)\\)\\s*(.*)".r("spInsideBraces", "name")
+  private final val NAME_WITH_SP_PATTERN: Regex = "\\(([\\d\\.]*)\\)\\s*(.*)".r("spInsideBraces", "name")
 
   private final val MAX_SCALE: Int = 3 // ten limit jest dlatego, że przy określonej precyzji źle zadziała round-trip dla zapisu-odczytu sp
 
@@ -33,6 +32,7 @@ object StoryPointsFromName {
           .filter(_.scale <= MAX_SCALE).map { storyPoints =>
           (Some(storyPoints), name)
         }
+      case _ => None
     }.getOrElse {
       (None, nameWithOptionalSp)
     }

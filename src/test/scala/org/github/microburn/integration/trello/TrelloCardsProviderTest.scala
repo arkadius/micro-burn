@@ -35,41 +35,40 @@ class TrelloCardsProviderTest extends FlatSpec with RestIntegrationTest with Mat
     val config = TestConfig.trelloConfigWithDefaultsFallback(fromFile = false)
     val provider = new TrelloCardsProvider(TrelloConfig(config.getConfig("trello")))
 
-    val cardStatus = "fooStatus"
     val result = provider.cards.await(5.seconds)
 
     result should have length 3
-    result shouldEqual List(
-      Card(
-        id = "closedCardId",
-        name = "Closed card name",
-        optionalSp = None,
-        columnId = "doneId",
-        closed = true,
-        checkListItems = List(
-          ChecklistItem("completeItemId", "Complete item name", None, completedStatus = true)
-        ),
-        dateLastActivity = new DateTime(2014, 12, 14, 0, 0, DateTimeZone.UTC).toDate
+    result(0) shouldEqual Card(
+      id = "closedCardId",
+      name = "Closed card name",
+      optionalSp = None,
+      columnId = "doneId",
+      closed = true,
+      checkListItems = List(
+        ChecklistItem("completeItemId", "Complete item name", None, completedStatus = true)
       ),
-      Card(
-        id = "openedCardWithMultipleChecklistsId",
-        name = "Opened card with multiple checklists name",
-        optionalSp = Some(BigDecimal("1.5")),
-        columnId = "inProgressId",
-        closed = false,
-        checkListItems = List(
-          ChecklistItem("incompleteItemId", "Incomplete item name", Some(BigDecimal("0.5")), completedStatus = false),
-          ChecklistItem("incompleteItemWithNonAsciiCharsId", "Incomplete item with ąż name", None, completedStatus = false)
-        ),dateLastActivity = new DateTime(2014, 12, 15, 0, 0, DateTimeZone.UTC).toDate),
-      Card(
-        id = "openedCardWithoutChecklists",
-        name = "Opened card with checklist name",
-        optionalSp = None,
-        columnId = "todoId",
-        closed = false,
-        checkListItems = Nil,
-        dateLastActivity = new DateTime(2014, 12, 16, 0, 0, DateTimeZone.UTC).toDate
-      )
+      dateLastActivity = new DateTime(2014, 12, 14, 0, 0, DateTimeZone.UTC).toDate
+    )
+    result(1) shouldEqual Card(
+      id = "openedCardWithMultipleChecklistsId",
+      name = "Opened card with multiple checklists name",
+      optionalSp = Some(BigDecimal("1.5")),
+      columnId = "todoId",
+      closed = false,
+      checkListItems = List(
+        ChecklistItem("incompleteItemId", "Incomplete item name", Some(BigDecimal("0.5")), completedStatus = false),
+        ChecklistItem("incompleteItem2Id", "Incomplete item 2 name", None, completedStatus = false),
+        ChecklistItem("incompleteItemWithNonAsciiCharsId", "Incomplete item with ąż name", None, completedStatus = false)
+      ),dateLastActivity = new DateTime(2014, 12, 15, 0, 0, DateTimeZone.UTC).toDate
+    )
+    result(2) shouldEqual Card(
+      id = "openedCardWithoutChecklists",
+      name = "Opened card with checklist name",
+      optionalSp = None,
+      columnId = "backlogId",
+      closed = false,
+      checkListItems = Nil,
+      dateLastActivity = new DateTime(2014, 12, 16, 0, 0, DateTimeZone.UTC).toDate
     )
   }
 }
