@@ -46,9 +46,9 @@ class TrelloBoardStateProvider(config: TrelloConfig) extends BoardStateProvider 
   def toUserStory(card: Card): UserStory = {
     val statusForTask = statusForTaskInColumn(card.columnId) _
     val technicalTasks = card.checklistItems.map { item =>
-      TechnicalTask(item.id, item.name, item.optionalSp, statusForTask(item))
+      TechnicalTask(item.id, item.extractedName, item.optionalSp, statusForTask(item))
     }.toIndexedSeq
-    UserStory(card.id, card.name, card.optionalSp, technicalTasks, statusForTask(card))
+    UserStory(card.id, card.extractedName, card.optionalSp, technicalTasks, statusForTask(card))
   }
 
   private def statusForTaskInColumn(columnId: String)(task: TrelloTask) = {

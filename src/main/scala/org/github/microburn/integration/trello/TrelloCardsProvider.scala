@@ -66,7 +66,7 @@ class TrelloCardsProvider(config: TrelloConfig) {
 }
 
 case class Card(id: String,
-                name: String,
+                protected val name: String,
                 columnId: String,
                 closed: Boolean,
                 checklistItems: Seq[ChecklistItem],

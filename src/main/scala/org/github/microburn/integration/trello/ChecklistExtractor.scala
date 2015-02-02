@@ -15,7 +15,6 @@
  */
 package org.github.microburn.integration.trello
 
-import org.github.microburn.integration.support.kanban.StoryPointsFromName
 import org.json4s.JsonAST._
 
 object ChecklistExtractor {
@@ -36,4 +35,4 @@ object ChecklistExtractor {
 
 }
 
-case class ChecklistItem(id: String, name: String, closed: Boolean) extends TrelloTask
+case class ChecklistItem(id: String, protected val name: String, closed: Boolean) extends TrelloTask
