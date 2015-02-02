@@ -15,23 +15,20 @@
  */
 package org.github.microburn.integration.trello
 
-import java.util.Date
-
 import akka.actor.ActorSystem
 import org.github.microburn.TestConfig
 import org.github.microburn.integration.RestIntegrationTest
-import org.joda.time.{DateTimeZone, DateTime}
+import org.joda.time.{DateTime, DateTimeZone}
 import org.scalatest.{FlatSpec, Matchers}
 import spray.routing._
 
 class TrelloCardsProviderTest extends FlatSpec with RestIntegrationTest with Matchers {
   import org.github.microburn.util.concurrent.FutureEnrichments._
-
   import scala.concurrent.duration._
 
   override protected def route: Route = TrelloCardsProviderTest.route
 
-  it should "get checklist" in {
+  it should "fetch cards with inner checklist items" in {
     val config = TestConfig.trelloConfigWithDefaultsFallback(fromFile = false)
     val provider = new TrelloCardsProvider(TrelloConfig(config.getConfig("trello")))
 
@@ -41,33 +38,30 @@ class TrelloCardsProviderTest extends FlatSpec with RestIntegrationTest with Mat
     result(0) shouldEqual Card(
       id = "closedCardId",
       name = "Closed card name",
-      optionalSp = None,
       columnId = "doneId",
       closed = true,
-      checkListItems = List(
-        ChecklistItem("completeItemId", "Complete item name", None, completedStatus = true)
+      checklistItems = List(
+        ChecklistItem("completeItemId", "Complete item name", closed = true)
       ),
       dateLastActivity = new DateTime(2014, 12, 14, 0, 0, DateTimeZone.UTC).toDate
     )
     result(1) shouldEqual Card(
       id = "openedCardWithMultipleChecklistsId",
-      name = "Opened card with multiple checklists name",
-      optionalSp = Some(BigDecimal("1.5")),
+      name = "(1.5) Opened card with multiple checklists name",
       columnId = "todoId",
       closed = false,
-      checkListItems = List(
-        ChecklistItem("incompleteItemId", "Incomplete item name", Some(BigDecimal("0.5")), completedStatus = false),
-        ChecklistItem("incompleteItem2Id", "Incomplete item 2 name", None, completedStatus = false),
-        ChecklistItem("incompleteItemWithNonAsciiCharsId", "Incomplete item with ąż name", None, completedStatus = false)
+      checklistItems = List(
+        ChecklistItem("incompleteItemId", "(0.5) Incomplete item name", closed = false),
+        ChecklistItem("incompleteItem2Id", "Incomplete item 2 name", closed = false),
+        ChecklistItem("incompleteItemWithNonAsciiCharsId", "Incomplete item with ąż name", closed = false)
       ),dateLastActivity = new DateTime(2014, 12, 15, 0, 0, DateTimeZone.UTC).toDate
     )
     result(2) shouldEqual Card(
       id = "openedCardWithoutChecklists",
       name = "Opened card with checklist name",
-      optionalSp = None,
       columnId = "backlogId",
       closed = false,
-      checkListItems = Nil,
+      checklistItems = Nil,
       dateLastActivity = new DateTime(2014, 12, 16, 0, 0, DateTimeZone.UTC).toDate
     )
   }

@@ -19,7 +19,6 @@ import java.util.Date
 
 import dispatch.{Http, Req}
 import net.liftweb.actor.LAFuture
-import org.github.microburn.integration.support.kanban.StoryPointsFromName
 import org.github.microburn.util.date._
 import org.github.microburn.util.dispatch._
 import org.json4s.JsonAST._
@@ -47,7 +46,7 @@ class TrelloCardsProvider(config: TrelloConfig) {
     Http(url OK asJsonWithUtf8).toLiftFuture.map { jv =>
       jv.children.map { item =>
         val JString(id) = item \ "id"
-        val JString(StoryPointsFromName(optionalSp, name)) = item \ "name"
+        val JString(name) = item \ "name"
         val JString(columnId) = item \ "idList"
         val JBool(closed) = item \ "closed"
         val JString(dateStr) = item \ "dateLastActivity"
@@ -56,10 +55,9 @@ class TrelloCardsProvider(config: TrelloConfig) {
         Card(
           id = id,
           name = name,
-          optionalSp = optionalSp,
           columnId = columnId,
           closed = closed,
-          checkListItems = checkListItems,
+          checklistItems = checkListItems,
           dateLastActivity = dateLastActivity
         )
       }
@@ -69,8 +67,7 @@ class TrelloCardsProvider(config: TrelloConfig) {
 
 case class Card(id: String,
                 name: String,
-                optionalSp: Option[BigDecimal],
                 columnId: String,
                 closed: Boolean,
-                checkListItems: Seq[ChecklistItem],
-                dateLastActivity: Date)
+                checklistItems: Seq[ChecklistItem],
+                dateLastActivity: Date) extends TrelloTask

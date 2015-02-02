@@ -90,7 +90,20 @@ case class BoardState(userStories: Seq[UserStory], date: Date) extends HavingNes
     } yield task.storyPointsWithoutSubTasks).sum
   }
 
+  // TODO: powinna być możliwa zmiana strategi uwzględniając zamiast storyPointsWithoutSubTasks: prezentować sensowne defaulty
+  //  val definedIfSignificantPointsPerTechnical = computePointsPerTechnical(card)
+  //  private def computePointsPerTechnical(card: Card): Option[BigDecimal] = {
+  //    val definedTechnicalPoints = card.checkListItems.flatMap(_.optionalSp).sum
+  //    val sumPointsToSplitBetweenTechnical = (card.optionalSp.getOrElse(BigDecimal(0)) - definedTechnicalPoints).max(0)
+  //    val technicalWithoutDefinedSp = card.checkListItems.count(_.optionalSp.isEmpty)
+  //    Option(technicalWithoutDefinedSp)
+  //      .filter(_ > 0)
+  //      .map { technicalCountGt0 => (sumPointsToSplitBetweenTechnical / technicalCountGt0).setScale(SP_SPLITTED_BETWEEN_TECHICAL_SCALE, RoundingMode.FLOOR) }
+  //      .filter(_ > 0)
+  //  }
+
   override def toString: String = {
     userStories.toSeq.sortBy(_.taskId).map(_.toString).mkString(",\n")
   }
+
 }

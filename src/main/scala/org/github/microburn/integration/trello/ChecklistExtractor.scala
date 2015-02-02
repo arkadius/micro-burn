@@ -27,13 +27,13 @@ object ChecklistExtractor {
     }
     items.map { item =>
       val JString(id) = item \ "id"
-      val JString(StoryPointsFromName(optionalSp, name)) = item \ "name"
+      val JString(name) = item \ "name"
       val JString(state) = item \ "state"
       val completedStatus = state == "complete"
-      ChecklistItem(id, name, optionalSp, completedStatus)
+      ChecklistItem(id, name, completedStatus)
     }
   }
 
 }
 
-case class ChecklistItem(id: String, name: String, optionalSp: Option[BigDecimal], completedStatus: Boolean)
+case class ChecklistItem(id: String, name: String, closed: Boolean) extends TrelloTask

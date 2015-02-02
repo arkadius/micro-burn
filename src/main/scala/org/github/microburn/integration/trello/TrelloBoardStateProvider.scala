@@ -44,25 +44,18 @@ class TrelloBoardStateProvider(config: TrelloConfig) extends BoardStateProvider 
   }
 
   def toUserStory(card: Card): UserStory = {
-    val definedIfSignificantPointsPerTechnical = computePointsPerTechnical(card)
-    val technicalTasks = card.checkListItems.map { item =>
-      val status = if (card.closed) {
-        TaskCompletedStatus
-      } else {
-        SpecifiedStatus(card.columnId)
-      }
-      TechnicalTask(item.id, item.name, item.optionalSp orElse definedIfSignificantPointsPerTechnical, status)
+    val statusForTask = statusForTaskInColumn(card.columnId) _
+    val technicalTasks = card.checklistItems.map { item =>
+      TechnicalTask(item.id, item.name, item.optionalSp, statusForTask(item))
     }.toIndexedSeq
-    UserStory(card.id, card.name, card.optionalSp, technicalTasks, SpecifiedStatus(card.columnId))
+    UserStory(card.id, card.name, card.optionalSp, technicalTasks, statusForTask(card))
   }
 
-  private def computePointsPerTechnical(card: Card): Option[BigDecimal] = {
-    val definedTechnicalPoints = card.checkListItems.flatMap(_.optionalSp).sum
-    val sumPointsToSplitBetweenTechnical = (card.optionalSp.getOrElse(BigDecimal(0)) - definedTechnicalPoints).max(0)
-    val technicalWithoutDefinedSp = card.checkListItems.count(_.optionalSp.isEmpty)
-    Option(technicalWithoutDefinedSp)
-      .filter(_ > 0)
-      .map { technicalCountGt0 => (sumPointsToSplitBetweenTechnical / technicalCountGt0).setScale(SP_SPLITTED_BETWEEN_TECHICAL_SCALE, RoundingMode.FLOOR) }
-      .filter(_ > 0)
+  private def statusForTaskInColumn(columnId: String)(task: TrelloTask) = {
+    if (task.closed) {
+      TaskCompletedStatus
+    } else {
+      SpecifiedStatus(columnId)
+    }
   }
 }
