@@ -23,6 +23,7 @@ import org.github.microburn.domain.actors.ProjectActor
 import org.github.microburn.integration.{IntegrationProvider, IntegrationProviderConfigurer}
 
 case class ApplicationConfig(jettyPort: Int,
+                             jettyContextPath: String,
                              updatePeriodSeconds: Int,
                              initialFetchToSprintStartAcceptableDelayMinutes: Int,
                              projectConfig: ProjectConfig,
@@ -32,6 +33,7 @@ object ApplicationConfig {
   
   def apply(config: Config): ApplicationConfig = {
     val jettyPort = config.getInt("jetty.port")
+    val jettyContextPath = config.getString("jetty.contextPath")
     val updatePeriodSeconds = config.getDuration("integration.updatePeriodSeconds", TimeUnit.SECONDS).toInt
     val initialFetchToSprintStartAcceptableDelayMinutes =
       config.getDuration("history.initialFetchToSprintStartAcceptableDelayMinutes", TimeUnit.MINUTES).toInt
@@ -44,6 +46,7 @@ object ApplicationConfig {
 
     ApplicationConfig(
       jettyPort = jettyPort,
+      jettyContextPath = jettyContextPath,
       updatePeriodSeconds = updatePeriodSeconds,
       initialFetchToSprintStartAcceptableDelayMinutes = initialFetchToSprintStartAcceptableDelayMinutes,
       projectConfig = projectConfig,
