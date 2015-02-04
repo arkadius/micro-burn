@@ -8,6 +8,6 @@ out
 tags
 .*.swp
 .*.swo
-.*application.conf
+*application.conf
 data
 secret.conf
