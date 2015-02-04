@@ -32,7 +32,7 @@ object Main extends App {
     val domain = this.getClass.getProtectionDomain
     val context = new WebAppContext()
     val location = domain.getCodeSource.getLocation
-    context.setContextPath("/")
+    context.setContextPath(ApplicationContext().jettyContextPath)
     context.setWar(location.toExternalForm)
     optionalResourceBase.map(context.setResourceBase)
     server.setHandler(context)

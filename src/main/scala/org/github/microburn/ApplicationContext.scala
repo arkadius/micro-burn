@@ -27,6 +27,7 @@ class ApplicationContext private(val projectActor: LiftActor,
                                  val columnsHistoryProvider: SprintColumnsHistoryProvider,
                                  appConfig: ApplicationConfig) {
   def jettyPort: Int = appConfig.jettyPort
+  def jettyContextPath: String = appConfig.jettyContextPath
 }
 
 object ApplicationContext {
