@@ -47,7 +47,7 @@ object ProjectConfig {
 
   def apply(config: Config): ProjectConfig = {
     val columns = for {
-      (columnConfig, index) <- config.getConfigList("board.columns").zipWithIndex
+      (columnConfig, index) <- config.getConfigList("boardColumns").zipWithIndex
       name = columnConfig.getString("name")
       statusIds = statusesFromStatusIds(columnConfig) orElse statusesFromId(columnConfig) getOrElse {
         throw new IllegalArgumentException("Missing field: statusIds or id")
@@ -61,7 +61,7 @@ object ProjectConfig {
       isBacklogColumn = isBacklogColumn,
       isDoneColumn = isDoneColumn
     )
-    val dataRoot = new File(config.getString("data.project.root"))
+    val dataRoot = new File(config.getString("dataRoot"))
     ProjectConfig(columns.toList, dataRoot)
   }
 

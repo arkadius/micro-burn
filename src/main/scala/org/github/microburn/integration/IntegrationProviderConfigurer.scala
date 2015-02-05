@@ -16,19 +16,20 @@
 package org.github.microburn.integration
 
 import com.typesafe.config.Config
+import org.github.microburn.{PartiallyPreparedConfig, DurationsConfig}
 import org.github.microburn.domain.actors.ProjectActor
 import org.github.microburn.integration.jira.JiraProviderConfigurer
 import org.github.microburn.integration.trello.TrelloProviderConfigurer
 
 trait IntegrationProviderConfigurer {
-  def tryConfigure: PartialFunction[Config, ProjectActor => IntegrationProvider]
+  def tryConfigure(partiallyPreparedConfig: PartiallyPreparedConfig): PartialFunction[Config, ProjectActor => IntegrationProvider]
 }
 
 object IntegrationProviderConfigurer {
   private val supportedProviders = Seq(JiraProviderConfigurer, TrelloProviderConfigurer)
 
-  val firstConfiguredProvidersFactory: PartialFunction[Config, ProjectActor => IntegrationProvider] =
-    supportedProviders.map(_.tryConfigure).foldLeft(PartialFunction.empty[Config, ProjectActor => IntegrationProvider]) { case (acc, tryConfigure) =>
+  def firstConfiguredProvidersFactory(partiallyPreparedConfig: PartiallyPreparedConfig): PartialFunction[Config, ProjectActor => IntegrationProvider] =
+    supportedProviders.map(_.tryConfigure(partiallyPreparedConfig)).foldLeft(PartialFunction.empty[Config, ProjectActor => IntegrationProvider]) { case (acc, tryConfigure) =>
       acc orElse tryConfigure
     }
 }

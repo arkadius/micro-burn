@@ -21,13 +21,13 @@ import org.scalatest.{FlatSpec, Matchers}
 class ProjectConfigTest extends FlatSpec with Matchers {
 
   it should "create project config from conf having columns with statuses" in {
-    val config = ProjectConfig(TestConfig.withDefaultsFallback())
+    val config = ProjectConfig(TestConfig.withDefaultsFallback().getConfig("project"))
 
     config.boardColumns should have length 5
   }
 
   it should "create project config from conf having columns with ids" in {
-    val config = ProjectConfig(TestConfig.trelloConfigWithDefaultsFallback())
+    val config = ProjectConfig(TestConfig.trelloConfigWithDefaultsFallback().getConfig("project"))
 
     config.boardColumns should have length 3
     config.boardColumns(0).isBacklogColumn shouldBe true

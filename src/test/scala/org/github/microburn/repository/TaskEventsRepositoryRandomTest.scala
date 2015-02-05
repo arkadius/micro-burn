@@ -26,7 +26,7 @@ import org.scalatest.{FlatSpec, Matchers}
 
 class TaskEventsRepositoryRandomTest extends FlatSpec with Matchers with GeneratorDrivenPropertyChecks {
 
-  implicit val config = ProjectConfig(TestConfig.withDefaultsFallback())
+  implicit val config = ProjectConfig(TestConfig.withDefaultsFallback().getConfig("project"))
 
   it should "do correct round trip" in {
     forAll(Gen.nonEmptyListOf(TaskEventsGenerator.generator)) { events =>

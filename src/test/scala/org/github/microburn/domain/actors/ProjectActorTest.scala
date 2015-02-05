@@ -15,76 +15,66 @@
  */
 package org.github.microburn.domain.actors
 
-import java.io.File
 import java.util.Date
 
 import net.liftweb.actor.LAFuture
 import net.liftweb.common.Box
 import org.github.microburn.TestConfig
 import org.github.microburn.domain._
-import org.github.microburn.repository.SprintRepository
 import org.scalatest.{FlatSpec, Matchers}
 
 import scala.concurrent.duration._
-import scala.reflect.io.Path
 
-class ProjectActorTest extends FlatSpec with Matchers {
+class ProjectActorTest extends FlatSpec with Matchers with ProjectActorHelper {
   import org.github.microburn.util.concurrent.FutureEnrichments._
   import org.github.microburn.util.concurrent.LiftActorEnrichments._
 
-  implicit val config = ProjectConfig(TestConfig.withDefaultsFallback())
+  implicit val config = ProjectConfig(TestConfig.withDefaultsFallback().getConfig("project"))
 
-  it should "reply with correct active actors" in {
-    val sprint = SampleSprint.withEmptyEvents()
-    val projectActor = actorWithInitialSprint(sprint)
-    def sprintIsActive = sprintActivenessCheck(sprint.id, projectActor)
+  it should "reply with correct active actors finishing with UpdateSprint" in {
+    finishActorCheck { sprint =>
+      UpdateSprint(sprint.id, sprint.currentBoard.userStories, finishSprint = true, new Date)
+    }
+  }
 
-   (for {
-      beforeUpdateActiveness <- sprintIsActive
-      _ = {
-        beforeUpdateActiveness shouldBe true
-        projectActor ! UpdateSprint(sprint.id, sprint.currentBoard.userStories, finishSprint = true, new Date)
-      }
-      afterUpdateActiveness <- sprintIsActive
-    } yield {
-      afterUpdateActiveness shouldBe false
-    }).await(5 seconds)
+  it should "reply with correct active actors finishing with FinishSprint" in {
+    finishActorCheck { sprint =>
+      FinishSprint(sprint.id, new Date)
+    }
   }
 
   it should "reply with correct history" in {
     val userStory = SampleTasks.openedUserStory(sp = 1)
     val sprint = SampleSprint.withEmptyEvents(userStory)
-    val projectActor = actorWithInitialSprint(sprint)
+    val projectActor = projectActorWithInitialSprint(sprint)
 
     val userStoriesWithClosed = Seq(userStory.copy(status = TaskCompletedStatus))
     val beforeSprintsEnd = new Date(sprint.details.end.getTime-1)
     projectActor ! UpdateSprint(sprint.id, userStoriesWithClosed, finishSprint = false, beforeSprintsEnd)
 
-    val sprintHistoryBox = (projectActor ?? GetStoryPointsHistory(sprint.id)).mapTo[Box[SprintHistory]].await(5 seconds)
+    val sprintHistoryBox = (projectActor ?? GetStoryPointsHistory(sprint.id)).mapTo[Box[SprintHistory]].await(5.seconds)
     val sprintHistory = sprintHistoryBox.openOrThrowException("")
     sprintHistory.initialStoryPointsSum shouldEqual 1
     val completedColumnHistory = sprintHistory.columnStates.map(_.storyPointsForColumn(ProjectConfigUtils.completedColumnIndex))
     completedColumnHistory shouldEqual Seq(0, 1)
   }
 
-  private def actorWithInitialSprint(sprint: Sprint): ProjectActor = {
-    val projectRoot = config.dataRoot
-    Path(projectRoot).deleteRecursively()
-    SprintRepository(new File(projectRoot, sprint.id), sprint.id).saveSprint(sprint)
+  private def finishActorCheck(finishMethod: Sprint => Any): Unit = {
+    val sprint = SampleSprint.withEmptyEvents()
+    val projectActor = projectActorWithInitialSprint(sprint)
+    def sprintIsActive = projectHasOnlyOneSprint(sprint.id, projectActor)
 
-    val projectActor = new ProjectActor(config)
-    projectActor
-  }
-
-  private def sprintActivenessCheck(sprintId: String, projectActor: ProjectActor): LAFuture[Boolean] = {
-    for {
-      projectState <- (projectActor ?? GetProjectState).mapTo[ProjectState]
-      sprintWithStates = projectState.sprints
+    (for {
+      beforeUpdateActiveness <- sprintIsActive
+      _ = {
+        beforeUpdateActiveness shouldBe true
+        projectActor ! finishMethod(sprint)
+      }
+      afterUpdateActiveness <- sprintIsActive
     } yield {
-      sprintWithStates should have length 1
-      sprintWithStates.head.id shouldEqual sprintId
-      sprintWithStates.head.isActive
-    }
+      afterUpdateActiveness shouldBe false
+    }).await(5.seconds)
   }
+
 
 }

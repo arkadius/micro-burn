@@ -30,18 +30,26 @@ class SprintActor(var sprint: Sprint)
   override protected def messageHandler: PartialFunction[Any, Unit] = {
     case GetDetails =>
       reply(sprint.details)
+    case FinishSprint(sprintId, timestamp) =>
+      require(sprintId == sprint.id)
+      updateSprintAndReply(sprint.finish(timestamp))
     case UpdateSprint(sprintId, userStories, finishSprint, timestamp) =>
       require(sprintId == sprint.id)
-      val result = sprint.update(userStories, finishSprint)(timestamp)
-      sprint = result.updatedSprint
-      repo.saveUpdateResult(result)
-      if (result.importantBoardStateChange)
-        changeNotifyingActor ! BoardStateChanged(sprint.id)
-      reply(sprint.id)
+      updateSprintAndReply(sprint.update(userStories, finishSprint)(timestamp))
     case GetStoryPointsHistory(sprintId: String) =>
       require(sprintId == sprint.id)
       reply(SprintHistory(sprint.initialStoryPointsSum, sprint.initialDate, sprint.columnStatesHistory, sprint.details))
   }
+
+  private def updateSprintAndReply(f: => SprintUpdateResult) = {
+    val result = f
+    sprint = result.updatedSprint
+    repo.saveUpdateResult(result)
+    if (result.importantBoardStateChange)
+      changeNotifyingActor ! BoardStateChanged(sprint.id)
+    reply(sprint.id)
+  }
+
 }
 
 case class BoardStateChanged(sprintId: String)

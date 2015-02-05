@@ -13,12 +13,10 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package org.github.microburn.integration
+package org.github.microburn.integration.support.kanban
 
-import java.util.Date
+import org.github.microburn.integration.IntegrationProvider
 
-import net.liftweb.actor.LAFuture
-
-trait IntegrationProvider {
-  def updateProject(implicit timestamp: Date): LAFuture[_]
+trait ScrumSimulation { self: IntegrationProvider =>
+  val scrumSimulator: ScrumSimulator
 }

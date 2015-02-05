@@ -22,35 +22,57 @@ import org.github.microburn.domain.ProjectConfig
 import org.github.microburn.domain.actors.ProjectActor
 import org.github.microburn.integration.{IntegrationProvider, IntegrationProviderConfigurer}
 
-case class ApplicationConfig(jettyPort: Int,
-                             jettyContextPath: String,
-                             updatePeriodSeconds: Int,
-                             initialFetchToSprintStartAcceptableDelayMinutes: Int,
+import scala.concurrent.duration.FiniteDuration
+
+case class ApplicationConfig(connectorConfig: ConnectorConfig,
                              projectConfig: ProjectConfig,
+                             durations: DurationsConfig,
                              integrationProvidersFactory: ProjectActor => IntegrationProvider)
 
 object ApplicationConfig {
   
   def apply(config: Config): ApplicationConfig = {
-    val jettyPort = config.getInt("jetty.port")
-    val jettyContextPath = config.getString("jetty.contextPath")
-    val updatePeriodSeconds = config.getDuration("integration.updatePeriodSeconds", TimeUnit.SECONDS).toInt
-    val initialFetchToSprintStartAcceptableDelayMinutes =
-      config.getDuration("history.initialFetchToSprintStartAcceptableDelayMinutes", TimeUnit.MINUTES).toInt
-
-    val projectConfig = ProjectConfig(config)
-    val providersFactory = IntegrationProviderConfigurer.firstConfiguredProvidersFactory.applyOrElse(
+    val durations = DurationsConfig(config.getConfig("durations"))
+    val partiallyPreparedConfig = PartiallyPreparedConfig(durations)
+    val providersFactory = IntegrationProviderConfigurer.firstConfiguredProvidersFactory(partiallyPreparedConfig).applyOrElse(
       config,
       (_:Config) => throw new IllegalArgumentException("You must define configuration of service that you want to integrate with")
     )
 
     ApplicationConfig(
-      jettyPort = jettyPort,
-      jettyContextPath = jettyContextPath,
-      updatePeriodSeconds = updatePeriodSeconds,
-      initialFetchToSprintStartAcceptableDelayMinutes = initialFetchToSprintStartAcceptableDelayMinutes,
-      projectConfig = projectConfig,
+      connectorConfig = ConnectorConfig(config.getConfig("connector")),
+      projectConfig = ProjectConfig(config.getConfig("project")),
+      durations = durations,
       integrationProvidersFactory = providersFactory)
   }
 
+}
+
+case class ConnectorConfig(port: Int, contextPath: String)
+
+object ConnectorConfig {
+  def apply(config: Config): ConnectorConfig = {
+    ConnectorConfig(
+      config.getInt("port"),
+      config.getString("contextPath")
+    )
+  }
+}
+
+case class PartiallyPreparedConfig(durations: DurationsConfig)
+
+case class DurationsConfig(initializationTimeout: FiniteDuration,
+                           fetchPeriod: FiniteDuration,
+                           initialFetchToSprintStartAcceptableDelayMinutes: FiniteDuration)
+
+object DurationsConfig {
+  import concurrent.duration._
+
+  def apply(config: Config): DurationsConfig = {
+    DurationsConfig(
+      config.getDuration("initializationTimeout", TimeUnit.MILLISECONDS).millis,
+      config.getDuration("fetchPeriod", TimeUnit.MILLISECONDS).millis,
+      config.getDuration("initialFetchToSprintStartAcceptableDelay", TimeUnit.MILLISECONDS).millis
+    )
+  }
 }

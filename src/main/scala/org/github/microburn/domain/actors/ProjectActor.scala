@@ -49,10 +49,19 @@ class ProjectActor(config: ProjectConfig) extends LiftActor with ListenerManager
       sprintActors += sprintId -> sprintFactory.createSprint(sprintId, details, userStories, timestamp)
       updateListeners()
       reply(sprintId)
-    case update: UpdateSprint =>
-      if (update.detailsUpdated)
+    case finish: FinishSprint =>
+      val resultFuture = sprintActors(finish.sprintId) !< finish
+      resultFuture.onSuccess { _ =>
         updateListeners()
-      reply(sprintActors(update.sprintId) !< update)
+      }
+      reply(resultFuture)
+    case update: UpdateSprint =>
+      val resultFuture = sprintActors(update.sprintId) !< update
+      resultFuture.onSuccess { _ =>
+        if (update.detailsUpdated)
+          updateListeners()
+      }
+      reply(resultFuture)
     case getHistory: GetStoryPointsHistory =>
       val future = sprintActors.get(getHistory.sprintId).map { sprintActor =>
         (sprintActor !< getHistory).map(Full(_))
@@ -88,6 +97,8 @@ case class SprintWithDetails(id: String, details: SprintDetails) {
 }
 
 case class CreateNewSprint(sprintId: String, details: SprintDetails, userStories: Seq[UserStory], timestamp: Date)
+
+case class FinishSprint(sprintId: String, timestamp: Date)
 
 case class UpdateSprint(sprintId: String, userStories: Seq[UserStory], finishSprint: Boolean, timestamp: Date) {
   def detailsUpdated: Boolean = finishSprint

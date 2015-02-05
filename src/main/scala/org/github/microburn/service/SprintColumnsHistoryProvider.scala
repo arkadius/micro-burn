@@ -23,9 +23,12 @@ import org.github.microburn.domain.actors.{GetStoryPointsHistory, ProjectActor, 
 import org.github.microburn.domain.{DateWithColumnsState, ProjectConfig}
 import org.joda.time.DateTime
 
+import scala.concurrent.duration.FiniteDuration
 import scalaz.Scalaz._
 
-class SprintColumnsHistoryProvider(projectActor: ProjectActor, initialFetchToSprintStartAcceptableDelayMinutes: Int)(implicit config: ProjectConfig) {
+class SprintColumnsHistoryProvider(projectActor: ProjectActor,
+                                   initialFetchToSprintStartAcceptableDelayMinutes: FiniteDuration)
+                                  (implicit config: ProjectConfig) {
   import org.github.microburn.util.concurrent.FutureEnrichments._
   import org.github.microburn.util.concurrent.LiftActorEnrichments._
   
@@ -55,7 +58,8 @@ class SprintColumnsHistoryProvider(projectActor: ProjectActor, initialFetchToSpr
 
   private def computeToPrepend(history: SprintHistory): Option[DateWithColumnsState] = {
     val initialDate = new DateTime(history.initialDate)
-    val startDatePlusAcceptableDelay = new DateTime(history.sprintDetails.start).plusMinutes(initialFetchToSprintStartAcceptableDelayMinutes)
+    val startDatePlusAcceptableDelay =
+      new DateTime(history.sprintDetails.start).plusMillis(initialFetchToSprintStartAcceptableDelayMinutes.toMillis.toInt)
     val initialAfterStartPlusDelay = initialDate.isAfter(startDatePlusAcceptableDelay)
     initialAfterStartPlusDelay.option {
       DateWithColumnsState.zero(history.sprintDetails.start)

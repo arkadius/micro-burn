@@ -15,7 +15,7 @@
  */
 package org.github.microburn.integration.support.scrum
 
-import java.util.Locale
+import java.util.{Date, Locale}
 
 import org.github.microburn.TestConfig
 import org.github.microburn.domain.ProjectConfig
@@ -35,7 +35,7 @@ class ScrumIntegrationProviderTest extends FlatSpec with RestIntegrationTest wit
 
   it should "fetch inital project state" in {
     val config = TestConfig.jiraConfigWithDefaultsFallback()
-    val projectConfig = ProjectConfig(config)
+    val projectConfig = ProjectConfig(config.getConfig("project"))
     Path(projectConfig.dataRoot).deleteRecursively()
     val projectActor = new ProjectActor(projectConfig)
     val jiraConfig = JiraConfig(config.getConfig("jira"))
@@ -43,7 +43,7 @@ class ScrumIntegrationProviderTest extends FlatSpec with RestIntegrationTest wit
       new JiraSprintsDataProvider(jiraConfig, Locale.ENGLISH),
       new JiraTasksDataProvider(jiraConfig)
     )(projectActor)
-    provider.updateProject().await(10.seconds)
+    provider.updateProject(new Date).await(10.seconds)
   }
 
 }

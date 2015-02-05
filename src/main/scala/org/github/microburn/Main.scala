@@ -26,13 +26,13 @@ object Main extends App {
   def runServer(optionalResourceBase: Option[String]) = {
     val server = new Server
     val connector = new SelectChannelConnector()
-    connector.setPort(ApplicationContext().jettyPort)
+    connector.setPort(ApplicationContext().connectorConfig.port)
     server.addConnector(connector)
 
     val domain = this.getClass.getProtectionDomain
     val context = new WebAppContext()
     val location = domain.getCodeSource.getLocation
-    context.setContextPath(ApplicationContext().jettyContextPath)
+    context.setContextPath(ApplicationContext().connectorConfig.contextPath)
     context.setWar(location.toExternalForm)
     optionalResourceBase.map(context.setResourceBase)
     server.setHandler(context)

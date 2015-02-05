@@ -17,19 +17,24 @@ package org.github.microburn.util.concurrent
 
 import net.liftweb.actor.LAFuture
 import net.liftweb.common._
+import net.liftweb.util._
 import org.github.microburn.util.logging.Slf4jLogging
 
 import scala.concurrent.duration.FiniteDuration
 import scala.concurrent.{Future, TimeoutException}
-import scala.reflect.ClassTag
 import scala.util.Success
 
 object FutureEnrichments {
   import scala.concurrent.ExecutionContext.Implicits.global
 
   implicit class EnrichedLAFuture[T](laFuture: LAFuture[T]) extends Slf4jLogging {
+    import scala.reflect._
+
     def mapTo[TT: ClassTag]: LAFuture[TT] = {
-      laFuture.map(_.asInstanceOf[TT])
+      laFuture.map {
+        case t: TT => t
+        case other => throw new ClassCastException(s"Cannot cast: $other to ${classTag[TT].runtimeClass.getName}")
+      }
     }
 
     def await(timeout: FiniteDuration): T = {
@@ -46,8 +51,23 @@ object FutureEnrichments {
         result
       }
     }
+
+    def ifMet(expr: => Boolean): LAFuture[Unit] = {
+      if (expr)
+        laFuture.map(_ => Unit)
+      else
+        LAFuture(() => Unit)
+    }
+
   }
 
+  implicit class OptionOfFuture[T](opt: Option[LAFuture[T]]) {
+    def toFutureOfOption: LAFuture[Option[T]] = opt match {
+      case Some(future) => future.map(Some(_))
+      case None => LAFuture(() => None)
+    }
+  }
+  
   implicit class ScalaFutureConvertibleToLAFuture[T](scf: Future[T]) {
     def toLiftFuture: LAFuture[T] = {
       val laf = new LAFuture[T]
@@ -58,4 +78,11 @@ object FutureEnrichments {
       laf
     }
   }
+
+  implicit class ScalaDurationConvertibleToTimeSpan(duration: FiniteDuration) {
+    def toTimeSpan: Helpers.TimeSpan = {
+      Helpers.TimeSpan(duration.toMillis)
+    }
+  }
+
 }

@@ -29,10 +29,7 @@ class ScrumIntegrationProvider(sprintsProvider: SprintsDataProvider, tasksProvid
   import org.github.microburn.util.concurrent.FutureEnrichments._
   import org.github.microburn.util.concurrent.LiftActorEnrichments._
 
-  override def optionalScrumSimulatorFactory: Option[ScrumSimulator] = None
-
-  override def updateProject(): LAFuture[_] = {
-    implicit val timestamp = new Date
+  override def updateProject(implicit timestamp: Date): LAFuture[_] = {
     for {
       (currentSprints, updatedSprintIds) <- parallelCurrentAndUpdatedSprints
       _ <- parallelCreateAndUpdate(currentSprints, updatedSprintIds)

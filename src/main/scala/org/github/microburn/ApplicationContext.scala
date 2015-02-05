@@ -25,8 +25,7 @@ class ApplicationContext private(val projectActor: ProjectActor,
                                  val updater: ProjectUpdater,
                                  val columnsHistoryProvider: SprintColumnsHistoryProvider,
                                  appConfig: ApplicationConfig) {
-  def jettyPort: Int = appConfig.jettyPort
-  def jettyContextPath: String = appConfig.jettyContextPath
+  def connectorConfig: ConnectorConfig = appConfig.connectorConfig
 }
 
 object ApplicationContext {
@@ -38,10 +37,10 @@ object ApplicationContext {
     val appConfig = ApplicationConfig(config)
     val projectActor = new ProjectActor(appConfig.projectConfig)
     val integrationProvider = appConfig.integrationProvidersFactory(projectActor)
-    val updater = new ProjectUpdater(integrationProvider, appConfig.updatePeriodSeconds)
+    val updater = new ProjectUpdater(integrationProvider, appConfig.durations.fetchPeriod)
     val columnsHistoryProvider = new SprintColumnsHistoryProvider(
       projectActor,
-      appConfig.initialFetchToSprintStartAcceptableDelayMinutes
+      appConfig.durations.initialFetchToSprintStartAcceptableDelayMinutes
     )(appConfig.projectConfig)
 
     new ApplicationContext(

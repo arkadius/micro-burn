@@ -28,7 +28,7 @@ class BoardStateRepositoryRandomTest extends FlatSpec with GeneratorDrivenProper
 
   import org.scalatest.OptionValues._
 
-  implicit val config = ProjectConfig(TestConfig.withDefaultsFallback())
+  implicit val config = ProjectConfig(TestConfig.withDefaultsFallback().getConfig("project"))
 
   it should "work round trip" in {
     forAll(SprintGenerator.withEmptyEvents) { sprint =>

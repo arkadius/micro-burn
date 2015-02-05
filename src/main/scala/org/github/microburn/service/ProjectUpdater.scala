@@ -15,23 +15,30 @@
  */
 package org.github.microburn.service
 
+import java.util.Date
+
 import net.liftweb.common.Failure
 import net.liftweb.util.Helpers._
 import net.liftweb.util.Schedule
 import org.github.microburn.integration.IntegrationProvider
 import org.github.microburn.util.logging.Slf4jLogging
 
-class ProjectUpdater(provider: IntegrationProvider, updatePeriodSeconds: Int) extends Slf4jLogging {
+import scala.concurrent.duration.FiniteDuration
 
+class ProjectUpdater(provider: IntegrationProvider, fetchPeriod: FiniteDuration) extends Slf4jLogging {
+
+  import org.github.microburn.util.concurrent.FutureEnrichments._
+  
   def start(): Unit = repeat()
 
   private def repeat(): Unit = {
-    provider.updateProject().onComplete { result =>
+    val timestamp = new Date
+    provider.updateProject(timestamp).onComplete { result =>
       result match {
         case Failure(msg, ex, _) => error(s"Error while updating project data: ${ex.map(_.getMessage).openOr(msg)}")
         case _ =>
       }
-      Schedule.schedule(() => repeat(), updatePeriodSeconds.seconds)
+      Schedule.schedule(() => repeat(), fetchPeriod.toTimeSpan)
     }
   }
 

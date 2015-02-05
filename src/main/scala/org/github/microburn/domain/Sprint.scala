@@ -29,11 +29,18 @@ case class Sprint(id: String,
 
   def initialStoryPointsSum: BigDecimal = initialBoard.userStoriesStoryPointsSum
 
+  def finish(timestamp: Date): SprintUpdateResult = {
+    val updatedSprint = copy(
+      details = details.finish
+    )
+    SprintUpdateResult(currentBoard, updatedSprint, Nil, sprintFinished = true, timestamp)
+  }
+
   def update(updatedUserStories: Seq[UserStory], finishSprint: Boolean)
             (timestamp: Date): SprintUpdateResult = {
     val updatedBoard = BoardState(updatedUserStories, timestamp)
     val newAddedEvents = currentBoard.diff(updatedBoard)
-    val finished = isActive && finishSprint
+    val finished = !isActive || finishSprint
     
     val updatedSprint = copy(
       details = if (finished) details.finish else details,

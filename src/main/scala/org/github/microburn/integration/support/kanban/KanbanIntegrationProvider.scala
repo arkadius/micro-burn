@@ -15,16 +15,32 @@
  */
 package org.github.microburn.integration.support.kanban
 
+import java.util.Date
+
 import net.liftweb.actor.LAFuture
-import org.github.microburn.domain.actors.ProjectActor
+import org.github.microburn.domain.actors.{UpdateSprint, ProjectActor}
 import org.github.microburn.integration.IntegrationProvider
 
-class KanbanIntegrationProvider(boardStateProvider: BoardStateProvider)(projectActor: ProjectActor) extends IntegrationProvider{
-  import org.github.microburn.util.concurrent.FutureEnrichments._
+import scala.concurrent.duration.FiniteDuration
 
-  override def updateProject(): LAFuture[_] = {
-    boardStateProvider.currentUserStories.withLoggingFinished(s"user stories count: " + _.size)
+class KanbanIntegrationProvider(boardStateProvider: BoardStateProvider, initializationTimeout: FiniteDuration)
+                               (projectActor: ProjectActor)
+  extends IntegrationProvider
+  with ScrumSimulation {
+
+  import org.github.microburn.util.concurrent.FutureEnrichments._
+  import org.github.microburn.util.concurrent.LiftActorEnrichments._
+
+  override def updateProject(implicit timestamp: Date): LAFuture[_] = {
+    for {
+      fetchedCurrentSprintsBoardState <- (scrumSimulator ?? FetchCurrentSprintsBoardState)
+        .mapTo[Option[FetchedBoardState]]
+        .withLoggingFinished { state => s"fetched sprint state: ${state.map(_.toString)}"  }
+      updateResult <- fetchedCurrentSprintsBoardState.map { fetchedState =>
+        projectActor ?? UpdateSprint(fetchedState.sprintId, fetchedState.userStories, finishSprint = false, timestamp)
+      }.toFutureOfOption
+    } yield updateResult
   }
 
-  override def optionalScrumSimulatorFactory: Option[ScrumSimulator] = None
+  override val scrumSimulator: ScrumSimulator = new ScrumSimulator(boardStateProvider, projectActor)(initializationTimeout)
 }
