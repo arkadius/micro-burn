@@ -17,6 +17,7 @@ package org.github.microburn.integration.support.kanban
 
 import java.util.Date
 
+import net.liftmodules.ng.Angular.NgModel
 import net.liftweb.actor.LiftActor
 import org.github.microburn.domain.{UserStory, SprintDetails}
 import org.github.microburn.domain.actors._
@@ -64,6 +65,9 @@ class ScrumSimulator(boardStateProvider: BoardStateProvider, projectActor: Proje
       val sprintInfo = currentSprintsInfo.map(_.next(details)).getOrElse(SprintInfo.zero(details))
       currentSprintsInfo = Some(sprintInfo)
       reply(projectActor !< CreateNewSprint(sprintInfo.id.toString, details, userStories, new Date))
+    case DoFinishSprint(id) =>
+      val finishFuture = this ?? FinishCurrentSprint ifMet currentSprintsInfo.exists(_.id.toString == id)
+      reply(finishFuture)
     case FinishCurrentSprint =>
       val finishFuture = currentSprintsInfo.filter(_.isActive).map { sprintsInfo =>
         val finishedSprintInfo = sprintsInfo.finish
@@ -116,6 +120,8 @@ object FetchedBoardState {
   }
 }
 
-case class StartSprint(name: String, start: Date, end: Date)
+case class StartSprint(name: String, start: Date, end: Date) extends NgModel
+
+case class DoFinishSprint(id: String)
 
 case object FinishCurrentSprint

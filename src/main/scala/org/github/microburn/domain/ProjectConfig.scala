@@ -28,6 +28,8 @@ case class ProjectConfig(boardColumns: List[BoardColumn], dataRoot: File) {
     status <- column.statusIds
   } yield status -> column).toMap
 
+  def containsStatus(status: String): Boolean = statuses.contains(status)
+
   def boardColumnIndex(status: String): Int = statuses(status).index
 
   def lastDoneColumnIndex: Int = {

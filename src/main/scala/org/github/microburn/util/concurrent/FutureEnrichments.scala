@@ -59,6 +59,10 @@ object FutureEnrichments {
         LAFuture(() => Unit)
     }
 
+    def boxed: LAFuture[Box[T]] = {
+      laFuture.map(Full(_))
+    }
+
   }
 
   implicit class OptionOfFuture[T](opt: Option[LAFuture[T]]) {

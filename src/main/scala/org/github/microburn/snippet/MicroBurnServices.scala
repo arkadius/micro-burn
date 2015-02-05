@@ -16,15 +16,29 @@
 package org.github.microburn.snippet
 
 import net.liftmodules.ng.Angular._
+import net.liftweb.common.Full
 import org.github.microburn.ApplicationContext
+import org.github.microburn.domain.actors.FinishSprint
+import org.github.microburn.integration.support.kanban.{DoFinishSprint, FinishCurrentSprint, StartSprint, ScrumSimulation}
+import org.github.microburn.service.ColumnsHistory
 
 object MicroBurnServices {
-  def render = renderIfNotAlreadyDefined(
-    angular.module("MicroBurnServices")
+  import org.github.microburn.util.concurrent.FutureEnrichments._
+  import org.github.microburn.util.concurrent.LiftActorEnrichments._
+
+  def render = renderIfNotAlreadyDefined {
+    val module = angular.module("MicroBurnServices")
       .factory("historySvc", jsObjFactory()
-        .future("getHistory", (sprintId: String) =>
-          ApplicationContext().columnsHistoryProvider.columnsHistory(sprintId)
-        )
+        .future("getHistory", (sprintId: String) => ApplicationContext().columnsHistoryProvider.columnsHistory(sprintId))
       )
-  )
+    ApplicationContext().integrationProvider match {
+      case s: ScrumSimulation =>
+        module.factory("scrumSimulatorSvc", jsObjFactory()
+          .future[StartSprint, Any]("startSprint",  (start: StartSprint) => (s.scrumSimulator ?? start).boxed)
+          .future("finishSprint", (sprintId: String) => (s.scrumSimulator ?? DoFinishSprint(sprintId)).boxed)
+        )
+      case _ =>
+        module
+    }
+  }
 }

@@ -19,10 +19,12 @@ import java.io.File
 
 import com.typesafe.config.ConfigFactory
 import org.github.microburn.domain.actors.ProjectActor
+import org.github.microburn.integration.IntegrationProvider
 import org.github.microburn.service.{ProjectUpdater, SprintColumnsHistoryProvider}
 
 class ApplicationContext private(val projectActor: ProjectActor,
                                  val updater: ProjectUpdater,
+                                 val integrationProvider: IntegrationProvider,
                                  val columnsHistoryProvider: SprintColumnsHistoryProvider,
                                  appConfig: ApplicationConfig) {
   def connectorConfig: ConnectorConfig = appConfig.connectorConfig
@@ -46,6 +48,7 @@ object ApplicationContext {
     new ApplicationContext(
       projectActor            = projectActor,
       updater                 = updater,
+      integrationProvider     = integrationProvider,
       columnsHistoryProvider  = columnsHistoryProvider,
       appConfig               = appConfig)
   }

@@ -10,6 +10,8 @@
           <select ng-model="selectedSprint"
                   ng-options="sprint.details.name for sprint in projectState.sprints | orderBy:'details.start':true track by sprint.id">
           </select>
+          <button ng-click="startSprint()">start</button>
+          <button ng-click="stopSprint()">stop</button>
           <div sprint-chart></div>
         </div>
       </div>

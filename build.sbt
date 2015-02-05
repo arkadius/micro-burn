@@ -85,3 +85,7 @@ mainClass in assembly := Some("org.github.microburn.Main")
 assemblyJarName in assembly := s"${name.value}-${version.value}.jar"
 
 Revolver.settings
+
+mainClass in Revolver.reStart := Some("org.github.microburn.DevMain")
+
+Revolver.enableDebugging(port = 5005, suspend = false)

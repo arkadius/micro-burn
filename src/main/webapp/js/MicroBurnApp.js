@@ -1,6 +1,6 @@
 var app = angular.module("MicroBurnApp", ["MicroBurnServices", 'ngCookies']);
 
-app.controller("ProjectCtrl", ['$scope', 'historySvc', function ($scope, historySvc) {
+app.controller("ProjectCtrl", ['$scope', 'historySvc', 'scrumSimulatorSvc', function ($scope, historySvc, scrumSimulatorSvc) {
   $scope.projectState = {
     sprints: []
   };
@@ -26,6 +26,16 @@ app.controller("ProjectCtrl", ['$scope', 'historySvc', function ($scope, history
       refreshChart();
     }
   });
+
+  $scope.startSprint = function () {
+    window.scrumSimulatorSvc = scrumSimulatorSvc;
+    console.log(scrumSimulatorSvc);
+    scrumSimulatorSvc.startSprint({
+      name: "asdf",
+      start: "2015-01-01T00:00:00Z",
+      end: "2015-03-01T00:00:00Z"
+    });
+  }
 }]);
 
 app.directive('sprintChart', ['$cookies', function ($cookies) {

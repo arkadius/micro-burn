@@ -18,6 +18,7 @@ package org.github.microburn.integration.support.kanban
 import java.util.Date
 
 import net.liftweb.actor.LAFuture
+import org.github.microburn.domain.ProjectConfig
 import org.github.microburn.domain.actors.{UpdateSprint, ProjectActor}
 import org.github.microburn.integration.IntegrationProvider
 

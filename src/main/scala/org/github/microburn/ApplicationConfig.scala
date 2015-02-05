@@ -32,8 +32,9 @@ case class ApplicationConfig(connectorConfig: ConnectorConfig,
 object ApplicationConfig {
   
   def apply(config: Config): ApplicationConfig = {
+    val projectConfig = ProjectConfig(config.getConfig("project"))
     val durations = DurationsConfig(config.getConfig("durations"))
-    val partiallyPreparedConfig = PartiallyPreparedConfig(durations)
+    val partiallyPreparedConfig = PartiallyPreparedConfig(durations, projectConfig)
     val providersFactory = IntegrationProviderConfigurer.firstConfiguredProvidersFactory(partiallyPreparedConfig).applyOrElse(
       config,
       (_:Config) => throw new IllegalArgumentException("You must define configuration of service that you want to integrate with")
@@ -41,7 +42,7 @@ object ApplicationConfig {
 
     ApplicationConfig(
       connectorConfig = ConnectorConfig(config.getConfig("connector")),
-      projectConfig = ProjectConfig(config.getConfig("project")),
+      projectConfig = projectConfig,
       durations = durations,
       integrationProvidersFactory = providersFactory)
   }
@@ -59,7 +60,7 @@ object ConnectorConfig {
   }
 }
 
-case class PartiallyPreparedConfig(durations: DurationsConfig)
+case class PartiallyPreparedConfig(durations: DurationsConfig, projectConfig: ProjectConfig)
 
 case class DurationsConfig(initializationTimeout: FiniteDuration,
                            fetchPeriod: FiniteDuration,

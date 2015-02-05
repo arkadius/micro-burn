@@ -26,7 +26,7 @@ object TrelloProviderConfigurer extends IntegrationProviderConfigurer{
     case config if config.hasPath("trello.token") =>
       val trelloConfig = TrelloConfig(config.getConfig("trello"))
       new KanbanIntegrationProvider(
-        new TrelloBoardStateProvider(trelloConfig),
+        new TrelloBoardStateProvider(trelloConfig, partiallyPreparedConfig.projectConfig.containsStatus),
         partiallyPreparedConfig.durations.initializationTimeout
       )(_)
   }
