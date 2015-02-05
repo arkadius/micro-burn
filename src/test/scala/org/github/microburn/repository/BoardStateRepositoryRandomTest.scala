@@ -20,7 +20,7 @@ import java.io.File
 import com.typesafe.config.ConfigFactory
 import org.github.microburn.TestConfig
 import org.github.microburn.domain.generator.SprintGenerator
-import org.github.microburn.domain.{SampleSprint, ProjectConfig, SampleTasks}
+import org.github.microburn.domain.{ProjectConfigUtils, SampleSprint, ProjectConfig, SampleTasks}
 import org.scalatest.prop.GeneratorDrivenPropertyChecks
 import org.scalatest.{FlatSpec, Matchers}
 
@@ -28,7 +28,7 @@ class BoardStateRepositoryRandomTest extends FlatSpec with GeneratorDrivenProper
 
   import org.scalatest.OptionValues._
 
-  implicit val config = ProjectConfig(TestConfig.withDefaultsFallback().getConfig("project"))
+  implicit val config = ProjectConfigUtils.defaultConfig
 
   it should "work round trip" in {
     forAll(SprintGenerator.withEmptyEvents) { sprint =>

@@ -30,7 +30,7 @@ class ScrumSimulatorTest extends FlatSpec with Matchers with ProjectActorHelper 
   import org.github.microburn.util.concurrent.LiftActorEnrichments._
   import OptionValues._
 
-  implicit val config = ProjectConfig(TestConfig.withDefaultsFallback().getConfig("project"))
+  implicit val config = ProjectConfigUtils.defaultConfig
 
   it should "initial fetch project state" in {
     val givenSprint = SampleSprint.withEmptyEvents().copy(id = "1")

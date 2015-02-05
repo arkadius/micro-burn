@@ -15,7 +15,7 @@
  */
 package org.github.microburn.domain.generator
 
-import org.github.microburn.domain.{BoardState, TechnicalTask, UserStory}
+import org.github.microburn.domain.{ProjectConfig, BoardState, TechnicalTask, UserStory}
 import org.scalacheck.Gen
 
 object BoardChangesGenerator {
@@ -45,7 +45,7 @@ object BoardChangesGenerator {
       updated = parent.remove(technicalTaskId)      
     } yield board.withUpdateNestedTask(updated)
   
-  private def addTechnicalTaskGenerator(board: BoardState): Gen[BoardState] =
+  private def addTechnicalTaskGenerator(board: BoardState)(implicit config: ProjectConfig): Gen[BoardState] =
     for {
       parent <- Gen.oneOf(board.userStories.toSeq)
       technicalStoryPoints <- StoryPointsGenerator.chooseAtMost(parent.storyPointsWithoutSubTasks)
@@ -79,7 +79,7 @@ object BoardChangesGenerator {
       userStory <- TasksGenerator.userStoryGenerator
     } yield board.copy(userStories = board.userStories :+ userStory)
   
-  def changesGenerator(board: BoardState): Gen[BoardState] =
+  def changesGenerator(board: BoardState)(implicit config: ProjectConfig): Gen[BoardState] =
     Gen.oneOf(
       updateTechnicalTaskGenerator(board),
       removeTechnicalTaskGenerator(board),

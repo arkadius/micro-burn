@@ -21,7 +21,7 @@ import org.scalatest.{FlatSpec, Matchers}
 class ProjectConfigTest extends FlatSpec with Matchers {
 
   it should "create project config from conf having columns with statuses" in {
-    val config = ProjectConfig(TestConfig.withDefaultsFallback().getConfig("project"))
+    val config = ProjectConfigUtils.defaultConfig
 
     config.boardColumns should have length 5
   }

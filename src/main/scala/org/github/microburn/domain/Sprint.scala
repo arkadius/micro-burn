@@ -27,7 +27,7 @@ case class Sprint(id: String,
 
   def initialDate: Date = initialBoard.date
 
-  def initialStoryPointsSum: BigDecimal = initialBoard.userStoriesStoryPointsSum
+  def initialStoryPointsSum(implicit projectConfig: ProjectConfig): BigDecimal = initialBoard.userStoriesStoryPointsSum
 
   def finish(timestamp: Date): SprintUpdateResult = {
     val updatedSprint = copy(

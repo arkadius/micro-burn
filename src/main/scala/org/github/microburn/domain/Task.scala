@@ -17,6 +17,7 @@ package org.github.microburn.domain
 
 import java.util.Date
 
+import scala.math.BigDecimal.RoundingMode
 import scalaz._
 import Scalaz._
 
@@ -30,7 +31,10 @@ sealed trait Task { self =>
   def status: TaskStatus
 
   def taskAdded(implicit timestamp: Date): Seq[TaskAdded]
-  def storyPointsWithoutSubTasks: BigDecimal
+  def storyPointsWithoutSubTasks(implicit config: ProjectConfig): BigDecimal
+
+  def storyPointsOfSelf(implicit config: ProjectConfig): BigDecimal
+
   def boardColumnIndex(implicit config: ProjectConfig): Int = status match {
     case SpecifiedStatus(status) => config.boardColumnIndex(status)
     case TaskCompletedStatus => config.lastDoneColumnIndex
@@ -41,10 +45,12 @@ case class UserStory(taskId: String,
                      taskName: String,
                      optionalStoryPoints: Option[BigDecimal],
                      technicalTasksWithoutParentId: IndexedSeq[TechnicalTask],
-                     status: TaskStatus) extends Task with ComparableWith[UserStory] with HavingNestedTasks[TechnicalTaskWithParentId] {
+                     status: TaskStatus) extends Task with ComparableWith[UserStory] with HavingNestedTasks[TechnicalTaskWithParent] {
+  private final val SP_SPLITTED_BETWEEN_TECHICAL_SCALE: Int = 1
+
   override type Self = UserStory
 
-  protected val nestedTasks: Seq[TechnicalTaskWithParentId] = technicalTasksWithoutParentId.map(TechnicalTaskWithParentId(_, taskId))
+  protected val nestedTasks: Seq[TechnicalTaskWithParent] = technicalTasksWithoutParentId.map(TechnicalTaskWithParent(_, this))
 
   override def parentUserStoryId: String = taskId
 
@@ -64,10 +70,10 @@ case class UserStory(taskId: String,
 
   def update(taskId: String)(updateTechnical: TechnicalTask => TechnicalTask): UserStory = {
     val updated = updateTechnical(taskById(taskId).technical)
-    withUpdateNestedTask(TechnicalTaskWithParentId(updated, taskId))
+    withUpdateNestedTask(TechnicalTaskWithParent(updated, this))
   }
 
-  override protected def updateNestedTasks(newNestedTasks: Seq[TechnicalTaskWithParentId]): Self =
+  override protected def updateNestedTasks(newNestedTasks: Seq[TechnicalTaskWithParent]): Self =
     copy(technicalTasksWithoutParentId = newNestedTasks.map(_.technical).toIndexedSeq)
 
   override def diff(other: Self)(implicit timestamp: Date): Seq[TaskEvent] = {
@@ -76,10 +82,29 @@ case class UserStory(taskId: String,
 
   def flattenTasks: List[Task] = this :: nestedTasks.toList
 
-  override def storyPointsWithoutSubTasks: BigDecimal = {
-    val storyPointsOfMine = optionalStoryPoints.getOrElse(BigDecimal(0))
-    val diff = storyPointsOfMine - nestedTasksStoryPointsSum
-    diff.max(0)
+  override def storyPointsOfSelf(implicit config: ProjectConfig): BigDecimal  = {
+    optionalStoryPoints orElse
+      config.defaultStoryPointsForUserStrories getOrElse
+      BigDecimal(0)
+  }
+
+  override def storyPointsWithoutSubTasks(implicit config: ProjectConfig): BigDecimal = {
+    val diff = storyPointsOfSelf - nestedTasksStoryPointsSum
+    diff.max(BigDecimal(0))
+  }
+
+  def storyPointsToSplitPerTechnical(implicit config: ProjectConfig): BigDecimal = {
+    if (config.splitSpBetweenTechnicalTasks) {
+      val definedTechnicalPoints = technicalTasksWithoutParentId.flatMap(_.optionalStoryPoints).sum
+      val sumPointsToSplitBetweenTechnical = (storyPointsOfSelf - definedTechnicalPoints).max(0)
+      val technicalWithoutDefinedSp = technicalTasksWithoutParentId.count(_.optionalStoryPoints.isEmpty)
+      if (technicalWithoutDefinedSp > 0)
+        (sumPointsToSplitBetweenTechnical / technicalWithoutDefinedSp).setScale(SP_SPLITTED_BETWEEN_TECHICAL_SCALE, RoundingMode.FLOOR)
+      else
+        BigDecimal(0)
+    } else {
+      BigDecimal(0)
+    }
   }
 
   override def toString: String = {
@@ -90,19 +115,26 @@ case class UserStory(taskId: String,
 
 }
 
-case class TechnicalTaskWithParentId(technical: TechnicalTask,
-                                     parentUserStoryId: String) extends Task with ComparableWith[TechnicalTaskWithParentId] {
+case class TechnicalTaskWithParent(technical: TechnicalTask,
+                                   parent: UserStory) extends Task with ComparableWith[TechnicalTaskWithParent] {
+  override def parentUserStoryId = parent.taskId
+
   override def taskId: String = technical.taskId
   override def taskName: String = technical.taskName
   override def optionalStoryPoints: Option[BigDecimal] = technical.optionalStoryPoints
   override def status: TaskStatus = technical.status
 
   override def isTechnicalTask: Boolean = true
-  override def storyPointsWithoutSubTasks: BigDecimal = technical.optionalStoryPoints.getOrElse(0)
+
+  override def storyPointsOfSelf(implicit config: ProjectConfig): BigDecimal  = {
+    optionalStoryPoints getOrElse parent.storyPointsToSplitPerTechnical
+  }
+
+  override def storyPointsWithoutSubTasks(implicit config: ProjectConfig): BigDecimal = storyPointsOfSelf
 
   override def taskAdded(implicit timestamp: Date): Seq[TaskAdded] = Seq(TaskAdded(this))
 
-  override def diff(other: TechnicalTaskWithParentId)(implicit timestamp: Date): Seq[TaskEvent] = {
+  override def diff(other: TechnicalTaskWithParent)(implicit timestamp: Date): Seq[TaskEvent] = {
     selfDiff(other)
   }
 }

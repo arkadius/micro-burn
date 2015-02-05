@@ -80,7 +80,7 @@ class SprintColumnsHistoryProvider(projectActor: ProjectActor,
     boardColumnsWithDroppedFirst.map { column =>
       val storyPointsForColumn = zipped.map { allColumnsInfo =>
         val storyPoints = allColumnsInfo.storyPointsForColumn(column.index)
-        HistoryProbe(allColumnsInfo.date.getTime, storyPoints.toFloat)
+        HistoryProbe(allColumnsInfo.date, storyPoints)
       }.toList
       ColumnHistory(column.name, storyPointsForColumn)
     }
@@ -96,4 +96,10 @@ case class ColumnsHistory(startDate: Long, series: List[ColumnHistory])
 
 case class ColumnHistory(name: String, data: List[HistoryProbe])
 
-case class HistoryProbe(x: Long, y: Float)
+case class HistoryProbe private(x: Long, y: Double)
+
+object HistoryProbe {
+  def apply(x: Date, y: BigDecimal): HistoryProbe = {
+    new HistoryProbe(x.getTime, y.toString().toDouble)
+  }
+}

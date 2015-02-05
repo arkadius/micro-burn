@@ -22,7 +22,11 @@ import com.typesafe.config.Config
 import scalaz._
 import Scalaz._
 
-case class ProjectConfig(boardColumns: List[BoardColumn], dataRoot: File) {
+case class ProjectConfig(boardColumns: List[BoardColumn],
+                         dataRoot: File,
+                         defaultStoryPointsForUserStrories: Option[BigDecimal],
+                         splitSpBetweenTechnicalTasks: Boolean) {
+
   private val statuses = (for {
     column <- boardColumns
     status <- column.statusIds
@@ -48,11 +52,23 @@ object ProjectConfig {
   import collection.convert.wrapAll._
 
   def apply(config: Config): ProjectConfig = {
-    val columns = for {
+    val columns = parseColumns(config)
+    val defaultStoryPointsForUserStrories = config.optional("defaultStoryPointsForUserStrories")(_.getBigDecimal)
+    val splitSpBetweenTechnicalTasks = config.getDefinedBoolean("splitSpBetweenTechnicalTasks")
+    val dataRoot = new File(config.getString("dataRoot"))
+    ProjectConfig(
+      boardColumns = columns,
+      dataRoot = dataRoot,
+      defaultStoryPointsForUserStrories = defaultStoryPointsForUserStrories,
+      splitSpBetweenTechnicalTasks = splitSpBetweenTechnicalTasks)
+  }
+  
+  private def parseColumns(config: Config): List[BoardColumn] = {
+    (for {
       (columnConfig, index) <- config.getConfigList("boardColumns").zipWithIndex
       name = columnConfig.getString("name")
       statusIds = statusesFromStatusIds(columnConfig) orElse statusesFromId(columnConfig) getOrElse {
-        throw new IllegalArgumentException("Missing field: statusIds or id")
+        throw new scala.IllegalArgumentException("Missing field: statusIds or id")
       }
       isBacklogColumn = columnConfig.getDefinedBoolean("backlogColumn")
       isDoneColumn = columnConfig.getDefinedBoolean("doneColumn")
@@ -62,9 +78,7 @@ object ProjectConfig {
       statusIds = statusIds,
       isBacklogColumn = isBacklogColumn,
       isDoneColumn = isDoneColumn
-    )
-    val dataRoot = new File(config.getString("dataRoot"))
-    ProjectConfig(columns.toList, dataRoot)
+    )).toList
   }
 
   private def statusesFromStatusIds(columnConfig: Config): Option[List[String]] = {

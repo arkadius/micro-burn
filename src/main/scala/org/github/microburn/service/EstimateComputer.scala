@@ -26,8 +26,8 @@ object EstimateComputer {
   def estimatesBetween(start: DateTime, end: DateTime, storyPointsSum: BigDecimal): List[HistoryProbe] = {
     if (storyPointsSum == BigDecimal(0)) {
       List(
-        HistoryProbe(start.getMillis, 0),
-        HistoryProbe(end.getMillis, 0)
+        HistoryProbe(start.toDate, BigDecimal(0)),
+        HistoryProbe(end.toDate, BigDecimal(0))
       )
     } else {
       estimatesForNonZeroStoryPointsSum(start, end, storyPointsSum)
@@ -40,7 +40,7 @@ object EstimateComputer {
     val steps = computeSteps(storyPointsSum)
     steps.map { storyPoints =>
       val date = momentInIntervals(intervalsAndSums, (sumOfIntervalsMillis * (1 - storyPoints / storyPointsSum)).toLong)
-      HistoryProbe(date.getMillis, storyPoints.toFloat)
+      HistoryProbe(date.toDate, storyPoints)
     }.toList
   }
 

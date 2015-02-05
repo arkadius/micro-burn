@@ -29,9 +29,9 @@ trait HavingNestedTasks[NestedTaskType <: Task with ComparableWith[NestedTaskTyp
 
   protected def nestedTask(taskId: String): Option[NestedTaskType] = taskById.get(taskId)
 
-  protected def nestedTasksStoryPointsSum: BigDecimal = {
-    nestedTasks.flatMap { task =>
-      task.optionalStoryPoints
+  protected def nestedTasksStoryPointsSum(implicit projectConfig: ProjectConfig): BigDecimal = {
+    nestedTasks.map { task =>
+      task.storyPointsOfSelf
     }.sum
   }
 

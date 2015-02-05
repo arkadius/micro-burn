@@ -17,6 +17,7 @@ package org.github.microburn.domain
 
 import java.util.Date
 
+import org.github.microburn.TestConfig
 import org.github.microburn.domain.generator.{BoardStateGenerator, BoardChangesGenerator}
 import org.scalacheck.Gen
 import org.scalatest.prop.GeneratorDrivenPropertyChecks
@@ -24,6 +25,7 @@ import org.scalatest.{FlatSpec, Matchers}
 
 class BoardStateRandomTest extends FlatSpec with GeneratorDrivenPropertyChecks with Matchers {
 
+  implicit val projectConfig = ProjectConfigUtils.defaultConfig
   implicit val testConfig = PropertyCheckConfig(minSuccessful = 10)
 
   it should "return empty result for the same boards" in {

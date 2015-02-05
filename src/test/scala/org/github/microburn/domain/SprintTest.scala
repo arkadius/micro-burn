@@ -23,7 +23,7 @@ import org.scalatest.{Inside, FlatSpec, Matchers}
 
 class SprintTest extends FlatSpec with Matchers with Inside {
 
-  implicit val config = ProjectConfig(TestConfig.withDefaultsFallback().getConfig("project"))
+  implicit val config = ProjectConfigUtils.defaultConfig
 
   it should "give correct story points sum" in {
     val sprint = SampleSprint.withEmptyEvents(

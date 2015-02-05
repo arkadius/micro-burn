@@ -26,8 +26,12 @@ object ConfigExtensions {
       config.hasPath(path).option(f(config)(path))
     }
 
-    def getDefinedBoolean(path: String, notDefinedDefault: => Boolean = false) = {
+    def getDefinedBoolean(path: String, notDefinedDefault: => Boolean = false): Boolean = {
       config.optional(path)(_.getBoolean).getOrElse(notDefinedDefault)
+    }
+
+    def getBigDecimal(path: String): BigDecimal = {
+      BigDecimal(config.getNumber(path).toString)
     }
   }
 }
