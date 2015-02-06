@@ -11,8 +11,16 @@
                   ng-options="sprint.details.name for sprint in projectState.sprints | orderBy:'details.start':true track by sprint.id">
           </select>
           <button ng-click="startSprint()">start</button>
+          <input type="text" id="default_datetimepicker"/>
           <button ng-click="stopSprint()">stop</button>
           <div sprint-chart></div>
+          <script type="application/javascript">
+            $('#default_datetimepicker').datetimepicker({
+              lang: "pl",
+              dayOfWeekStart: 1,
+              format:'Y-m-d H:i'
+            });
+          </script>
         </div>
       </div>
     </div>
