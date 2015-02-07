@@ -1,14 +1,65 @@
+window.dateFormat = 'Y-m-d H:i';
+
+window.wrapServiceCall = function (call) {
+  $("body").addClass("wait");
+  $("#cover").show();
+  window.callResult = call();
+  callResult.catch(function (msg) {
+    window.alert("Error: " + msg);
+  });
+  callResult.then(function () {
+    $("#cover").hide();
+    $("body").removeClass("wait");
+  });
+};
+
 var app = angular.module("MicroBurnApp", ["MicroBurnServices", 'ngCookies']);
 
 app.controller("ProjectCtrl", ['$scope', 'historySvc', 'scrumSimulatorSvc', function ($scope, historySvc, scrumSimulatorSvc) {
-  window.historySvc = historySvc;
+  window.scrumSimulatorSvc = scrumSimulatorSvc;
 
   $scope.projectState = {
     sprints: []
   };
+  $scope.sprintsOrdered = [];
+  $scope.existsActiveSprint = false;
+  $scope.maxSprintId = -1;
+
+  $scope.editedSprint = {
+    name: "",
+    start: "",
+    end: ""
+  };
+
+  $scope.editMode = false;
 
   $scope.$watch("projectState", function (projectState) {
-    $scope.selectedSprint = projectState.sprints[projectState.sprints.length-1];
+    if (projectState.sprints.length == 0)
+      return;
+    var existsActiveSprint = false;
+    var maxId = -1;
+    for (i = 0; i < projectState.sprints.length; i++) {
+      var sprint = projectState.sprints[i];
+      if (sprint.details.isActive) {
+        sprint.details.formattedName = sprint.details.name;
+        sprint.order = "1" + sprint.details.start; // aktywne na górze listy
+        existsActiveSprint = true;
+      } else {
+        sprint.details.formattedName = sprint.details.name + " (inactive)";
+        sprint.order = "0" + sprint.details.start;
+      }
+      var parsedId = parseInt(sprint.id);
+      if (parsedId) {
+        maxId = Math.max(maxId, parsedId);
+      }
+    }
+    $scope.existsActiveSprint = existsActiveSprint;
+    $scope.maxSprintId = maxId;
+    projectState.sprints.sort(function (f, s) {
+      return -f.order.localeCompare(s.order);
+    });
+    $scope.sprintsOrdered = projectState.sprints;
+    $scope.selectedSprint = $scope.sprintsOrdered[0];
   });
 
   var refreshChart = function () {
@@ -20,8 +71,19 @@ app.controller("ProjectCtrl", ['$scope', 'historySvc', 'scrumSimulatorSvc', func
   $scope.$watch("selectedSprint", function (sprint) {
     if (!sprint)
       return;
+    disableEditMode();
     refreshChart();
   });
+
+
+  function disableEditMode() {
+    $scope.editedSprint = {
+      name: "",
+      start: new Date($scope.selectedSprint.details.start).dateFormat(window.dateFormat),
+      end: new Date($scope.selectedSprint.details.end).dateFormat(window.dateFormat)
+    };
+    $scope.editMode = false;
+  }
 
   $scope.$on("boardStateChanged", function (event, sprintId) {
     if (sprintId == $scope.selectedSprint.id) {
@@ -29,13 +91,39 @@ app.controller("ProjectCtrl", ['$scope', 'historySvc', 'scrumSimulatorSvc', func
     }
   });
 
-  $scope.startSprint = function () {
-    scrumSimulatorSvc.startSprint({
-      name: "asdf",
-      start: "2015-01-01T00:00:00Z",
-      end: "2015-03-01T00:00:00Z"
+  $scope.finishSprint = function () {
+    wrapServiceCall(function() {
+      return scrumSimulatorSvc.finishSprint($scope.selectedSprint.id);
     });
-  }
+  };
+
+  $scope.editSprint = function () {
+    $scope.selectedSprint = null;
+    var start = new Date();
+    var end = new Date(start);
+    end.setDate(start.getDate() + 7);
+    $scope.editedSprint = {
+      name: "Sprint " + ($scope.maxSprintId + 2), // +1 for next and +1 for natural indexing,
+      start: start.dateFormat(window.dateFormat),
+      end: end.dateFormat(window.dateFormat)
+    };
+    $scope.editMode = true;
+  };
+
+  $scope.discardEdit = function () {
+    $scope.selectedSprint = $scope.sprintsOrdered[0];
+  };
+
+  $scope.startSprint = function () {
+    wrapServiceCall(function() {
+      var input = {
+        name: $scope.editedSprint.name,
+        start: Date.parseDate($scope.editedSprint.start, window.dateFormat).toISOString().replace(/\..*Z/, "Z"),
+        end: Date.parseDate($scope.editedSprint.end, window.dateFormat).toISOString().replace(/\..*Z/, "Z")
+      };
+      return scrumSimulatorSvc.startSprint(input);
+    });
+  };
 }]);
 
 app.directive('sprintChart', ['$cookies', function ($cookies) {
@@ -87,22 +175,8 @@ app.directive('sprintChart', ['$cookies', function ($cookies) {
       var detail = new Rickshaw.Graph.HoverDetail({
         graph: graph,
         xFormatter: function(x) {
-          var d = new Date(x),
-            month = '' + (d.getMonth() + 1),
-            day = '' + d.getDate(),
-            year = d.getFullYear(),
-            hour = '' + d.getHours(),
-            min = '' + d.getMinutes();
-
-
-          if (month.length < 2) month = '0' + month;
-          if (day.length < 2) day = '0' + day;
-          if (hour.length < 2) hour = '0' + hour;
-          if (min.length < 2) min = '0' + min;
-
-          var formattedDay = [year, month, day].join('-');
-          var formattedTime = [hour, min].join(':');
-          return [formattedDay, formattedTime].join("&nbsp;");
+          var d = new Date(x);
+          return d.dateFormat(window.dateFormat);
         },
         yFormatter: function(y) {
           return y;

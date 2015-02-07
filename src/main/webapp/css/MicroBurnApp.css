@@ -1,4 +1,55 @@
+#cover {
+    position: fixed;
+    top: 0;
+    left: 0;
+    background: rgba(0, 0, 0, 0.0);
+    z-index: 5;
+    width: 100%;
+    height: 100%;
+    display: none;
+}
+
+body.wait, body.wait * {
+    cursor: wait !important;
+}
+
+input:disabled {
+    color: gray;
+}
+
+#sprint-select {
+    position: absolute;
+    width: 170px;
+}
+
+#name-input {
+    width: 235px;
+}
+
+.date-input {
+    width: 110px;
+}
+
+.action-button {
+    width: 100px;
+}
+
+.sprint-details {
+    position: relative;
+    left: 200px;
+    line-height: 20px;
+}
+
+#actions-panel {
+    margin-left: 20px;
+}
+
+#confirm-panel {
+    margin-left: 20px;
+}
+
 #sprint-chart-container {
+    margin-top: 10px;
     position: relative;
     font-family: Arial, Helvetica, sans-serif;
 }
@@ -7,6 +58,7 @@
     position: relative;
     left: 40px;
 }
+
 #sprint-chart-container > #y-axis {
     position: absolute;
     top: 0;
@@ -17,10 +69,16 @@
 #sprint-chart-container > #legend {
     position: absolute;
     top: 200px;
-    left: -110px;
-    background: white;
+    left: -200px;
+    width: 220px;
+    background: rgba(0, 0, 0, 0.0);
 }
 
 #sprint-chart-container > #legend .line {
+    white-space: normal;
     color: #333;
+}
+
+#sprint-chart-container > #legend .label {
+    white-space: normal;
 }

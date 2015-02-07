@@ -72,7 +72,7 @@ class ScrumSimulator(boardStateProvider: BoardStateProvider, projectActor: Proje
       reply(finishFuture)
   }
 
-  def doStartSprint(name: String, start: Date, end: Date): LAFuture[Any] = {
+  private def doStartSprint(name: String, start: Date, end: Date): LAFuture[Any] = {
     for {
       userStories <- boardStateProvider.currentUserStories
       details = SprintDetails(name, start, end)

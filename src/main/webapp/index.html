@@ -6,21 +6,40 @@
       <script data-lift="MicroBurnServices"></script>
       <script type="application/javascript" src="js/MicroBurnApp.js"></script>
       <div ng-app="MicroBurnApp">
-        <div ng-controller="ProjectCtrl" data-lift="Angular.bind?type=ProjectStateBinder">
-          <select ng-model="selectedSprint"
-                  ng-options="sprint.details.name for sprint in projectState.sprints | orderBy:'details.start':true track by sprint.id">
+        <div id="project-panel" ng-controller="ProjectCtrl" data-lift="Angular.bind?type=ProjectStateBinder">
+          <select ng-model="selectedSprint" id="sprint-select"
+                  ng-options="sprint.details.formattedName for sprint in sprintsOrdered track by sprint.id">
           </select>
-          <button ng-click="startSprint()">start</button>
-          <input type="text" id="default_datetimepicker"/>
-          <button ng-click="stopSprint()">stop</button>
+          <div>
+            <span class="sprint-details">
+              from: <input type="text" id="start-date" ng-model="editedSprint.start" ng-disabled="!editMode" class="date-input">
+                to: <input type="text" id="end-date" ng-model="editedSprint.end" ng-disabled="!editMode" class="date-input">
+              <script type="application/javascript">
+                $('#start-date').datetimepicker({
+                  lang: "pl",
+                  dayOfWeekStart: 1,
+                  format: window.dateFormat
+                });
+                $('#end-date').datetimepicker({
+                  lang: "pl",
+                  dayOfWeekStart: 1,
+                  format: window.dateFormat
+                });
+              </script>
+              <span id="actions-panel">
+                <button ng-click="finishSprint()" ng-disabled="!selectedSprint.details.isActive">Finish</button>
+                <button ng-click="editSprint()" ng-disabled="existsActiveSprint">Create new</button>
+              </span>
+            </span>
+          </div>
+          <div class="sprint-details" ng-if="editMode">
+            name: <input type="text" ng-model="editedSprint.name" id="name-input"/>
+            <span id="confirm-panel">
+              <button ng-click="startSprint()">Start</button>
+              <button ng-click="discardEdit()">Discard</button>
+            </span>
+          </div>
           <div sprint-chart></div>
-          <script type="application/javascript">
-            $('#default_datetimepicker').datetimepicker({
-              lang: "pl",
-              dayOfWeekStart: 1,
-              format:'Y-m-d H:i'
-            });
-          </script>
         </div>
       </div>
     </div>
