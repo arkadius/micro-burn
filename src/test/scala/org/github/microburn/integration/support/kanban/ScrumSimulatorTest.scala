@@ -74,7 +74,9 @@ class ScrumSimulatorTest extends FlatSpec with Matchers with ProjectActorHelper 
     val givenId = "12"
     val givenSprint = SampleSprint.withEmptyEvents().copy(id = givenId)
     val projectActor = projectActorWithInitialSprint(givenSprint)
-    checkSprintStart(projectActor, expectedSprintId = "13")
+    an[Exception] should be thrownBy {
+      checkSprintStart(projectActor, expectedSprintId = "13")
+    }
   }
 
   private def checkSprintStart(projectActor: ProjectActor, expectedSprintId: String): Unit = {

@@ -18,7 +18,7 @@ package org.github.microburn.integration.support.kanban
 import java.util.Date
 
 import net.liftmodules.ng.Angular.NgModel
-import net.liftweb.actor.LiftActor
+import net.liftweb.actor.{LAFuture, LiftActor}
 import org.github.microburn.domain.{UserStory, SprintDetails}
 import org.github.microburn.domain.actors._
 
@@ -53,28 +53,32 @@ class ScrumSimulator(boardStateProvider: BoardStateProvider, projectActor: Proje
       }.toFutureOfOption 
       reply(fetchedStateFuture)
     case StartSprint(name, start, end) =>
-      val startFuture = for {
-        _ <- this ?? FinishCurrentSprint ifMet currentSprintsInfo.exists(_.isActive)
-        userStories <- boardStateProvider.currentUserStories
-        details = SprintDetails(name, start, end)
-        // wysyłamy do siebie, żeby mieć pewność, że fetch będzie miał dobry currentSprintsInfo
-        createResult <- this ?? NextSprint(details, userStories)
-      } yield createResult
+      val startFuture =
+        if (currentSprintsInfo.exists(_.isActive))
+          LAFuture(() => throw new IllegalStateException("You must finish current sprint before start new"))
+        else
+          doStartSprint(name, start, end)
       reply(startFuture)
     case NextSprint(details, userStories) =>
       val sprintInfo = currentSprintsInfo.map(_.next(details)).getOrElse(SprintInfo.zero(details))
       currentSprintsInfo = Some(sprintInfo)
       reply(projectActor !< CreateNewSprint(sprintInfo.id.toString, details, userStories, new Date))
     case DoFinishSprint(id) =>
-      val finishFuture = this ?? FinishCurrentSprint ifMet currentSprintsInfo.exists(_.id.toString == id)
-      reply(finishFuture)
-    case FinishCurrentSprint =>
-      val finishFuture = currentSprintsInfo.filter(_.isActive).map { sprintsInfo =>
+      val finishFuture = currentSprintsInfo.filter(f => f.isActive || f.id.toString != id).map { sprintsInfo =>
         val finishedSprintInfo = sprintsInfo.finish
         currentSprintsInfo = Some(finishedSprintInfo)
         projectActor ?? FinishSprint(finishedSprintInfo.id.toString, new Date)
-      }.toFutureOfOption
+      }.getOrElse(LAFuture(() => throw new IllegalArgumentException("You can finish only current active sprint")))
       reply(finishFuture)
+  }
+
+  def doStartSprint(name: String, start: Date, end: Date): LAFuture[Any] = {
+    for {
+      userStories <- boardStateProvider.currentUserStories
+      details = SprintDetails(name, start, end)
+      // wysyłamy do siebie, żeby mieć pewność, że fetch będzie miał dobry currentSprintsInfo
+      createResult <- this ?? NextSprint(details, userStories)
+    } yield createResult
   }
 
   private def optionalLastNumericalSprint(sprints: Seq[SprintWithDetails]): Option[SprintInfo] = {
@@ -123,5 +127,3 @@ object FetchedBoardState {
 case class StartSprint(name: String, start: Date, end: Date) extends NgModel
 
 case class DoFinishSprint(id: String)
-
-case object FinishCurrentSprint

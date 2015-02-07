@@ -25,8 +25,8 @@ class EstimateComputerTest extends FlatSpec with Matchers {
     val end = new DateTime(2014, 12, 19, 0, 0)
     val result = EstimateComputer.estimatesBetween(start, end, 1)
     result shouldEqual List(
-      HistoryProbe(start.getMillis, 1),
-      HistoryProbe(end.getMillis, 0)
+      HistoryProbe(start.toDate, 1),
+      HistoryProbe(end.toDate, 0)
     )
   }
 
@@ -36,9 +36,9 @@ class EstimateComputerTest extends FlatSpec with Matchers {
     val end = new DateTime(2014, 12, 19, 0, 0)
     val result = EstimateComputer.estimatesBetween(start, end, BigDecimal("1.5"))
     result shouldEqual List(
-      HistoryProbe(start.getMillis, 1.5f),
-      HistoryProbe(middle.getMillis, 1),
-      HistoryProbe(end.getMillis, 0)
+      HistoryProbe(start.toDate, BigDecimal("1.5")),
+      HistoryProbe(middle.toDate, 1),
+      HistoryProbe(end.toDate, 0)
     )
   }
 
@@ -47,8 +47,8 @@ class EstimateComputerTest extends FlatSpec with Matchers {
     val end = new DateTime(2014, 12, 19, 0, 0)
     val result = EstimateComputer.estimatesBetween(start, end, 0)
     result shouldEqual List(
-      HistoryProbe(start.getMillis, 0),
-      HistoryProbe(end.getMillis, 0)
+      HistoryProbe(start.toDate, 0),
+      HistoryProbe(end.toDate, 0)
     )
   }
 
