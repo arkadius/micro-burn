@@ -39,10 +39,18 @@ class SprintColumnsHistoryProvider(projectActor: ProjectActor,
   }
 
   private def extractColumnsHistory(history: SprintHistory): ColumnsHistory = {
-    val toPrepend = computeToPrepend(history).toSeq
-    val toAppend = computeToAppend(history)
+    val initialAfterStartPlusAcceptableDelay = initialAfterStartPlusDelay(history)
+    val toPrepend = initialAfterStartPlusAcceptableDelay.option {
+      DateWithColumnsState.zero(history.sprintDetails.start)
+    }.toSeq
+    val toAppend = computeToAppend(history).toSeq
     val fullHistory = toPrepend ++ history.columnStates ++ toAppend
 
+    val initalStoryPoints = if (initialAfterStartPlusAcceptableDelay) {
+      history.initialStoryPointsSum
+    } else {
+      1 // FIXME
+    }
     val baseIndexOnSum = DateWithColumnsState.constIndexOnSum(history.initialStoryPointsSum)
     val withBaseAdded = fullHistory.map(_.multiply(-1).plus(baseIndexOnSum))
 
@@ -56,14 +64,11 @@ class SprintColumnsHistoryProvider(projectActor: ProjectActor,
     ColumnsHistory(startDate.getMillis, columns)
   }
 
-  private def computeToPrepend(history: SprintHistory): Option[DateWithColumnsState] = {
+  private def initialAfterStartPlusDelay(history: SprintHistory): Boolean = {
     val initialDate = new DateTime(history.initialDate)
     val startDatePlusAcceptableDelay =
       new DateTime(history.sprintDetails.start).plusMillis(initialFetchToSprintStartAcceptableDelayMinutes.toMillis.toInt)
-    val initialAfterStartPlusDelay = initialDate.isAfter(startDatePlusAcceptableDelay)
-    initialAfterStartPlusDelay.option {
-      DateWithColumnsState.zero(history.sprintDetails.start)
-    }
+    initialDate.isAfter(startDatePlusAcceptableDelay)
   }
 
   private def computeToAppend(history: SprintHistory): Option[DateWithColumnsState] = {
@@ -76,7 +81,7 @@ class SprintColumnsHistoryProvider(projectActor: ProjectActor,
   }
 
   private def unzipByColumn(zipped: Seq[DateWithColumnsState]): List[ColumnHistory] = {
-    val boardColumnsWithDroppedFirst = config.boardColumns.drop(1)
+    val boardColumnsWithDroppedFirst = config.nonBacklogColumns.drop(1)
     boardColumnsWithDroppedFirst.map { column =>
       val storyPointsForColumn = zipped.map { allColumnsInfo =>
         val storyPoints = allColumnsInfo.storyPointsForColumn(column.index)

@@ -27,6 +27,8 @@ case class ProjectConfig(boardColumns: List[BoardColumn],
                          defaultStoryPointsForUserStrories: Option[BigDecimal],
                          splitSpBetweenTechnicalTasks: Boolean) {
 
+  def nonBacklogColumns: List[BoardColumn] = boardColumns.filterNot(_.isBacklogColumn)
+
   private val statuses = (for {
     column <- boardColumns
     status <- column.statusIds

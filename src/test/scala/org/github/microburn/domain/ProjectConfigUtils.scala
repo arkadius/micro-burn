@@ -20,9 +20,9 @@ import org.github.microburn.TestConfig
 object ProjectConfigUtils {
   def completedColumnIndex(implicit config: ProjectConfig): Int = config.boardColumnIndex(firstCompletedStatus)
 
-  private def firstCompletedStatus(implicit config: ProjectConfig): String = config.boardColumns.last.statusIds.head
+  private def firstCompletedStatus(implicit config: ProjectConfig): String = config.nonBacklogColumns.last.statusIds.head
 
-  def firstNotCompletedStatus(implicit config: ProjectConfig): String = config.boardColumns.head.statusIds.head
+  def firstNotCompletedStatus(implicit config: ProjectConfig): String = config.nonBacklogColumns.head.statusIds.head
 
   def defaultConfig = ProjectConfig(TestConfig.withDefaultsFallback().getConfig("project"))
 

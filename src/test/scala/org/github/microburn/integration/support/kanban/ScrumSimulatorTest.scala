@@ -52,7 +52,7 @@ class ScrumSimulatorTest extends FlatSpec with Matchers with ProjectActorHelper 
     val simulator = new ScrumSimulator(boardStateProvider, projectActor)(5.seconds)
     def sprintIsActive = projectHasOnlyOneSprint(givenId, projectActor)
 
-    simulator ! FinishCurrentSprint
+    simulator ! DoFinishSprint("1")
 
     (for {
       state <- (simulator ?? FetchCurrentSprintsBoardState).mapTo[Option[FetchedBoardState]]

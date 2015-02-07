@@ -24,23 +24,28 @@ import scalaz.Scalaz._
 object EstimateComputer {
 
   def estimatesBetween(start: DateTime, end: DateTime, storyPointsSum: BigDecimal): List[HistoryProbe] = {
-    if (storyPointsSum == BigDecimal(0)) {
-      List(
-        HistoryProbe(start.toDate, BigDecimal(0)),
-        HistoryProbe(end.toDate, BigDecimal(0))
-      )
+    val computed = if (storyPointsSum == BigDecimal(0)) {
+      Nil
     } else {
       estimatesForNonZeroStoryPointsSum(start, end, storyPointsSum)
     }
+    wrapIfRequired(start, end, storyPointsSum)(computed).map(_.toHistory)
   }
 
-  private def estimatesForNonZeroStoryPointsSum(start: DateTime, end: DateTime, storyPointsSum: BigDecimal): List[HistoryProbe] = {
+  private def wrapIfRequired(start: DateTime, end: DateTime, storyPointsSum: BigDecimal)
+                            (probes: List[Probe]): List[Probe] = {
+    val optionalPrepand = (probes.isEmpty || probes.headOption.exists(_.date != start)).option(Probe(start, storyPointsSum))
+    val optionalAppend = (probes.isEmpty || probes.lastOption.exists(_.date != end)).option(Probe(end, BigDecimal(0)))
+    optionalPrepand.toList ::: probes ::: optionalAppend.toList
+  }
+
+  private def estimatesForNonZeroStoryPointsSum(start: DateTime, end: DateTime, storyPointsSum: BigDecimal): List[Probe] = {
     val intervalsAndSums = intervalAndSumMillisAfterThem(businessWeekIntervals(start, end))
     val sumOfIntervalsMillis = intervalsAndSums.lastOption.map(_.sumAfter).getOrElse(0L)
     val steps = computeSteps(storyPointsSum)
     steps.map { storyPoints =>
       val date = momentInIntervals(intervalsAndSums, (sumOfIntervalsMillis * (1 - storyPoints / storyPointsSum)).toLong)
-      HistoryProbe(date.toDate, storyPoints)
+      Probe(date, storyPoints)
     }.toList
   }
 
@@ -90,6 +95,10 @@ object EstimateComputer {
     def dateAfter(millis: Long): DateTime = {
       interval.getStart.plusMillis(millis.toInt)
     }
+  }
+
+  private case class Probe(date: DateTime, sp: BigDecimal) {
+    def toHistory = HistoryProbe(date.toDate, sp)
   }
 
 }
