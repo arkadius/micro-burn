@@ -16,11 +16,8 @@
 package org.github.microburn.snippet
 
 import net.liftmodules.ng.Angular._
-import net.liftweb.common.Full
 import org.github.microburn.ApplicationContext
-import org.github.microburn.domain.actors.FinishSprint
-import org.github.microburn.integration.support.kanban.{DoFinishSprint, FinishCurrentSprint, StartSprint, ScrumSimulation}
-import org.github.microburn.service.ColumnsHistory
+import org.github.microburn.integration.support.kanban.{DoFinishSprint, ScrumSimulation, StartSprint}
 
 object MicroBurnServices {
   import org.github.microburn.util.concurrent.FutureEnrichments._
