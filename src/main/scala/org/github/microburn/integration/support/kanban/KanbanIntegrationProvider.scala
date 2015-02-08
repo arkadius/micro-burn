@@ -18,14 +18,13 @@ package org.github.microburn.integration.support.kanban
 import java.util.Date
 
 import net.liftweb.actor.LAFuture
-import org.github.microburn.domain.ProjectConfig
-import org.github.microburn.domain.actors.{UpdateSprint, ProjectActor}
+import org.github.microburn.domain.actors.{ProjectActor, UpdateSprint}
 import org.github.microburn.integration.IntegrationProvider
 
 import scala.concurrent.duration.FiniteDuration
 
-class KanbanIntegrationProvider(boardStateProvider: BoardStateProvider, initializationTimeout: FiniteDuration)
-                               (projectActor: ProjectActor)
+class KanbanIntegrationProvider(protected val boardStateProvider: BoardStateProvider, protected val initializationTimeout: FiniteDuration)
+                               (protected val projectActor: ProjectActor)
   extends IntegrationProvider
   with ScrumSimulation {
 
@@ -42,6 +41,4 @@ class KanbanIntegrationProvider(boardStateProvider: BoardStateProvider, initiali
       }.toFutureOfOption
     } yield updateResult
   }
-
-  override val scrumSimulator: ScrumSimulator = new ScrumSimulator(boardStateProvider, projectActor)(initializationTimeout)
 }

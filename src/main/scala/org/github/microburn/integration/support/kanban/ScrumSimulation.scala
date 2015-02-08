@@ -15,8 +15,15 @@
  */
 package org.github.microburn.integration.support.kanban
 
+import org.github.microburn.domain.actors.ProjectActor
 import org.github.microburn.integration.IntegrationProvider
 
+import scala.concurrent.duration.FiniteDuration
+
 trait ScrumSimulation { self: IntegrationProvider =>
-  val scrumSimulator: ScrumSimulator
+  def boardStateProvider: BoardStateProvider
+  def projectActor: ProjectActor
+  def initializationTimeout: FiniteDuration
+
+  val scrumSimulator: ScrumSimulator = new ScrumSimulator(boardStateProvider, projectActor)(initializationTimeout)
 }
