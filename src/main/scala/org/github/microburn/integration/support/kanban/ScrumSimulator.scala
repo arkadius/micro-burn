@@ -80,7 +80,7 @@ class ScrumSimulator(boardStateProvider: BoardStateProvider, projectActor: Proje
           else
             Some(sprintInfo)
         }
-        projectActor ?? RemoveSprint(id, new Date)
+        projectActor !< RemoveSprint(id, new Date)
       }
       reply(removeFuture)
   }

@@ -56,16 +56,9 @@ class ProjectActor(config: ProjectConfig) extends LiftActor with ListenerManager
       }
       reply(resultFuture)
     case remove: RemoveSprint =>
-      val resultFuture = for {
-        _ <- sprintActors(remove.sprintId) !< remove
-        _ <- this !< CleanupAfterSprintsRemove(remove.sprintId)
-      } yield Unit
-      resultFuture.onSuccess { _ =>
-        updateListeners()
-      }
-      reply(resultFuture)
-    case CleanupAfterSprintsRemove(sprintId) =>
-      sprintActors -= sprintId
+      sprintActors(remove.sprintId) ! remove
+      sprintActors -= remove.sprintId
+      updateListeners()
       reply(Unit)
     case update: UpdateSprint =>
       val resultFuture = sprintActors(update.sprintId) !< update
@@ -96,8 +89,6 @@ class ProjectActor(config: ProjectConfig) extends LiftActor with ListenerManager
       ProjectState(sprints.sortBy(_.id))
     }
   }
-
-  private case class CleanupAfterSprintsRemove(id: String)
 }
 
 case object GetProjectState

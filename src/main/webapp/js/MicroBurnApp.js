@@ -16,7 +16,9 @@ var app = angular.module("MicroBurnApp", ["MicroBurnServices", 'ngCookies']);
 app.controller("ProjectCtrl", ['$scope', 'historySvc', 'scrumSimulatorSvc', function ($scope, historySvc, scrumSimulatorSvc) {
   window.scrumSimulatorSvc = scrumSimulatorSvc;
 
-  $scope.projectState = null;
+  $scope.projectState = {
+    sprints: []
+  };
   $scope.sprintsOrdered = [];
   $scope.existsActiveSprint = false;
 
@@ -30,7 +32,7 @@ app.controller("ProjectCtrl", ['$scope', 'historySvc', 'scrumSimulatorSvc', func
   $scope.removeDecisionMode = false;
 
   $scope.$watch("projectState", function (projectState) {
-    if (projectState) {
+    if (projectState.sprints.length > 0) {
       var existsActiveSprint = false;
       projectState.sprints.forEach(function (sprint) {
         if (sprint.details.isActive) {
@@ -49,8 +51,14 @@ app.controller("ProjectCtrl", ['$scope', 'historySvc', 'scrumSimulatorSvc', func
       $scope.sprintsOrdered = projectState.sprints;
       $scope.selectedSprint = $scope.sprintsOrdered[0];
     } else {
+      $scope.existsActiveSprint = false;
       $scope.sprintsOrdered = [];
       $scope.selectedSprint = null;
+      $scope.editedSprint = {
+        name: "",
+        start: "",
+        end: ""
+      };
     }
     disableModes();
   });
