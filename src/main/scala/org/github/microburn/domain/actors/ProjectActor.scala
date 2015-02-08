@@ -55,6 +55,18 @@ class ProjectActor(config: ProjectConfig) extends LiftActor with ListenerManager
         updateListeners()
       }
       reply(resultFuture)
+    case remove: RemoveSprint =>
+      val resultFuture = for {
+        _ <- sprintActors(remove.sprintId) !< remove
+        _ <- this !< CleanupAfterSprintsRemove(remove.sprintId)
+      } yield Unit
+      resultFuture.onSuccess { _ =>
+        updateListeners()
+      }
+      reply(resultFuture)
+    case CleanupAfterSprintsRemove(sprintId) =>
+      sprintActors -= sprintId
+      reply(Unit)
     case update: UpdateSprint =>
       val resultFuture = sprintActors(update.sprintId) !< update
       resultFuture.onSuccess { _ =>
@@ -81,9 +93,11 @@ class ProjectActor(config: ProjectConfig) extends LiftActor with ListenerManager
         }
     }.toSeq
     LAFuture.collect(sprintWithStateFutures : _*).map { sprints =>
-      ProjectState(sprints.sortBy(_.details.start))
+      ProjectState(sprints.sortBy(_.id))
     }
   }
+
+  private case class CleanupAfterSprintsRemove(id: String)
 }
 
 case object GetProjectState
@@ -99,6 +113,8 @@ case class SprintWithDetails(id: String, details: SprintDetails) {
 case class CreateNewSprint(sprintId: String, details: SprintDetails, userStories: Seq[UserStory], timestamp: Date)
 
 case class FinishSprint(sprintId: String, timestamp: Date)
+
+case class RemoveSprint(sprintId: String, timestamp: Date)
 
 case class UpdateSprint(sprintId: String, userStories: Seq[UserStory], finishSprint: Boolean, timestamp: Date) {
   def detailsUpdated: Boolean = finishSprint

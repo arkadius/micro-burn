@@ -35,7 +35,14 @@ case class Sprint(id: String,
     val updatedSprint = copy(
       details = details.finish
     )
-    SprintUpdateResult(currentBoard, updatedSprint, Nil, sprintFinished = true, timestamp)
+    SprintUpdateResult(currentBoard, updatedSprint, Nil, sprintFinished = true, sprintRemoved = false, timestamp)
+  }
+
+  def markRemoved(timestamp: Date): SprintUpdateResult = {
+    val updatedSprint = copy(
+      details = details.markRemoved
+    )
+    SprintUpdateResult(currentBoard, updatedSprint, Nil, sprintFinished = false, sprintRemoved = true, timestamp)
   }
 
   def update(updatedUserStories: Seq[UserStory], finishSprint: Boolean)
@@ -49,7 +56,7 @@ case class Sprint(id: String,
       currentBoard = updatedBoard,
       events = events ++ newAddedEvents      
     )
-    SprintUpdateResult(updatedBoard, updatedSprint, newAddedEvents, finished, timestamp)
+    SprintUpdateResult(updatedBoard, updatedSprint, newAddedEvents, finished, sprintRemoved = false, timestamp)
   }
   
   def columnStatesHistory(implicit config: ProjectConfig): Seq[DateWithColumnsState] = {
@@ -69,18 +76,27 @@ case class Sprint(id: String,
   }
 }
 
-case class SprintDetails(name: String, start: Date, end: Date, isActive: Boolean) {
+case class SprintDetails(name: String, start: Date, end: Date, isActive: Boolean, isRemoved: Boolean) {
   def finished = !isActive
 
   def finish = copy(isActive = false)
+
+  def markRemoved = copy(isRemoved = true)
 }
 
 object SprintDetails {
   def apply(name: String, start: Date, end: Date): SprintDetails = SprintDetails(name, start, end, isActive = true)
+
+  def apply(name: String, start: Date, end: Date, isActive: Boolean): SprintDetails = SprintDetails(name, start, end, isActive, isRemoved = false)
 }
 
-case class SprintUpdateResult(private val stateBeforeUpdate: BoardState, updatedSprint: Sprint, newAddedEvents: Seq[TaskEvent], sprintFinished: Boolean, timestamp: Date) {
-  def importantDetailsChange: Boolean = sprintFinished // co ze zmianą nazwy/dat?
+case class SprintUpdateResult(private val stateBeforeUpdate: BoardState,
+                              updatedSprint: Sprint,
+                              newAddedEvents: Seq[TaskEvent],
+                              sprintFinished: Boolean,
+                              sprintRemoved: Boolean,
+                              timestamp: Date) {
+  def importantDetailsChange: Boolean = sprintFinished || sprintRemoved// co ze zmianą nazwy/dat?
   
   def importantBoardStateChange: Boolean = newAddedEvents.nonEmpty
 }

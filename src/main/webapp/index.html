@@ -8,7 +8,8 @@
       <div ng-app="MicroBurnApp">
         <div id="project-panel" ng-controller="ProjectCtrl" data-lift="Angular.bind?type=ProjectStateBinder">
           <select ng-model="selectedSprint" id="sprint-select"
-                  ng-options="sprint.details.formattedName for sprint in sprintsOrdered track by sprint.id">
+                  ng-options="sprint.details.formattedName for sprint in sprintsOrdered track by sprint.id"
+                  ng-disabled="editMode">
           </select>
           <div>
             <span class="sprint-details">
@@ -30,13 +31,23 @@
                 <button ng-click="finishSprint()" ng-disabled="!selectedSprint.details.isActive">Finish</button>
                 <button ng-click="editSprint()" ng-disabled="existsActiveSprint">Create new</button>
               </span>
+              <span id="risky-actions-panel">
+                <button ng-click="askForRemoveSprint()" ng-disabled="selectedSprint == null || selectedSprint.details.isActive">Remove</button>
+              </span>
             </span>
           </div>
           <div class="sprint-details" ng-if="editMode">
             name: <input type="text" ng-model="editedSprint.name" id="name-input"/>
-            <span id="confirm-panel">
+            <span class="confirm-panel">
               <button ng-click="startSprint()">Start</button>
-              <button ng-click="discardEdit()">Discard</button>
+              <button ng-click="discard()">Discard</button>
+            </span>
+          </div>
+          <div class="sprint-details" ng-if="removeDecisionMode">
+            Are you sure want to remove '{{selectedSprint.details.name}}'?
+            <span class="confirm-panel">
+              <button ng-click="removeSprint()">Yes</button>
+              <button ng-click="discard()">Cancel</button>
             </span>
           </div>
           <div sprint-chart></div>

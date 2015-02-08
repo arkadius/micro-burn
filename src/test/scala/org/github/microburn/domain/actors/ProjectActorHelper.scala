@@ -45,6 +45,15 @@ trait ProjectActorHelper extends Matchers {
     new ProjectActor(config)
   }
 
+  def projectHasNoSprint(projectActor: ProjectActor): LAFuture[Unit] = {
+    for {
+      projectState <- (projectActor ?? GetProjectState).mapTo[ProjectState]
+      sprintWithStates = projectState.sprints
+    } yield {
+      sprintWithStates shouldBe empty
+    }
+  }
+
   def projectHasOnlyOneSprint(sprintId: String, projectActor: ProjectActor): LAFuture[Boolean] = {
     for {
       projectState <- (projectActor ?? GetProjectState).mapTo[ProjectState]

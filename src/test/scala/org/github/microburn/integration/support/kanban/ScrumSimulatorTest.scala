@@ -70,13 +70,34 @@ class ScrumSimulatorTest extends FlatSpec with Matchers with ProjectActorHelper 
     checkSprintStart(projectActor, expectedSprintId = "0")
   }
 
-  it should "create next sprint when some created before" in {
+  it should "fail to create next sprint when some created before" in {
     val givenId = "12"
     val givenSprint = SampleSprint.withEmptyEvents().copy(id = givenId)
     val projectActor = projectActorWithInitialSprint(givenSprint)
     an[Exception] should be thrownBy {
       checkSprintStart(projectActor, expectedSprintId = "13")
     }
+  }
+
+  it should "remove finished sprint" in {
+    val givenId = "1"
+    val givenSprint = SampleSprint.withEmptyEvents().copy(id = givenId)
+    val projectActor = projectActorWithInitialSprint(givenSprint)
+    val boardStateProvider = new MockBoardStateProvider
+    val simulator = new ScrumSimulator(boardStateProvider, projectActor)(5.seconds)
+    def noSprints = projectHasNoSprint(projectActor)
+
+    simulator ! DoFinishSprint("1")
+    simulator ! DoRemoveSprint("1")
+
+    (for {
+      state <- (simulator ?? FetchCurrentSprintsBoardState).mapTo[Option[FetchedBoardState]]
+      _ = {
+        state shouldBe None
+        Thread.sleep(500)
+      }
+      _ <- noSprints
+    } yield Unit).await(5.seconds)
   }
 
   private def checkSprintStart(projectActor: ProjectActor, expectedSprintId: String): Unit = {

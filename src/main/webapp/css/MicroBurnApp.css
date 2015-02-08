@@ -27,10 +27,6 @@ input:disabled {
     width: 110px;
 }
 
-.action-button {
-    width: 100px;
-}
-
 .sprint-details {
     position: relative;
     left: 200px;
@@ -41,7 +37,11 @@ input:disabled {
     margin-left: 20px;
 }
 
-#confirm-panel {
+#risky-actions-panel {
+    margin-left: 20px;
+}
+
+.confirm-panel {
     margin-left: 20px;
 }
 

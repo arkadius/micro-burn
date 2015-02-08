@@ -33,6 +33,9 @@ class SprintActor(var sprint: Sprint)
     case FinishSprint(sprintId, timestamp) =>
       require(sprintId == sprint.id)
       updateSprintAndReply(sprint.finish(timestamp))
+    case RemoveSprint(sprintId, timestamp) =>
+      require(sprintId == sprint.id)
+      updateSprintAndReply(sprint.markRemoved(timestamp))
     case UpdateSprint(sprintId, userStories, finishSprint, timestamp) =>
       require(sprintId == sprint.id)
       updateSprintAndReply(sprint.update(userStories, finishSprint)(timestamp))

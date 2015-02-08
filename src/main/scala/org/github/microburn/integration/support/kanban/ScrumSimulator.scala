@@ -70,6 +70,19 @@ class ScrumSimulator(boardStateProvider: BoardStateProvider, projectActor: Proje
         projectActor ?? FinishSprint(finishedSprintInfo.id.toString, new Date)
       }.getOrElse(LAFuture(() => throw new IllegalArgumentException("You can finish only current active sprint")))
       reply(finishFuture)
+    case DoRemoveSprint(id) =>
+      val removeFuture = if (currentSprintsInfo.exists(f => f.id.toString == id && f.isActive)) {
+        LAFuture(() => throw new IllegalArgumentException("You cannot remove active sprint"))
+      } else {
+        currentSprintsInfo = currentSprintsInfo.flatMap { sprintInfo =>
+          if (sprintInfo.id.toString == id)
+            None
+          else
+            Some(sprintInfo)
+        }
+        projectActor ?? RemoveSprint(id, new Date)
+      }
+      reply(removeFuture)
   }
 
   private def doStartSprint(name: String, start: Date, end: Date): LAFuture[Any] = {
@@ -127,3 +140,5 @@ object FetchedBoardState {
 case class StartSprint(name: String, start: Date, end: Date) extends NgModel
 
 case class DoFinishSprint(id: String)
+
+case class DoRemoveSprint(id: String)
