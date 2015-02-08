@@ -9,7 +9,7 @@
         <div id="project-panel" ng-controller="ProjectCtrl" data-lift="Angular.bind?type=ProjectStateBinder">
           <select ng-model="selectedSprint" id="sprint-select"
                   ng-options="sprint.details.formattedName for sprint in sprintsOrdered track by sprint.id"
-                  ng-disabled="editMode">
+                  ng-disabled="editMode || removeDecisionMode">
           </select>
           <div>
             <span class="sprint-details">
