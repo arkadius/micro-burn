@@ -22,9 +22,13 @@ case class BoardState(userStories: Seq[UserStory], date: Date) extends HavingNes
 
   override protected def nestedTasks: Seq[UserStory] = userStories
 
-  def userStoriesStoryPointsSum(implicit projectConfig: ProjectConfig): BigDecimal = nestedTasksStoryPointsSum
+  def userStoriesStoryPointsSum(implicit config: ProjectConfig): BigDecimal =
+    notBacklogUserStories
+      .map(userStory => userStory.storyPointsOfSelf)
+      .sum
 
-  def userStoriesNotDoneStoryPointsSum(implicit projectConfig: ProjectConfig): BigDecimal = storyPointsForColumnsMatching(!_.isDoneColumn)
+  def userStoriesNotDoneStoryPointsSum(implicit config: ProjectConfig): BigDecimal =
+    storyPointsForColumnsMatching(!_.isDoneColumn)
 
   def diff(other: BoardState): Seq[TaskEvent] = nestedDiff(other)(other.date)
 
@@ -91,15 +95,14 @@ case class BoardState(userStories: Seq[UserStory], date: Date) extends HavingNes
   private def storyPointsForColumnsMatching(matchColumn: BoardColumn => Boolean)
                                            (implicit config: ProjectConfig) = {
     (for {
-      task <- flattenTasks
+      userStory <- notBacklogUserStories
+      task <- userStory.flattenTasks
       if matchColumn(config.boardColumns(task.boardColumnIndex))
     } yield task.storyPointsWithoutSubTasks).sum
   }
 
-  private def flattenTasks: Seq[Task] = for {
-    userStory <- userStories
-    task <- userStory.flattenTasks
-  } yield task
+  private def notBacklogUserStories(implicit config: ProjectConfig): Seq[UserStory] =
+    userStories.filterNot(userStory => config.boardColumns(userStory.boardColumnIndex).isBacklogColumn)
 
   override def toString: String = {
     userStories.toSeq.sortBy(_.taskId).map(_.toString).mkString(",\n")
