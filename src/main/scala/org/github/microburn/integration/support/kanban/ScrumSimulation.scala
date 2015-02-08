@@ -21,9 +21,9 @@ import org.github.microburn.integration.IntegrationProvider
 import scala.concurrent.duration.FiniteDuration
 
 trait ScrumSimulation { self: IntegrationProvider =>
-  def boardStateProvider: BoardStateProvider
-  def projectActor: ProjectActor
-  def initializationTimeout: FiniteDuration
+  protected def boardStateProvider: BoardStateProvider
+  protected def projectActor: ProjectActor
+  protected def initializationTimeout: FiniteDuration
 
   val scrumSimulator: ScrumSimulator = new ScrumSimulator(boardStateProvider, projectActor)(initializationTimeout)
 }

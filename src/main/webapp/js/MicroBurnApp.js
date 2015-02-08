@@ -27,12 +27,12 @@ app.controller("ProjectCtrl", ['$scope', 'historySvc', 'scrumSimulatorSvc', func
   };
 
   $scope.editMode = false;
+  $scope.removeDecisionMode = false;
 
   $scope.$watch("projectState", function (projectState) {
     if (projectState) {
       var existsActiveSprint = false;
-      for (var i = 0; i < projectState.sprints.length; i++) {
-        var sprint = projectState.sprints[i];
+      projectState.sprints.forEach(function (sprint) {
         if (sprint.details.isActive) {
           sprint.details.formattedName = sprint.details.name;
           sprint.order = "1" + sprint.details.start; // active on top of list
@@ -41,7 +41,7 @@ app.controller("ProjectCtrl", ['$scope', 'historySvc', 'scrumSimulatorSvc', func
           sprint.details.formattedName = sprint.details.name + " (inactive)";
           sprint.order = "0" + sprint.details.start;
         }
-      }
+      });
       $scope.existsActiveSprint = existsActiveSprint;
       projectState.sprints.sort(function (f, s) {
         return s.order.localeCompare(f.order);
@@ -49,20 +49,16 @@ app.controller("ProjectCtrl", ['$scope', 'historySvc', 'scrumSimulatorSvc', func
       $scope.sprintsOrdered = projectState.sprints;
       $scope.selectedSprint = $scope.sprintsOrdered[0];
     } else {
+      $scope.sprintsOrdered = [];
       $scope.selectedSprint = null;
     }
     disableModes();
   });
 
-  var refreshChart = function () {
-    if ($scope.selectedSprint) {
-      historySvc.getHistory($scope.selectedSprint.id).then(function (history) {
-        $scope.history = history;
-      });
-    } else {
-      $scope.history = null;
-    }
-  };
+  function disableModes() {
+    $scope.editMode = false;
+    $scope.removeDecisionMode = false;
+  }
 
   $scope.$watch("selectedSprint", function (sprint) {
     if (sprint) {
@@ -75,29 +71,21 @@ app.controller("ProjectCtrl", ['$scope', 'historySvc', 'scrumSimulatorSvc', func
     refreshChart();
   });
 
-
-  function disableModes() {
-    $scope.editMode = false;
-    $scope.removeDecisionMode = false;
-  }
-
   $scope.$on("boardStateChanged", function (event, sprintId) {
     if (sprintId == $scope.selectedSprint.id) {
       refreshChart();
     }
   });
 
-  $scope.finishSprint = function () {
-    wrapServiceCall(function() {
-      return scrumSimulatorSvc.finishSprint($scope.selectedSprint.id);
-    });
-  };
-
-  $scope.removeSprint = function () {
-    wrapServiceCall(function() {
-      return scrumSimulatorSvc.removeSprint($scope.selectedSprint.id);
-    });
-  };
+  function refreshChart() {
+    if ($scope.selectedSprint) {
+      historySvc.getHistory($scope.selectedSprint.id).then(function (history) {
+        $scope.history = history;
+      });
+    } else {
+      $scope.history = null;
+    }
+  }
 
   $scope.editSprint = function () {
     $scope.selectedSprint = null;
@@ -114,24 +102,14 @@ app.controller("ProjectCtrl", ['$scope', 'historySvc', 'scrumSimulatorSvc', func
 
   function nextSprintId() {
     var maxId = -1;
-    for (var i = 0; i < $scope.projectState.sprints.length; i++) {
-      var sprint = $scope.projectState.sprints[i];
+    $scope.projectState.sprints.forEach(function(sprint) {
       var parsedId = parseInt(sprint.id);
       if (!isNaN(parsedId)) {
         maxId = Math.max(maxId, parsedId);
       }
-    }
+    });
     return maxId + 1
   }
-
-  $scope.askForRemoveSprint = function () {
-    $scope.removeDecisionMode = true;
-  };
-
-  $scope.discard = function () {
-    $scope.selectedSprint = $scope.sprintsOrdered[0];
-    disableModes();
-  };
 
   $scope.startSprint = function () {
     wrapServiceCall(function() {
@@ -143,6 +121,31 @@ app.controller("ProjectCtrl", ['$scope', 'historySvc', 'scrumSimulatorSvc', func
       return scrumSimulatorSvc.startSprint(input);
     });
   };
+
+  $scope.finishSprint = function () {
+    wrapServiceCall(function() {
+      return scrumSimulatorSvc.finishSprint($scope.selectedSprint.id);
+    });
+  };
+
+  $scope.askForRemoveSprint = function () {
+    $scope.removeDecisionMode = true;
+  };
+
+  $scope.removeSprint = function () {
+    wrapServiceCall(function() {
+      return scrumSimulatorSvc.removeSprint($scope.selectedSprint.id);
+    });
+  };
+
+  $scope.discardEdit = function () {
+    $scope.selectedSprint = $scope.sprintsOrdered[0];
+    disableModes();
+  };
+
+  $scope.discardRemove = function () {
+    disableModes();
+  }
 }]);
 
 app.directive('sprintChart', ['$cookies', function ($cookies) {
@@ -171,9 +174,10 @@ app.directive('sprintChart', ['$cookies', function ($cookies) {
         series: series
       });
 
-      var toDays = function(millis) {
+      function toDays(millis) {
         return Math.floor((millis - startDate) / (1000 * 60 * 60 * 24))
-      };
+      }
+
       var xAxes = new Rickshaw.Graph.Axis.X({
         graph: graph,
         tickFormat: toDays
@@ -208,11 +212,10 @@ app.directive('sprintChart', ['$cookies', function ($cookies) {
         }
         if (history) {
           startDate = history.startDate;
-          for (var i = 0; i < history.series.length; i++) { // przepisujemy, bo wykres ma uchwyt do serii
-            var column = history.series[i];
+          history.series.forEach(function (column, i) { // przepisujemy, bo wykres ma uchwyt do serii
             if (column.name == 'Estimate') {
               column.color = "rgba(255, 0, 0, 0.5)";
-            } else if (i == history.series.length - 1) { // DONE
+            } else if (i == history.series.length - 1) { // FIXME: ostatni DONE powinien być rozpoznawany za pomocą isDone
               column.color = "rgba(0, 0, 0, 0.9)";
             } else {
               column.color = "rgba(0, 0, 255, 0." + i + ")";
@@ -221,7 +224,7 @@ app.directive('sprintChart', ['$cookies', function ($cookies) {
               column.disabled = true;
             }
             series.push(column);
-          }
+          });
         } else {
           startDate = null;
         }
