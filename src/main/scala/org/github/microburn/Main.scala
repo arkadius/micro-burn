@@ -15,8 +15,7 @@
  */
 package org.github.microburn
 
-import org.eclipse.jetty.server.Server
-import org.eclipse.jetty.server.nio.SelectChannelConnector
+import org.eclipse.jetty.server.{Server, ServerConnector}
 import org.eclipse.jetty.webapp.WebAppContext
 
 object Main extends App {
@@ -25,7 +24,7 @@ object Main extends App {
 
   def runServer(optionalResourceBase: Option[String]) = {
     val server = new Server
-    val connector = new SelectChannelConnector()
+    val connector = new ServerConnector(server)
     connector.setPort(ApplicationContext().connectorConfig.port)
     server.addConnector(connector)
 

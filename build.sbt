@@ -47,8 +47,7 @@ seq(net.virtualvoid.sbt.graph.Plugin.graphSettings : _*)
 libraryDependencies ++= {
   val liftV = "3.0-M3"
   val liftEdition = liftV.substring(0,3)
-//  val jettyV = "9.3.0.M1" <- jakiś busy waiting się dzieje
-  val jettyV = "8.1.16.v20140903"
+  val jettyV = "9.2.7.v20150116"
   Seq(
     "com.typesafe" % "config" % "1.2.1",
     "net.databinder.dispatch" %% "dispatch-json4s-native" % "0.11.2",
