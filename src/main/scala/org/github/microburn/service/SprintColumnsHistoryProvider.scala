@@ -46,11 +46,6 @@ class SprintColumnsHistoryProvider(projectActor: ProjectActor,
     val toAppend = computeToAppend(history).toSeq
     val fullHistory = toPrepend ++ history.columnStates ++ toAppend
 
-    val initalStoryPoints = if (initialAfterStartPlusAcceptableDelay) {
-      history.initialStoryPointsSum
-    } else {
-      1 // FIXME
-    }
     val baseIndexOnSum = DateWithColumnsState.constIndexOnSum(history.initialStoryPointsSum)
     val withBaseAdded = fullHistory.map(_.multiply(-1).plus(baseIndexOnSum))
 
@@ -58,7 +53,12 @@ class SprintColumnsHistoryProvider(projectActor: ProjectActor,
     val startDate = new DateTime(history.sprintDetails.start)
     val endDate = new DateTime(history.sprintDetails.end)
 
-    val estimate = computeEstimate(startDate, endDate, history.initialStoryPointsSum)
+    val initalStoryPointsForEstimate = if (initialAfterStartPlusAcceptableDelay) {
+      history.initialStoryPointsSum
+    } else {
+      history.initialStoryPointsNotDoneSum
+    }
+    val estimate = computeEstimate(startDate, endDate, initalStoryPointsForEstimate)
 
     val columns = estimate :: columnsHistory
     ColumnsHistory(startDate.getMillis, columns)
@@ -81,8 +81,8 @@ class SprintColumnsHistoryProvider(projectActor: ProjectActor,
   }
 
   private def unzipByColumn(zipped: Seq[DateWithColumnsState]): List[ColumnHistory] = {
-    val boardColumnsWithDroppedFirst = config.nonBacklogColumns.drop(1)
-    boardColumnsWithDroppedFirst.map { column =>
+    val boardColumnsWithDroppedBacklog = config.nonBacklogColumns.drop(1)
+    boardColumnsWithDroppedBacklog.map { column =>
       val storyPointsForColumn = zipped.map { allColumnsInfo =>
         val storyPoints = allColumnsInfo.storyPointsForColumn(column.index)
         HistoryProbe(allColumnsInfo.date, storyPoints)
@@ -92,7 +92,9 @@ class SprintColumnsHistoryProvider(projectActor: ProjectActor,
   }
 
   private def computeEstimate(start: DateTime, end: DateTime, storyPointsSum: BigDecimal): ColumnHistory = {
-    val estimates = EstimateComputer.estimatesBetween(start, end, storyPointsSum)
+    val estimates = EstimateComputer.estimatesBetween(start, end, storyPointsSum).map { probe =>
+      HistoryProbe(probe.date.toDate, probe.sp)
+    }
     ColumnHistory("Estimate", estimates)
   }
 }

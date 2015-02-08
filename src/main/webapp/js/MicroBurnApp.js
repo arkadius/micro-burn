@@ -1,17 +1,15 @@
 window.dateFormat = 'Y-m-d H:i';
 
-window.wrapServiceCall = function (call) {
-  $("body").addClass("wait");
+function wrapServiceCall(call) {
   $("#cover").show();
-  window.callResult = call();
+  var callResult = call();
   callResult.catch(function (msg) {
     window.alert("Error: " + msg);
   });
   callResult.then(function () {
     $("#cover").hide();
-    $("body").removeClass("wait");
   });
-};
+}
 
 var app = angular.module("MicroBurnApp", ["MicroBurnServices", 'ngCookies']);
 
@@ -42,7 +40,7 @@ app.controller("ProjectCtrl", ['$scope', 'historySvc', 'scrumSimulatorSvc', func
       var sprint = projectState.sprints[i];
       if (sprint.details.isActive) {
         sprint.details.formattedName = sprint.details.name;
-        sprint.order = "1" + sprint.details.start; // aktywne na górze listy
+        sprint.order = "1" + sprint.details.start; // active on top of list
         existsActiveSprint = true;
       } else {
         sprint.details.formattedName = sprint.details.name + " (inactive)";
@@ -56,7 +54,7 @@ app.controller("ProjectCtrl", ['$scope', 'historySvc', 'scrumSimulatorSvc', func
     $scope.existsActiveSprint = existsActiveSprint;
     $scope.maxSprintId = maxId;
     projectState.sprints.sort(function (f, s) {
-      return -f.order.localeCompare(s.order);
+      return s.order.localeCompare(f.order);
     });
     $scope.sprintsOrdered = projectState.sprints;
     $scope.selectedSprint = $scope.sprintsOrdered[0];
@@ -194,7 +192,7 @@ app.directive('sprintChart', ['$cookies', function ($cookies) {
         for (var i = 0; i < history.series.length; i++) {
           var column = history.series[i];
           if (column.name == 'Estimate') {
-            column.color = "rgba(255, 0, 0, 0.9)";
+            column.color = "rgba(255, 0, 0, 0.5)";
           } else if (i == history.series.length - 1) { // DONE
             column.color = "rgba(0, 0, 0, 0.9)";
           } else {

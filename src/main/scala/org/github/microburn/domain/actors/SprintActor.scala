@@ -38,7 +38,7 @@ class SprintActor(var sprint: Sprint)
       updateSprintAndReply(sprint.update(userStories, finishSprint)(timestamp))
     case GetStoryPointsHistory(sprintId: String) =>
       require(sprintId == sprint.id)
-      reply(SprintHistory(sprint.initialStoryPointsSum, sprint.initialDate, sprint.columnStatesHistory, sprint.details))
+      reply(SprintHistory(sprint.initialStoryPointsSum, sprint.initialStoryPointsNotDoneSum, sprint.initialDate, sprint.columnStatesHistory, sprint.details))
   }
 
   private def updateSprintAndReply(f: => SprintUpdateResult) = {

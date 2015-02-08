@@ -24,6 +24,8 @@ case class BoardState(userStories: Seq[UserStory], date: Date) extends HavingNes
 
   def userStoriesStoryPointsSum(implicit projectConfig: ProjectConfig): BigDecimal = nestedTasksStoryPointsSum
 
+  def userStoriesNotDoneStoryPointsSum(implicit projectConfig: ProjectConfig): BigDecimal = storyPointsForColumnsMatching(!_.isDoneColumn)
+
   def diff(other: BoardState): Seq[TaskEvent] = nestedDiff(other)(other.date)
 
   def plus(event: TaskEvent): BoardState = event match {
@@ -75,7 +77,7 @@ case class BoardState(userStories: Seq[UserStory], date: Date) extends HavingNes
   override protected def updateNestedTasks(newNestedTasks: Seq[UserStory]): Self = copy(userStories = newNestedTasks)
 
   def columnsState(implicit config: ProjectConfig): DateWithColumnsState = {
-    val indexOnSum = config.nonBacklogColumns.map(_.index).map { boardColumnIndex =>
+    val indexOnSum = config.boardColumns.map(_.index).map { boardColumnIndex =>
       boardColumnIndex -> storyPointsOnRightFromColumn(boardColumnIndex)
     }.toMap
     DateWithColumnsState(date, indexOnSum)
@@ -83,12 +85,21 @@ case class BoardState(userStories: Seq[UserStory], date: Date) extends HavingNes
 
   private def storyPointsOnRightFromColumn(columnIndex: Int)
                                           (implicit config: ProjectConfig) = {
+    storyPointsForColumnsMatching(_.index >= columnIndex)
+  }
+
+  private def storyPointsForColumnsMatching(matchColumn: BoardColumn => Boolean)
+                                           (implicit config: ProjectConfig) = {
     (for {
-      userStory <- userStories
-      task <- userStory.flattenTasks
-      if task.boardColumnIndex >= columnIndex
+      task <- flattenTasks
+      if matchColumn(config.boardColumns(task.boardColumnIndex))
     } yield task.storyPointsWithoutSubTasks).sum
   }
+
+  private def flattenTasks: Seq[Task] = for {
+    userStory <- userStories
+    task <- userStory.flattenTasks
+  } yield task
 
   override def toString: String = {
     userStories.toSeq.sortBy(_.taskId).map(_.toString).mkString(",\n")

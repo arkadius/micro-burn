@@ -23,13 +23,13 @@ import scalaz.Scalaz._
 
 object EstimateComputer {
 
-  def estimatesBetween(start: DateTime, end: DateTime, storyPointsSum: BigDecimal): List[HistoryProbe] = {
+  def estimatesBetween(start: DateTime, end: DateTime, storyPointsSum: BigDecimal): List[Probe] = {
     val computed = if (storyPointsSum == BigDecimal(0)) {
       Nil
     } else {
       estimatesForNonZeroStoryPointsSum(start, end, storyPointsSum)
     }
-    wrapIfRequired(start, end, storyPointsSum)(computed).map(_.toHistory)
+    wrapIfRequired(start, end, storyPointsSum)(computed)
   }
 
   private def wrapIfRequired(start: DateTime, end: DateTime, storyPointsSum: BigDecimal)
@@ -97,8 +97,6 @@ object EstimateComputer {
     }
   }
 
-  private case class Probe(date: DateTime, sp: BigDecimal) {
-    def toHistory = HistoryProbe(date.toDate, sp)
-  }
-
 }
+
+case class Probe(date: DateTime, sp: BigDecimal)

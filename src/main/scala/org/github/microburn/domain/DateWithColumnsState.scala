@@ -36,5 +36,5 @@ case class DateWithColumnsState(date: Date, indexOnSum: Map[Int, BigDecimal]) {
 object DateWithColumnsState {
   def zero(date: Date)(implicit config: ProjectConfig): DateWithColumnsState = DateWithColumnsState(date, constIndexOnSum(0))
 
-  def constIndexOnSum(c: BigDecimal)(implicit config: ProjectConfig): Map[Int, BigDecimal] = config.nonBacklogColumns.map(_.index -> c).toMap
+  def constIndexOnSum(c: BigDecimal)(implicit config: ProjectConfig): Map[Int, BigDecimal] = config.boardColumns.map(_.index -> c).toMap
 }

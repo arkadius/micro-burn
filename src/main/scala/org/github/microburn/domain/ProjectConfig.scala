@@ -40,10 +40,7 @@ case class ProjectConfig(boardColumns: List[BoardColumn],
 
   def lastDoneColumnIndex: Int = {
     val doneColumns = boardColumns.filter(_.isDoneColumn)
-    if (doneColumns.nonEmpty)
-      doneColumns.last.index
-    else
-      boardColumns.last.index
+    doneColumns.last.index
   }
 }
 
@@ -55,16 +52,26 @@ object ProjectConfig {
 
   def apply(config: Config): ProjectConfig = {
     val columns = parseColumns(config)
+    if (columns.size < 2)
+      throw new scala.IllegalArgumentException("You must define at least two column")
+    val columnsWithAtLeastOneDone = makeAtLeastOneColumnDone(columns)
     val defaultStoryPointsForUserStrories = config.optional("defaultStoryPointsForUserStrories")(_.getBigDecimal)
     val splitSpBetweenTechnicalTasks = config.getDefinedBoolean("splitSpBetweenTechnicalTasks")
     val dataRoot = new File(config.getString("dataRoot"))
     ProjectConfig(
-      boardColumns = columns,
+      boardColumns = columnsWithAtLeastOneDone,
       dataRoot = dataRoot,
       defaultStoryPointsForUserStrories = defaultStoryPointsForUserStrories,
       splitSpBetweenTechnicalTasks = splitSpBetweenTechnicalTasks)
   }
-  
+
+  private def makeAtLeastOneColumnDone(columns: List[BoardColumn]): List[BoardColumn] = {
+    if (!columns.exists(_.isDoneColumn))
+      columns.updated(columns.size - 1, columns(columns.size - 1).copy(isDoneColumn = true))
+    else
+      columns
+  }
+
   private def parseColumns(config: Config): List[BoardColumn] = {
     (for {
       (columnConfig, index) <- config.getConfigList("boardColumns").zipWithIndex
