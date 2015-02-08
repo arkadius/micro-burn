@@ -39,8 +39,8 @@ class ProjectActor(config: ProjectConfig) extends LiftActor with ListenerManager
   ).toMap
 
   override protected def lowPriority: PartialFunction[Any, Unit] = {
-    case GetProjectState =>
-      reply(prepareProjectState)
+    case GetProjectState(includeRemoved) =>
+      reply(prepareProjectState(includeRemoved))
     case CreateNewSprint(sprintId, details, userStories, timestamp) if details.finished =>
       sprintActors += sprintId -> sprintFactory.migrateSprint(sprintId, details, userStories)
       updateListeners()
@@ -57,7 +57,6 @@ class ProjectActor(config: ProjectConfig) extends LiftActor with ListenerManager
       reply(resultFuture)
     case remove: RemoveSprint =>
       sprintActors(remove.sprintId) ! remove
-      sprintActors -= remove.sprintId
       updateListeners()
       reply(Unit)
     case update: UpdateSprint =>
@@ -76,9 +75,9 @@ class ProjectActor(config: ProjectConfig) extends LiftActor with ListenerManager
       sendListenersMessage(boardStateChanged)
   }
 
-  override protected def createUpdate: Any = prepareProjectState
+  override protected def createUpdate: Any = prepareProjectState(includeRemoved = false)
 
-  private def prepareProjectState: LAFuture[ProjectState] = {
+  private def prepareProjectState(includeRemoved: Boolean): LAFuture[ProjectState] = {
     val sprintWithStateFutures = sprintActors.map {
       case (sprintId, sprintActor) =>
         (sprintActor !< GetDetails).mapTo[SprintDetails] map { details =>
@@ -86,12 +85,15 @@ class ProjectActor(config: ProjectConfig) extends LiftActor with ListenerManager
         }
     }.toSeq
     LAFuture.collect(sprintWithStateFutures : _*).map { sprints =>
-      ProjectState(sprints.sortBy(_.id))
+      val filtered = sprints.filter { sprint =>
+        !sprint.isRemoved || includeRemoved
+      }
+      ProjectState(filtered.sortBy(_.id))
     }
   }
 }
 
-case object GetProjectState
+case class GetProjectState(includeRemoved: Boolean = false)
 
 case class ProjectState(sprints: Seq[SprintWithDetails]) extends NgModel {
   def sprintIds: Set[String] = sprints.map(_.id).toSet
@@ -99,6 +101,7 @@ case class ProjectState(sprints: Seq[SprintWithDetails]) extends NgModel {
 
 case class SprintWithDetails(id: String, details: SprintDetails) {
   def isActive: Boolean = details.isActive
+  def isRemoved: Boolean = details.isRemoved
 }
 
 case class CreateNewSprint(sprintId: String, details: SprintDetails, userStories: Seq[UserStory], timestamp: Date)

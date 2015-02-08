@@ -37,7 +37,7 @@ class ScrumIntegrationProvider(sprintsProvider: SprintsDataProvider, tasksProvid
   }
 
   private def parallelCurrentAndUpdatedSprints: LAFuture[(ProjectState, Seq[Long])] = {
-    val currentStateFuture = (projectActor ?? GetProjectState).mapTo[ProjectState]
+    val currentStateFuture = (projectActor ?? GetProjectState()).mapTo[ProjectState]
       .withLoggingFinished("current sprint ids: " + _.sprints.map(_.id).mkString(", "))
     val updatedIdsFuture = sprintsProvider.allSprintIds.withLoggingFinished("updated sprints ids: " + _.mkString(", "))
     for {

@@ -27,7 +27,6 @@ class SprintRepository(sprintRoot: File, sprintId: String) {
   def loadSprint: Option[Sprint] =
     for {
       details <- detailsRepo.loadDetails
-      if !details.isRemoved
       initial <- storiesRepo.loadInitialUserStories
       current <- storiesRepo.loadCurrentUserStories
       events = eventsRepo.loadTaskEvents    

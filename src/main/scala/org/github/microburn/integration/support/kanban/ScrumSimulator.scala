@@ -39,7 +39,7 @@ class ScrumSimulator(boardStateProvider: BoardStateProvider, projectActor: Proje
   override protected def messageHandler: PartialFunction[Any, Unit] = {
     case Init =>
       val lastSprintInfoFuture = for {
-        projectState <- (projectActor ?? GetProjectState).mapTo[ProjectState]
+        projectState <- (projectActor ?? GetProjectState(includeRemoved = true)).mapTo[ProjectState]
       } yield {
         optionalLastNumericalSprint(projectState.sprints)
       }
@@ -74,12 +74,7 @@ class ScrumSimulator(boardStateProvider: BoardStateProvider, projectActor: Proje
       val removeFuture = if (currentSprintsInfo.exists(f => f.id.toString == id && f.isActive)) {
         LAFuture(() => throw new IllegalArgumentException("You cannot remove active sprint"))
       } else {
-        currentSprintsInfo = currentSprintsInfo.flatMap { sprintInfo =>
-          if (sprintInfo.id.toString == id)
-            None
-          else
-            Some(sprintInfo)
-        }
+        currentSprintsInfo = currentSprintsInfo.map(_.markRemoved)
         projectActor !< RemoveSprint(id, new Date)
       }
       reply(removeFuture)
@@ -112,13 +107,15 @@ class ScrumSimulator(boardStateProvider: BoardStateProvider, projectActor: Proje
 }
 
 case class SprintInfo(id: Int, details: SprintDetails) {
-  def isActive: Boolean = details.isActive
+  def isActive: Boolean = !details.isRemoved && details.isActive
   
   def next(details: SprintDetails): SprintInfo = {
     SprintInfo(id + 1, details)
   }
 
   def finish: SprintInfo = copy(details = details.finish)
+
+  def markRemoved: SprintInfo = copy(details = details.markRemoved)
 }
 
 object SprintInfo {

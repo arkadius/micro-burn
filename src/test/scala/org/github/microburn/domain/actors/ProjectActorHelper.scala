@@ -47,7 +47,7 @@ trait ProjectActorHelper extends Matchers {
 
   def projectHasNoSprint(projectActor: ProjectActor): LAFuture[Unit] = {
     for {
-      projectState <- (projectActor ?? GetProjectState).mapTo[ProjectState]
+      projectState <- (projectActor ?? GetProjectState()).mapTo[ProjectState]
       sprintWithStates = projectState.sprints
     } yield {
       sprintWithStates shouldBe empty
@@ -56,7 +56,7 @@ trait ProjectActorHelper extends Matchers {
 
   def projectHasOnlyOneSprint(sprintId: String, projectActor: ProjectActor): LAFuture[Boolean] = {
     for {
-      projectState <- (projectActor ?? GetProjectState).mapTo[ProjectState]
+      projectState <- (projectActor ?? GetProjectState()).mapTo[ProjectState]
       sprintWithStates = projectState.sprints
     } yield {
       sprintWithStates should have length 1
@@ -67,7 +67,7 @@ trait ProjectActorHelper extends Matchers {
 
   def projectHasOnlyOneActiveSprint(sprintId: String, projectActor: ProjectActor): LAFuture[Unit] = {
     for {
-      projectState <- (projectActor ?? GetProjectState).mapTo[ProjectState]
+      projectState <- (projectActor ?? GetProjectState()).mapTo[ProjectState]
       sprintWithStates = projectState.sprints
     } yield {
       val activeSprints = sprintWithStates.filter(_.isActive)
