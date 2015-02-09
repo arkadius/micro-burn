@@ -15,6 +15,7 @@
  */
 package org.github.microburn.service
 
+import org.github.microburn.domain.ProjectConfig
 import org.joda.time._
 
 import scala.collection.immutable.Seq
@@ -23,62 +24,62 @@ import scalaz.Scalaz._
 
 object EstimateComputer {
 
-  def estimatesBetween(start: DateTime, end: DateTime, storyPointsSum: BigDecimal): List[Probe] = {
-    val computed = if (storyPointsSum == BigDecimal(0)) {
-      Nil
+  def estimatesBetween(start: DateTime, end: DateTime, storyPointsSum: BigDecimal)
+                      (implicit config: ProjectConfig): List[Probe] = {
+    if (storyPointsSum == BigDecimal(0)) {
+      List(
+        Probe(start, BigDecimal(0)),
+        Probe(end, BigDecimal(0))
+      )
     } else {
       estimatesForNonZeroStoryPointsSum(start, end, storyPointsSum)
     }
-    wrapIfRequired(start, end, storyPointsSum)(computed)
   }
 
-  private def wrapIfRequired(start: DateTime, end: DateTime, storyPointsSum: BigDecimal)
-                            (probes: List[Probe]): List[Probe] = {
-    val optionalPrepand = (probes.isEmpty || probes.headOption.exists(_.date != start)).option(Probe(start, storyPointsSum))
-    val optionalAppend = (probes.isEmpty || probes.lastOption.exists(_.date != end)).option(Probe(end, BigDecimal(0)))
-    optionalPrepand.toList ::: probes ::: optionalAppend.toList
-  }
-
-  private def estimatesForNonZeroStoryPointsSum(start: DateTime, end: DateTime, storyPointsSum: BigDecimal): List[Probe] = {
-    val intervalsAndSums = intervalAndSumMillisAfterThem(businessWeekIntervals(start, end))
-    val sumOfIntervalsMillis = intervalsAndSums.lastOption.map(_.sumAfter).getOrElse(0L)
+  private def estimatesForNonZeroStoryPointsSum(start: DateTime, end: DateTime, storyPointsSum: BigDecimal)
+                                               (implicit config: ProjectConfig): List[Probe] = {
+    val intervalsAndSums = intervalAndSumMillisAfterThem(daysIntervals(start, end))
+    val weightedSumOfIntervalsMillis = intervalsAndSums.lastOption.map(_.weightedSumAfter).getOrElse(BigDecimal(0))
     val steps = computeSteps(storyPointsSum)
+    val computeWeitghtedMillis = millisForStoryPoints(storyPointsSum, weightedSumOfIntervalsMillis) _
     steps.map { storyPoints =>
-      val date = momentInIntervals(intervalsAndSums, (sumOfIntervalsMillis * (1 - storyPoints / storyPointsSum)).toLong)
+      val date = momentInIntervals(intervalsAndSums, computeWeitghtedMillis(storyPoints))
       Probe(date, storyPoints)
     }.toList
   }
 
-  private def computeSteps(storyPointsSum: BigDecimal) = {
+  private def computeSteps(storyPointsSum: BigDecimal): scala.Seq[BigDecimal] = {
     val additionalStepForNonWhole = (!storyPointsSum.isWhole()).option(storyPointsSum)
     additionalStepForNonWhole.toSeq ++ storyPointsSum.setScale(0, RoundingMode.FLOOR).to(0, step = -1)
   }
 
-  private[service] def businessWeekIntervals(start: DateTime, end: DateTime): List[Interval] = {
+  private def millisForStoryPoints(storyPointsSum: BigDecimal, weightedSumOfIntervalsMillis: BigDecimal)
+                                  (storyPoints: BigDecimal): BigDecimal = {
+    weightedSumOfIntervalsMillis * (1 - storyPoints / storyPointsSum)
+  }
+
+  private def daysIntervals(start: DateTime, end: DateTime): List[Interval] = {
     val startIntervalsStream: Stream[DateTime] = Stream.iterate(start) { prev =>
-      prev.plusWeeks(1).withDayOfWeek(DateTimeConstants.MONDAY).withTimeAtStartOfDay()
+      prev.plusDays(1).withTimeAtStartOfDay()
     }
-    val withDroppedStartInWeekend = if (start.isBefore(start.withDayOfWeek(DateTimeConstants.SATURDAY).withTimeAtStartOfDay())) {
-      startIntervalsStream
-    } else {
-      startIntervalsStream.drop(1)
-    }
-    val positiveIntervalsStream = withDroppedStartInWeekend.map { startOfInterval =>
-      val endOfInterval = minOfDates(end, startOfInterval.withDayOfWeek(DateTimeConstants.SATURDAY).withTimeAtStartOfDay())
+    val positiveIntervalsStream = startIntervalsStream.map { startOfInterval =>
+      val endOfInterval = minOfDates(end, startOfInterval.plusDays(1).withTimeAtStartOfDay())
       endOfInterval.isAfter(startOfInterval).option(new Interval(startOfInterval, endOfInterval))
     }
     positiveIntervalsStream.takeWhile(_.isDefined).map(_.get).toList
   }
 
-  private[service] def intervalAndSumMillisAfterThem(intervals: List[Interval]): Seq[IntervalAndSumMillis] = {
+  private def intervalAndSumMillisAfterThem(intervals: List[Interval])
+                                           (implicit config: ProjectConfig): Seq[IntervalAndSumMillis] = {
     intervals.tail.scanLeft(IntervalAndSumMillis(intervals.head, 0)) { (sum, nextInterval) =>
-      IntervalAndSumMillis(nextInterval, sum.sumAfter)
+      IntervalAndSumMillis(nextInterval, sum.weightedSumAfter)
     }
   }
 
-  private def momentInIntervals(intervalsAndSums: Seq[IntervalAndSumMillis], millis: Long): DateTime = {
-    intervalsAndSums.find(millis <= _.sumAfter).map { intervalAndSum =>
-      intervalAndSum.dateAfter(millis - intervalAndSum.sumBefore)
+  private def momentInIntervals(intervalsAndSums: Seq[IntervalAndSumMillis], weightedMillis: BigDecimal)
+                               (implicit config: ProjectConfig): DateTime = {
+    intervalsAndSums.find(weightedMillis <= _.weightedSumAfter).map { intervalAndSum =>
+      intervalAndSum.dateAfter(weightedMillis - intervalAndSum.weightedSumBefore)
     } getOrElse { throw new IllegalArgumentException("Interval too short - cannot estimate") }
   }
 
@@ -89,14 +90,18 @@ object EstimateComputer {
       first
   }
 
-  private[service] case class IntervalAndSumMillis(interval: Interval, sumBefore: Long) {
-    def sumAfter: Long = sumBefore + interval.toDurationMillis
+  private[service] case class IntervalAndSumMillis(interval: Interval, weightedSumBefore: BigDecimal) {
+    def weightedSumAfter(implicit config: ProjectConfig): BigDecimal = weightedSumBefore + weight * interval.toDurationMillis
+
+    def dateAfter(weightedMillis: BigDecimal)
+                 (implicit config: ProjectConfig): DateTime = {
+      interval.getStart.plusMillis((weightedMillis / weight).toInt)
+    }
     
-    def dateAfter(millis: Long): DateTime = {
-      interval.getStart.plusMillis(millis.toInt)
+    private def weight(implicit config: ProjectConfig): BigDecimal = {
+      config.dayOfWeekWeights(interval.getStart.getDayOfWeek - 1)
     }
   }
-
 }
 
 case class Probe(date: DateTime, sp: BigDecimal)

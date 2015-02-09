@@ -32,7 +32,7 @@ object TestConfig {
       ConfigFactory.parseFile(new File(resource))
     else
       ConfigFactory.load(resource)
-    baseConfig.withFallback(ConfigFactory.parseResources("defaults.conf"))
+    baseConfig.withFallback(ConfigFactory.parseResources("defaults.conf")).resolveWith(ConfigFactory.parseResources("predefined.conf"))
   }
 
 }

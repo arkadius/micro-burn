@@ -21,6 +21,8 @@ import scalaz._
 import Scalaz._
 
 object ConfigExtensions {
+  import collection.convert.wrapAsScala._
+
   implicit class ConfigExtension(config: Config) {
     def optional[T](path: String)(f: Config => String => T): Option[T] = {
       config.hasPath(path).option(f(config)(path))
@@ -32,6 +34,10 @@ object ConfigExtensions {
 
     def getBigDecimal(path: String): BigDecimal = {
       BigDecimal(config.getNumber(path).toString)
+    }
+
+    def getBigDecimalList(path: String): List[BigDecimal] = {
+      config.getNumberList(path).map(n => BigDecimal(n.toString)).toList
     }
   }
 }

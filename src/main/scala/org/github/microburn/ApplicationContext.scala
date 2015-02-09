@@ -35,7 +35,10 @@ object ApplicationContext {
 
   private lazy val context = {
     val configFile = System.getProperty("config", "application.conf")
-    val config = ConfigFactory.parseFile(new File(configFile)).withFallback(ConfigFactory.parseResources("defaults.conf"))
+    val config =
+      ConfigFactory.parseFile(new File(configFile))
+        .withFallback(ConfigFactory.parseResources("defaults.conf"))
+        .resolveWith(ConfigFactory.parseResources("predefined.conf"))
     val appConfig = ApplicationConfig(config)
     val projectActor = new ProjectActor(appConfig.projectConfig)
     val integrationProvider = appConfig.integrationProvidersFactory(projectActor)

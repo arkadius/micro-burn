@@ -16,6 +16,7 @@
 package org.github.microburn.domain
 
 import java.io.File
+import java.util
 
 import com.typesafe.config.Config
 
@@ -25,7 +26,8 @@ import Scalaz._
 case class ProjectConfig(nonBacklogColumns: List[BoardColumn],
                          dataRoot: File,
                          defaultStoryPointsForUserStrories: Option[BigDecimal],
-                         splitSpBetweenTechnicalTasks: Boolean) {
+                         splitSpBetweenTechnicalTasks: Boolean,
+                         dayOfWeekWeights: IndexedSeq[BigDecimal]) {
 
   private val statuses = (for {
     column <- nonBacklogColumns
@@ -58,7 +60,8 @@ object ProjectConfig {
       nonBacklogColumns = nonBacklogColumnsWithAtLeastOneDone,
       dataRoot = dataRoot,
       defaultStoryPointsForUserStrories = defaultStoryPointsForUserStrories,
-      splitSpBetweenTechnicalTasks = splitSpBetweenTechnicalTasks)
+      splitSpBetweenTechnicalTasks = splitSpBetweenTechnicalTasks,
+      dayOfWeekWeights = parseDayOfWeekWeights(config))
   }
 
   private def makeAtLeastOneColumnDone(columns: List[BoardColumn]): List[BoardColumn] = {
@@ -92,5 +95,18 @@ object ProjectConfig {
 
   private def statusesFromId(columnConfig: Config): Option[List[String]] = {
     columnConfig.optional("id")(_.getString).map(List(_))
+  }
+  
+  private def parseDayOfWeekWeights(config: Config): IndexedSeq[BigDecimal] = {
+    val weights = config.getBigDecimalList("dayOfWeekWeights")
+    require(weights.size == 7, "All days of weeks must be defined")
+    require(!weights.exists(_ < 0), "Weights must be positive value")
+    require(weights.exists(_ > 0), "At least one non zero weight must be defined")
+    normalize(weights.toSeq).toIndexedSeq
+  }
+
+  private def normalize(seq: Seq[BigDecimal]): Seq[BigDecimal] = {
+    val sum = seq.sum
+    seq.map(_ / sum)
   }
 }
