@@ -35,9 +35,9 @@ sealed trait Task { self =>
 
   def storyPointsOfSelf(implicit config: ProjectConfig): BigDecimal
 
-  def boardColumnIndex(implicit config: ProjectConfig): Int = status match {
-    case SpecifiedStatus(status) => config.boardColumnIndex(status)
-    case TaskCompletedStatus => config.lastDoneColumnIndex
+  def boardColumn(implicit config: ProjectConfig): Option[BoardColumn] = status match {
+    case SpecifiedStatus(status) => config.boardColumn(status)
+    case TaskCompletedStatus => Some(config.lastDoneColumn)
   }
 }
 

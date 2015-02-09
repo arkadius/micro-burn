@@ -34,13 +34,11 @@ case class ProjectConfig(boardColumns: List[BoardColumn],
     status <- column.statusIds
   } yield status -> column).toMap
 
-  def containsStatus(status: String): Boolean = statuses.contains(status)
+  def boardColumn(status: String): Option[BoardColumn] = statuses.get(status)
 
-  def boardColumnIndex(status: String): Int = statuses(status).index
-
-  def lastDoneColumnIndex: Int = {
+  def lastDoneColumn: BoardColumn = {
     val doneColumns = boardColumns.filter(_.isDoneColumn)
-    doneColumns.last.index
+    doneColumns.last
   }
 }
 

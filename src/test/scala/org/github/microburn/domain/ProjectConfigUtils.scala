@@ -18,10 +18,6 @@ package org.github.microburn.domain
 import org.github.microburn.TestConfig
 
 object ProjectConfigUtils {
-  def completedColumnIndex(implicit config: ProjectConfig): Int = config.boardColumnIndex(firstCompletedStatus)
-
-  private def firstCompletedStatus(implicit config: ProjectConfig): String = config.boardColumns(config.lastDoneColumnIndex).statusIds.head
-
   def firstNotCompletedStatus(implicit config: ProjectConfig): String = config.nonBacklogColumns.head.statusIds.head
 
   def defaultConfig = ProjectConfig(TestConfig.withDefaultsFallback().getConfig("project"))

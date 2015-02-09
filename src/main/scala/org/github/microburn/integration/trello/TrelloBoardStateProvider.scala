@@ -23,7 +23,7 @@ import scala.math.BigDecimal.RoundingMode
 import scalaz._
 import Scalaz._
 
-class TrelloBoardStateProvider(config: TrelloConfig, columnVisible: String => Boolean) extends BoardStateProvider {
+class TrelloBoardStateProvider(config: TrelloConfig) extends BoardStateProvider {
   private final val SP_SPLITTED_BETWEEN_TECHICAL_SCALE: Int = 1
 
   private val cardsProvider = new TrelloCardsProvider(config)
@@ -39,7 +39,7 @@ class TrelloBoardStateProvider(config: TrelloConfig, columnVisible: String => Bo
       // zakończeniem sprintu
       // + możemy odrzucać zadania zamknięte w poprzednich sprintach - mogło być ponownie otwarte a potem jeszcze raz zamknięte?
       // - czy musimy się martwić, gdy automatczynie zakończy się sprint, a zadania nie będę przesunięte? => raczej nie
-      .filter(c => !c.closed && columnVisible(c.columnId))
+      .filter(c => !c.closed)
       .map(toUserStory)
   }
 

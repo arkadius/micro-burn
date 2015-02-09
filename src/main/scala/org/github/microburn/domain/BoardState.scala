@@ -97,12 +97,13 @@ case class BoardState(userStories: Seq[UserStory], date: Date) extends HavingNes
     (for {
       userStory <- notBacklogUserStories
       task <- userStory.flattenTasks
-      if matchColumn(config.boardColumns(task.boardColumnIndex))
+      configuredTasksBoardColumn <- task.boardColumn
+      if matchColumn(configuredTasksBoardColumn)
     } yield task.storyPointsWithoutSubTasks).sum
   }
 
   private def notBacklogUserStories(implicit config: ProjectConfig): Seq[UserStory] =
-    userStories.filterNot(userStory => config.boardColumns(userStory.boardColumnIndex).isBacklogColumn)
+    userStories.filter(userStory => userStory.boardColumn.exists(!_.isBacklogColumn))
 
   override def toString: String = {
     userStories.toSeq.sortBy(_.taskId).map(_.toString).mkString(",\n")
