@@ -81,7 +81,7 @@ case class BoardState(userStories: Seq[UserStory], date: Date) extends HavingNes
   override protected def updateNestedTasks(newNestedTasks: Seq[UserStory]): Self = copy(userStories = newNestedTasks)
 
   def columnsState(implicit config: ProjectConfig): DateWithColumnsState = {
-    val indexOnSum = config.boardColumns.map(_.index).map { boardColumnIndex =>
+    val indexOnSum = config.nonBacklogColumns.map(_.index).map { boardColumnIndex =>
       boardColumnIndex -> storyPointsOnRightFromColumn(boardColumnIndex)
     }.toMap
     DateWithColumnsState(date, indexOnSum)
@@ -103,7 +103,7 @@ case class BoardState(userStories: Seq[UserStory], date: Date) extends HavingNes
   }
 
   private def notBacklogUserStories(implicit config: ProjectConfig): Seq[UserStory] =
-    userStories.filter(userStory => userStory.boardColumn.exists(!_.isBacklogColumn))
+    userStories.filter(userStory => userStory.boardColumn.isDefined)
 
   override def toString: String = {
     userStories.toSeq.sortBy(_.taskId).map(_.toString).mkString(",\n")
