@@ -17,7 +17,7 @@ package org.github.microburn.snippet
 
 import net.liftmodules.ng.Angular._
 import org.github.microburn.ApplicationContext
-import org.github.microburn.integration.support.kanban.{DoRemoveSprint, DoFinishSprint, ScrumSimulation, StartSprint}
+import org.github.microburn.integration.support.kanban._
 
 object MicroBurnServices {
   import org.github.microburn.util.concurrent.FutureEnrichments._

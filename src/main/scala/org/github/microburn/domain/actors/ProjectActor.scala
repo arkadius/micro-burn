@@ -24,10 +24,14 @@ import net.liftweb.http.ListenerManager
 import org.github.microburn.domain._
 import org.github.microburn.repository.ProjectRepository
 
-class ProjectActor(config: ProjectConfig) extends LiftActor with ListenerManager {
+import scala.concurrent.duration.FiniteDuration
+
+class ProjectActor(config: ProjectConfig, initialFetchToSprintStartAcceptableDelayMinutes: FiniteDuration)
+  extends LiftActor with ListenerManager {
+
   import org.github.microburn.util.concurrent.FutureEnrichments._
 
-  private val sprintFactory = new SprintActorFactory(config, this)
+  private val sprintFactory = new SprintActorFactory(config, initialFetchToSprintStartAcceptableDelayMinutes, this)
   private val projectRepo = ProjectRepository(config.dataRoot)
 
   private var sprintActors: Map[String, SprintActor] = (
@@ -80,8 +84,8 @@ class ProjectActor(config: ProjectConfig) extends LiftActor with ListenerManager
   private def prepareProjectState(includeRemoved: Boolean): LAFuture[ProjectState] = {
     val sprintWithStateFutures = sprintActors.map {
       case (sprintId, sprintActor) =>
-        (sprintActor !< GetDetails).mapTo[SprintDetails] map { details =>
-          SprintWithDetails(sprintId, details)
+        (sprintActor !< GetDetails).mapTo[DetailsWithBaseStoryPoints] map { details =>
+          SprintWithDetails(sprintId, details.details, details.baseStoryPointsSum.toDouble)
         }
     }.toSeq
     LAFuture.collect(sprintWithStateFutures : _*).map { sprints =>
@@ -99,7 +103,7 @@ case class ProjectState(sprints: Seq[SprintWithDetails]) extends NgModel {
   def sprintIds: Set[String] = sprints.map(_.id).toSet
 }
 
-case class SprintWithDetails(id: String, details: SprintDetails) {
+case class SprintWithDetails(id: String, details: SprintDetails, baseStoryPoints: Double) {
   def isActive: Boolean = details.isActive
   def isRemoved: Boolean = details.isRemoved
 }
@@ -115,9 +119,3 @@ case class UpdateSprint(sprintId: String, userStories: Seq[UserStory], finishSpr
 }
 
 case class GetStoryPointsHistory(sprintId: String)
-
-case class SprintHistory(initialStoryPointsSum: BigDecimal,
-                         initialStoryPointsNotDoneSum: BigDecimal,
-                         initialDate: Date,
-                         columnStates: Seq[DateWithColumnsState],
-                         sprintDetails: SprintDetails)

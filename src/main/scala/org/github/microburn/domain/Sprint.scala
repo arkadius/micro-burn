@@ -29,7 +29,7 @@ case class Sprint(id: String,
 
   def initialStoryPointsSum(implicit projectConfig: ProjectConfig): BigDecimal = initialBoard.userStoriesStoryPointsSum
 
-  def initialStoryPointsNotDoneSum(implicit projectConfig: ProjectConfig): BigDecimal = initialBoard.userStoriesNotDoneStoryPointsSum
+  def initialDoneTasksStoryPointsSum(implicit projectConfig: ProjectConfig): BigDecimal = initialBoard.doneTasksStoryPointsSum
 
   def finish(timestamp: Date): SprintUpdateResult = {
     val updatedSprint = copy(
@@ -76,18 +76,20 @@ case class Sprint(id: String,
   }
 }
 
-case class SprintDetails(name: String, start: Date, end: Date, isActive: Boolean, isRemoved: Boolean) {
+case class SprintDetails(name: String, start: Date, end: Date, isActive: Boolean, isRemoved: Boolean, overriddenBaseStoryPointsSum: Option[BigDecimal]) {
   def finished = !isActive
 
   def finish = copy(isActive = false)
 
   def markRemoved = copy(isRemoved = true)
+
+  def defineBaseStoryPoints(base: BigDecimal) = copy(overriddenBaseStoryPointsSum = Some(base))
 }
 
 object SprintDetails {
   def apply(name: String, start: Date, end: Date): SprintDetails = SprintDetails(name, start, end, isActive = true)
 
-  def apply(name: String, start: Date, end: Date, isActive: Boolean): SprintDetails = SprintDetails(name, start, end, isActive, isRemoved = false)
+  def apply(name: String, start: Date, end: Date, isActive: Boolean): SprintDetails = SprintDetails(name, start, end, isActive, isRemoved = false, overriddenBaseStoryPointsSum = None)
 }
 
 case class SprintUpdateResult(private val stateBeforeUpdate: BoardState,

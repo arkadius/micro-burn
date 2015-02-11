@@ -28,12 +28,13 @@ trait ProjectActorHelper extends Matchers {
 
   import org.github.microburn.util.concurrent.LiftActorEnrichments._
   import org.github.microburn.util.concurrent.FutureEnrichments._
+  import concurrent.duration._
   
   def projectActorWithoutSprints(implicit config: ProjectConfig): ProjectActor = {
     val projectRoot = config.dataRoot
     Path(projectRoot).deleteRecursively()
 
-    new ProjectActor(config)
+    new ProjectActor(config, initialFetchToSprintStartAcceptableDelayMinutes = 1.second)
   }
   
   def projectActorWithInitialSprint(sprint: Sprint)
@@ -42,7 +43,7 @@ trait ProjectActorHelper extends Matchers {
     Path(projectRoot).deleteRecursively()
     SprintRepository(new File(projectRoot, sprint.id), sprint.id).saveSprint(sprint)
 
-    new ProjectActor(config)
+    new ProjectActor(config, initialFetchToSprintStartAcceptableDelayMinutes = 1.second)
   }
 
   def projectHasNoSprint(projectActor: ProjectActor): LAFuture[Unit] = {

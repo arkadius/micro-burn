@@ -9,41 +9,44 @@
         <div id="project-panel" ng-controller="ProjectCtrl" data-lift="Angular.bind?type=ProjectStateBinder">
           <select ng-model="selectedSprint" id="sprint-select"
                   ng-options="sprint.details.formattedName for sprint in sprintsOrdered track by sprint.id"
-                  ng-disabled="editMode || removeDecisionMode">
+                  ng-disabled="editMode || removeDecisionMode || editBaseMode">
           </select>
           <div>
             <span class="sprint-details">
-              from: <input type="text" id="start-date" ng-model="editedSprint.start" ng-disabled="!editMode" class="date-input">
-                to: <input type="text" id="end-date" ng-model="editedSprint.end" ng-disabled="!editMode" class="date-input">
-              <script type="application/javascript">
-                $('#start-date').datetimepicker({
-                  lang: "en",
-                  dayOfWeekStart: 1,
-                  format: window.dateFormat
-                });
-                $('#end-date').datetimepicker({
-                  lang: "en",
-                  dayOfWeekStart: 1,
-                  format: window.dateFormat
-                });
-              </script>
-              <span id="actions-panel">
-                <button ng-click="finishSprint()" ng-disabled="!selectedSprint.details.isActive">Finish</button>
-                <button ng-click="editSprint()" ng-disabled="existsActiveSprint || editMode || removeDecisionMode">Create new</button>
+              from: <input type="text" ng-model="editedSprint.start" ng-disabled="!editMode" class="date-input">
+                to: <input type="text" ng-model="editedSprint.end" ng-disabled="!editMode" class="date-input">
+              base sp: <input type="text" ng-model="editedSprint.baseStoryPoints" ng-focus="editBaseMode = true" class="number-input">
+              <span id="base-confirm-panel" ng-show="editBaseMode">
+                <button class="ok-button"  ng-click="saveBase()"></button>
+                <button class="cancel-button" ng-click="cancelBase()"></button>
               </span>
-              <span id="risky-actions-panel">
-                <button ng-click="askForRemoveSprint()" ng-disabled="selectedSprint == null || selectedSprint.details.isActive || editMode || removeDecisionMode">Remove</button>
+              <script type="application/javascript">
+                $('.date-input').datetimepicker({
+                  lang: "en",
+                  dayOfWeekStart: 1,
+                  format: window.dateFormat
+                });
+                $(".number-input").numeric(".");
+              </script>
+              <span id="actions-group-panel">
+                <span id="actions-panel">
+                  <button ng-click="finishSprint()" ng-disabled="!selectedSprint.details.isActive">Finish</button>
+                  <button ng-click="editSprint()" ng-disabled="existsActiveSprint || editMode || removeDecisionMode || editBaseMode">Create new</button>
+                </span>
+                <span id="risky-actions-panel">
+                  <button ng-click="askForRemoveSprint()" ng-disabled="selectedSprint == null || selectedSprint.details.isActive || editMode || removeDecisionMode || editBaseMode">Remove</button>
+                </span>
               </span>
             </span>
           </div>
-          <div class="sprint-details" ng-if="editMode">
-            name: <input type="text" ng-model="editedSprint.name" id="name-input"/>
+          <div class="sprint-details" ng-show="editMode">
+            name: <input type="text" ng-model="editedSprint.name" focus-on="editModeEntered" id="name-input"/>
             <span class="confirm-panel">
               <button ng-click="startSprint()">Start</button>
               <button ng-click="discardEdit()">Discard</button>
             </span>
           </div>
-          <div class="sprint-details" ng-if="removeDecisionMode">
+          <div class="sprint-details" ng-show="removeDecisionMode">
             Are you sure want to remove '{{selectedSprint.details.name}}'?
             <span class="confirm-panel">
               <button ng-click="removeSprint()">Yes</button>

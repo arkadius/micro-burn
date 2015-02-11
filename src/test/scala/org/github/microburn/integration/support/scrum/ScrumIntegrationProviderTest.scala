@@ -37,7 +37,7 @@ class ScrumIntegrationProviderTest extends FlatSpec with RestIntegrationTest wit
     val config = TestConfig.jiraConfigWithDefaultsFallback()
     val projectConfig = ProjectConfigUtils.defaultConfig
     Path(projectConfig.dataRoot).deleteRecursively()
-    val projectActor = new ProjectActor(projectConfig)
+    val projectActor = new ProjectActor(projectConfig, initialFetchToSprintStartAcceptableDelayMinutes = 1.second)
     val jiraConfig = JiraConfig(config.getConfig("jira"))
     val provider = new ScrumIntegrationProvider(
       new JiraSprintsDataProvider(jiraConfig, Locale.ENGLISH),

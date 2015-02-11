@@ -27,8 +27,8 @@ case class BoardState(userStories: Seq[UserStory], date: Date) extends HavingNes
       .map(userStory => userStory.storyPointsOfSelf)
       .sum
 
-  def userStoriesNotDoneStoryPointsSum(implicit config: ProjectConfig): BigDecimal =
-    storyPointsForColumnsMatching(!_.isDoneColumn)
+  def doneTasksStoryPointsSum(implicit config: ProjectConfig): BigDecimal =
+    storyPointsForColumnsMatching(_.isDoneColumn)
 
   def diff(other: BoardState): Seq[TaskEvent] = nestedDiff(other)(other.date)
 

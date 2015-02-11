@@ -13,7 +13,7 @@ function wrapServiceCall(call) {
 
 var app = angular.module("MicroBurnApp", ["MicroBurnServices", 'ngCookies']);
 
-app.controller("ProjectCtrl", ['$scope', 'historySvc', 'scrumSimulatorSvc', function ($scope, historySvc, scrumSimulatorSvc) {
+app.controller("ProjectCtrl", ['$scope', '$timeout', 'historySvc', 'scrumSimulatorSvc', function ($scope, $timeout, historySvc, scrumSimulatorSvc) {
   window.scrumSimulatorSvc = scrumSimulatorSvc;
 
   $scope.projectState = {
@@ -25,11 +25,13 @@ app.controller("ProjectCtrl", ['$scope', 'historySvc', 'scrumSimulatorSvc', func
   $scope.editedSprint = {
     name: "",
     start: "",
-    end: ""
+    end: "",
+    baseStoryPoints: ""
   };
 
   $scope.editMode = false;
   $scope.removeDecisionMode = false;
+  $scope.editBaseMode = false;
 
   $scope.$watch("projectState", function (projectState) {
     if (projectState.sprints.length > 0) {
@@ -57,7 +59,8 @@ app.controller("ProjectCtrl", ['$scope', 'historySvc', 'scrumSimulatorSvc', func
       $scope.editedSprint = {
         name: "",
         start: "",
-        end: ""
+        end: "",
+        baseStoryPoints: ""
       };
     }
     disableModes();
@@ -66,6 +69,7 @@ app.controller("ProjectCtrl", ['$scope', 'historySvc', 'scrumSimulatorSvc', func
   function disableModes() {
     $scope.editMode = false;
     $scope.removeDecisionMode = false;
+    $scope.editBaseMode = false;
   }
 
   $scope.$watch("selectedSprint", function (sprint) {
@@ -73,7 +77,8 @@ app.controller("ProjectCtrl", ['$scope', 'historySvc', 'scrumSimulatorSvc', func
       $scope.editedSprint = {
         name: "",
         start: new Date($scope.selectedSprint.details.start).dateFormat(window.dateFormat),
-        end: new Date($scope.selectedSprint.details.end).dateFormat(window.dateFormat)
+        end: new Date($scope.selectedSprint.details.end).dateFormat(window.dateFormat),
+        baseStoryPoints: $scope.selectedSprint.baseStoryPoints
       };
     }
     refreshChart();
@@ -95,17 +100,30 @@ app.controller("ProjectCtrl", ['$scope', 'historySvc', 'scrumSimulatorSvc', func
     }
   }
 
+  $scope.cancelBase = function () {
+    $scope.editBaseMode = false;
+    $scope.editedSprint.baseStoryPoints = $scope.selectedSprint.baseStoryPoints;
+  };
+
+  $scope.saveBase = function () {
+    console.log("save"); // FIXME usługa
+  };
+
   $scope.editSprint = function () {
     $scope.selectedSprint = null;
     var start = new Date();
     var end = new Date(start);
-    end.setDate(start.getDate() + 7); //FIXME: konfigurowalne
+    end.setDate(start.getDate() + 7); //TODO: konfigurowalne
     $scope.editedSprint = {
       name: "Sprint " + (nextSprintId() + 1), // +1 for natural indexing,
       start: start.dateFormat(window.dateFormat),
-      end: end.dateFormat(window.dateFormat)
+      end: end.dateFormat(window.dateFormat),
+      baseStoryPoints: ""
     };
     $scope.editMode = true;
+    $timeout(function (){
+      $scope.$broadcast('editModeEntered');
+    });
   };
 
   function nextSprintId() {
@@ -265,3 +283,11 @@ app.directive('sprintChart', ['$cookies', function ($cookies) {
     }
   };
 }]);
+
+app.directive('focusOn', function() {
+  return function(scope, elem, attr) {
+    scope.$on(attr.focusOn, function(e) {
+      elem[0].focus();
+    });
+  };
+});

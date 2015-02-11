@@ -20,11 +20,33 @@ input:disabled {
 }
 
 #name-input {
-    width: 235px;
+    width: 330px;
 }
 
 .date-input {
     width: 110px;
+}
+
+.number-input {
+    width: 40px;
+}
+
+.ok-button {
+    position: relative;
+    top: 4px;
+    width: 21px;
+    height: 21px;
+    background-image: url(../images/ok.png);
+    background-repeat: no-repeat;
+}
+
+.cancel-button {
+    position: relative;
+    top: 4px;
+    width: 21px;
+    height: 21px;
+    background-image: url(../images/cancel.png);
+    background-repeat: no-repeat;
 }
 
 .sprint-details {
@@ -33,16 +55,25 @@ input:disabled {
     line-height: 20px;
 }
 
+#actions-group-panel {
+    position: absolute;;
+    left: 440px;
+    top: -3px;
+    line-height: 20px;
+    width: 250px;
+}
+
 #actions-panel {
-    margin-left: 20px;
+    position: relative;
 }
 
 #risky-actions-panel {
-    margin-left: 20px;
+    position: relative;
+    left: 20px;
 }
 
 .confirm-panel {
-    margin-left: 20px;
+    margin-left: 67px;
 }
 
 #sprint-chart-container {

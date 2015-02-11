@@ -22,14 +22,19 @@ import net.liftweb.actor.LiftActor
 import org.github.microburn.domain._
 import org.github.microburn.repository.SprintRepository
 
+import scala.concurrent.duration.FiniteDuration
+
 class SprintActor(var sprint: Sprint)
-                 (repo: SprintRepository, config: ProjectConfig, changeNotifyingActor: LiftActor) extends LiftActor {
+                 (repo: SprintRepository,
+                  baseDeterminer: SprintBaseStateDeterminer,
+                  config: ProjectConfig,
+                  changeNotifyingActor: LiftActor) extends LiftActor {
 
   implicit val configImplicit = config
 
   override protected def messageHandler: PartialFunction[Any, Unit] = {
     case GetDetails =>
-      reply(sprint.details)
+      reply(DetailsWithBaseStoryPoints(sprint.details, sprintBase.baseStoryPointsForStart))
     case FinishSprint(sprintId, timestamp) =>
       require(sprintId == sprint.id)
       updateSprintAndReply(sprint.finish(timestamp))
@@ -41,7 +46,20 @@ class SprintActor(var sprint: Sprint)
       updateSprintAndReply(sprint.update(userStories, finishSprint)(timestamp))
     case GetStoryPointsHistory(sprintId: String) =>
       require(sprintId == sprint.id)
-      reply(SprintHistory(sprint.initialStoryPointsSum, sprint.initialStoryPointsNotDoneSum, sprint.initialDate, sprint.columnStatesHistory, sprint.details))
+      reply(SprintHistory(
+        sprintBase = sprintBase,
+        columnStates = sprint.columnStatesHistory,
+        sprintDetails = sprint.details
+      ))
+  }
+
+  private def sprintBase: SprintBase = {
+    baseDeterminer.baseForSprint(
+      sprint.details,
+      sprint.initialDate,
+      sprint.initialStoryPointsSum,
+      sprint.initialDoneTasksStoryPointsSum
+    )
   }
 
   private def updateSprintAndReply(f: => SprintUpdateResult) = {
@@ -59,11 +77,19 @@ case class BoardStateChanged(sprintId: String)
 
 case object GetDetails
 
-class SprintActorFactory(config: ProjectConfig, changeNotifyingActor: LiftActor) {
+case class DetailsWithBaseStoryPoints(details: SprintDetails, baseStoryPointsSum: BigDecimal)
+
+case class SprintHistory(sprintBase: SprintBase,
+                         columnStates: Seq[DateWithColumnsState],
+                         sprintDetails: SprintDetails)
+
+class SprintActorFactory(config: ProjectConfig, initialFetchToSprintStartAcceptableDelayMinutes: FiniteDuration, changeNotifyingActor: LiftActor) {
+  private val baseDeterminer = new SprintBaseStateDeterminer(initialFetchToSprintStartAcceptableDelayMinutes)
+
   def fromRepo(sprintId: String): Option[SprintActor] = {
     val repo = createRepo(sprintId)
     repo.loadSprint.map { sprint =>
-      new SprintActor(sprint)(repo, config, changeNotifyingActor)
+      new SprintActor(sprint)(repo, baseDeterminer, config, changeNotifyingActor)
     }
   }
 
@@ -75,7 +101,7 @@ class SprintActorFactory(config: ProjectConfig, changeNotifyingActor: LiftActor)
     val sprint = Sprint.withEmptyEvents(sprintId, details, BoardState(userStories.toIndexedSeq, timestamp))
     val repo = createRepo(sprintId)
     repo.saveSprint(sprint)
-    new SprintActor(sprint)(repo, config, changeNotifyingActor)
+    new SprintActor(sprint)(repo, baseDeterminer, config, changeNotifyingActor)
   }
 
   private def createRepo(sprintId: String): SprintRepository = {

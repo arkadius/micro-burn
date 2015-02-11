@@ -39,36 +39,23 @@ class SprintColumnsHistoryProvider(projectActor: ProjectActor,
   }
 
   private def extractColumnsHistory(history: SprintHistory): ColumnsHistory = {
-    val initialAfterStartPlusAcceptableDelay = initialAfterStartPlusDelay(history)
-    val toPrepend = initialAfterStartPlusAcceptableDelay.option {
+    val toPrepend = history.sprintBase.initialAfterStartPlusAcceptableDelay.option {
       DateWithColumnsState.zero(history.sprintDetails.start)
     }.toSeq
     val toAppend = computeToAppend(history).toSeq
     val fullHistory = toPrepend ++ history.columnStates ++ toAppend
 
-    val baseIndexOnSum = DateWithColumnsState.constIndexOnSum(history.initialStoryPointsSum)
+    val baseIndexOnSum = DateWithColumnsState.constIndexOnSum(history.sprintBase.baseStoryPointsForColumnChanges)
     val withBaseAdded = fullHistory.map(_.multiply(-1).plus(baseIndexOnSum))
 
     val columnsHistory = unzipByColumn(withBaseAdded)
     val startDate = new DateTime(history.sprintDetails.start)
     val endDate = new DateTime(history.sprintDetails.end)
 
-    val initalStoryPointsForEstimate = if (initialAfterStartPlusAcceptableDelay) {
-      history.initialStoryPointsSum
-    } else {
-      history.initialStoryPointsNotDoneSum
-    }
-    val estimate = computeEstimate(startDate, endDate, initalStoryPointsForEstimate)
+    val estimate = computeEstimate(startDate, endDate, history.sprintBase.baseStoryPointsForStart)
 
     val columns = estimate :: columnsHistory
     ColumnsHistory(startDate.getMillis, columns)
-  }
-
-  private def initialAfterStartPlusDelay(history: SprintHistory): Boolean = {
-    val initialDate = new DateTime(history.initialDate)
-    val startDatePlusAcceptableDelay =
-      new DateTime(history.sprintDetails.start).plusMillis(initialFetchToSprintStartAcceptableDelayMinutes.toMillis.toInt)
-    initialDate.isAfter(startDatePlusAcceptableDelay)
   }
 
   private def computeToAppend(history: SprintHistory): Option[DateWithColumnsState] = {

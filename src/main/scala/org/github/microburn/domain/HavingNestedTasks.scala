@@ -29,12 +29,6 @@ trait HavingNestedTasks[NestedTaskType <: Task with ComparableWith[NestedTaskTyp
 
   protected def nestedTask(taskId: String): Option[NestedTaskType] = taskById.get(taskId)
 
-  protected def nestedTasksStoryPointsSum(implicit projectConfig: ProjectConfig): BigDecimal = {
-    nestedTasks.map { task =>
-      task.storyPointsOfSelf
-    }.sum
-  }
-
   def withUpdateNestedTask(updated: NestedTaskType): Self = {
     val currentIndex = nestedTasks.zipWithIndex.collectFirst {
       case (userStory, index) if userStory.taskId == updated.taskId => index

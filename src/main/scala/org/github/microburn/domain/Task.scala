@@ -89,8 +89,14 @@ case class UserStory(taskId: String,
   }
 
   override def storyPointsWithoutSubTasks(implicit config: ProjectConfig): BigDecimal = {
-    val diff = storyPointsOfSelf - nestedTasksStoryPointsSum
+    val diff = storyPointsOfSelf - technicalTasksStoryPointsSum
     diff.max(BigDecimal(0))
+  }
+
+  private def technicalTasksStoryPointsSum(implicit projectConfig: ProjectConfig): BigDecimal = {
+    nestedTasks.map { task =>
+      task.storyPointsOfSelf
+    }.sum
   }
 
   def storyPointsToSplitPerTechnical(implicit config: ProjectConfig): BigDecimal = {
