@@ -33,13 +33,13 @@ class ProjectActorTest extends FlatSpec with Matchers with ProjectActorHelper {
 
   it should "reply with correct active actors finishing with UpdateSprint" in {
     finishActorCheck { sprint =>
-      UpdateSprint(sprint.id, sprint.currentBoard.userStories, finishSprint = true, new Date)
+      UpdateSprint(sprint.id, sprint.currentBoard.userStories, sprint.details.finish.openOrThrowException("").toMajor, new Date)
     }
   }
 
   it should "reply with correct active actors finishing with FinishSprint" in {
     finishActorCheck { sprint =>
-      FinishSprint(sprint.id, new Date)
+      UpdateSprintDetails(sprint.id, sprint.details.finish.openOrThrowException(""), new Date)
     }
   }
 
@@ -50,7 +50,7 @@ class ProjectActorTest extends FlatSpec with Matchers with ProjectActorHelper {
 
     val userStoriesWithClosed = Seq(userStory.copy(status = TaskCompletedStatus))
     val beforeSprintsEnd = new Date(sprint.details.end.getTime-1)
-    projectActor ! UpdateSprint(sprint.id, userStoriesWithClosed, finishSprint = false, beforeSprintsEnd)
+    projectActor ! UpdateSprint(sprint.id, userStoriesWithClosed, sprint.details.toMajor, beforeSprintsEnd)
 
     val sprintHistoryBox = (projectActor ?? GetStoryPointsHistory(sprint.id)).mapTo[Box[SprintHistory]].await(5.seconds)
     val sprintHistory = sprintHistoryBox.openOrThrowException("")

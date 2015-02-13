@@ -20,12 +20,13 @@ import java.util.Locale
 
 import dispatch._
 import net.liftweb.actor.LAFuture
-import org.github.microburn.domain.SprintDetails
+import org.github.microburn.domain.MajorSprintDetails
 import org.github.microburn.integration.support.scrum.SprintsDataProvider
 import org.json4s._
 
 class JiraSprintsDataProvider(config: JiraConfig, locale: java.util.Locale = Locale.getDefault(Locale.Category.FORMAT)) extends SprintsDataProvider {
   import org.github.microburn.util.concurrent.FutureEnrichments._
+
   import scala.concurrent.ExecutionContext.Implicits.global
 
   override def allSprintIds: LAFuture[Seq[Long]] = {
@@ -37,7 +38,7 @@ class JiraSprintsDataProvider(config: JiraConfig, locale: java.util.Locale = Loc
     }
   }
 
-  override def sprintDetails(sprintId: String): LAFuture[SprintDetails] = {
+  override def sprintDetails(sprintId: String): LAFuture[MajorSprintDetails] = {
     val url = config.greenhopperUrl / "rapid" / "charts" / "sprintreport" <<? Map(
       "rapidViewId" -> config.rapidViewId.toString,
       "sprintId" -> sprintId
@@ -47,7 +48,7 @@ class JiraSprintsDataProvider(config: JiraConfig, locale: java.util.Locale = Loc
       val JBool(closed) = jv \ "sprint" \ "closed"
       val JString(startDate) = jv \ "sprint" \ "startDate"
       val JString(endDate) = jv \ "sprint" \ "endDate"
-      SprintDetails(name, dateFormat.parse(startDate), dateFormat.parse(endDate), !closed)
+      MajorSprintDetails(name, dateFormat.parse(startDate), dateFormat.parse(endDate), !closed)
     }
   }
 

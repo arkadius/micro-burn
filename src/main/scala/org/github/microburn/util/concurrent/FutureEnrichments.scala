@@ -72,6 +72,13 @@ object FutureEnrichments {
     }
   }
   
+  implicit class BoxOfFuture[T](box: Box[LAFuture[T]]) {
+    def toFutureOfBox: LAFuture[Box[T]] = box match {
+      case Full(future) => future.map(Full(_))
+      case empty: EmptyBox => LAFuture(() => empty)
+    }
+  }
+  
   implicit class ScalaFutureConvertibleToLAFuture[T](scf: Future[T]) {
     def toLiftFuture: LAFuture[T] = {
       val laf = new LAFuture[T]

@@ -18,6 +18,7 @@ package org.github.microburn.repository
 import java.io.{PrintWriter, File}
 
 import org.github.microburn.domain._
+import org.github.microburn.util.json.{BigDecimalSerializer, CaseObjectSerializer}
 
 import scala.io.Source
 
@@ -35,7 +36,9 @@ class SprintDetailsJsonRepository(sprintRoot: File) extends SprintDetailsReposit
   import net.liftweb.json.Extraction._
   import net.liftweb.json._
 
-  implicit val formats = DefaultFormats.withHints(FullTypeHints(List(classOf[SprintDetails])))
+  implicit val formats = DefaultFormats.withHints(FullTypeHints(List(classOf[SprintDetails]))) ++
+    CaseObjectSerializer.sequence(ActiveState, FinishedState, RemovedState) +
+    BigDecimalSerializer
 
   override def saveDetails(sprint: Sprint): Unit = {
     sprintRoot.mkdirs()

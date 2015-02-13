@@ -15,7 +15,10 @@
             <span class="sprint-details">
               from: <input type="text" ng-model="editedSprint.start" ng-disabled="!editMode" class="date-input">
                 to: <input type="text" ng-model="editedSprint.end" ng-disabled="!editMode" class="date-input">
-              base sp: <input type="text" ng-model="editedSprint.baseStoryPoints" ng-focus="editBaseMode = true" class="number-input">
+              base sp: <input id="base-sp" type="text" ng-model="editedSprint.baseStoryPoints" ng-focus="editBaseMode = true"
+                              ng-disabled="selectedSprint == null || !selectedSprint.details.isActive || editMode"
+                              ng-keydown="$event.keyCode == 13 && saveBase() || $event.keyCode == 27 && cancelBase()"
+                              select-on-click class="number-input">
               <span id="base-confirm-panel" ng-show="editBaseMode">
                 <button class="ok-button"  ng-click="saveBase()"></button>
                 <button class="cancel-button" ng-click="cancelBase()"></button>

@@ -19,123 +19,134 @@ import java.util.Date
 
 import net.liftmodules.ng.Angular.NgModel
 import net.liftweb.actor.{LAFuture, LiftActor}
-import org.github.microburn.domain.{UserStory, SprintDetails}
+import net.liftweb.common._
 import org.github.microburn.domain.actors._
+import org.github.microburn.domain.{SprintDetails, MajorSprintDetails, UserStory}
 
+import scala.collection.immutable.TreeMap
 import scala.concurrent.duration.FiniteDuration
-import scalaz._
-import Scalaz._
+import scalaz.Scalaz._
 
 class ScrumSimulator(boardStateProvider: BoardStateProvider, projectActor: ProjectActor)
                     (initializationTimeout: FiniteDuration) extends LiftActor {
 
   import org.github.microburn.util.concurrent.FutureEnrichments._
   import org.github.microburn.util.concurrent.LiftActorEnrichments._
+  import org.github.microburn.util.concurrent.BoxEnrichments._
 
-  private var currentSprintsInfo: Option[SprintInfo] = None
+  private var currentSprints: TreeMap[Int, SprintDetails] = TreeMap.empty
   
   this ! Init
 
   override protected def messageHandler: PartialFunction[Any, Unit] = {
     case Init =>
-      val lastSprintInfoFuture = for {
-        projectState <- (projectActor ?? GetProjectState(includeRemoved = true)).mapTo[ProjectState]
+      val lastSprints = for {
+        projectState <- (projectActor ?? GetFullProjectState).mapTo[FullProjectState]
       } yield {
-        optionalLastNumericalSprint(projectState.sprints)
+        val sprintsSeq = projectState.sprints.flatMap {
+          case SprintIdWithDetails(sprintId, details, _) =>
+            sprintId.parseInt.toOption.map { numericalId =>
+              (numericalId, details)
+            }
+        }
+        TreeMap(sprintsSeq: _*)
       }
-      // czekamy, żeby poprawnie wyliczy się id zanim ktoś zdąży wykonać inną akcję
-      currentSprintsInfo = lastSprintInfoFuture.await(initializationTimeout)
+      // czekamy, żeby poprawnie zostaną pobrane sprinty zanim ktoś zdąży wykonać inną akcję
+      currentSprints = lastSprints.await(initializationTimeout)
     case FetchCurrentSprintsBoardState =>
-      val fetchedStateFuture = currentSprintsInfo.filter(_.isActive).map { sprintsInfo =>
+      val fetchedStateFuture = lastActive.toOption.map { last =>
         boardStateProvider.currentUserStories.map { userStories =>
-          FetchedBoardState(sprintsInfo, userStories)
+          FetchedBoardState(last, userStories)
         }  
-      }.toFutureOfOption 
+      }.toFutureOfOption
       reply(fetchedStateFuture)
     case StartSprint(name, start, end) =>
       val startFuture =
-        if (currentSprintsInfo.exists(_.isActive))
-          LAFuture(() => throw new IllegalStateException("You must finish current sprint before start new"))
+        if (lastActive.isDefined)
+          LAFuture[Box[Any]](() => throw new IllegalArgumentException("You must finish current sprint before start new"))
         else
           doStartSprint(name, start, end)
       reply(startFuture)
-    case NextSprint(details, userStories) =>
-      val sprintInfo = currentSprintsInfo.map(_.next(details)).getOrElse(SprintInfo.zero(details))
-      currentSprintsInfo = Some(sprintInfo)
-      reply(projectActor !< CreateNewSprint(sprintInfo.id.toString, details, userStories, new Date))
-    case DoFinishSprint(id) =>
-      val finishFuture = currentSprintsInfo.filter(f => f.isActive || f.id.toString != id).map { sprintsInfo =>
-        val finishedSprintInfo = sprintsInfo.finish
-        currentSprintsInfo = Some(finishedSprintInfo)
-        projectActor ?? FinishSprint(finishedSprintInfo.id.toString, new Date)
-      }.getOrElse(LAFuture(() => throw new IllegalArgumentException("You can finish only current active sprint")))
-      reply(finishFuture)
-    case DoRemoveSprint(id) =>
-      val removeFuture = if (currentSprintsInfo.exists(f => f.id.toString == id && f.isActive)) {
-        LAFuture(() => throw new IllegalArgumentException("You cannot remove active sprint"))
-      } else {
-        currentSprintsInfo = currentSprintsInfo.map(_.markRemoved)
-        projectActor !< RemoveSprint(id, new Date)
-      }
-      reply(removeFuture)
+    case NextSprint(major, userStories) =>
+      val fullDetails = SprintDetails(major)
+      val next = optionalLastNumericalSprint.map(_.next(fullDetails)).getOrElse(NumericalSprintIdWithDetails.zero(fullDetails))
+      currentSprints += next.numericalId -> next.details
+      reply(projectActor !< CreateNewSprint(next.id, major, userStories, new Date))
+    case FinishSprint(sprintId) =>
+      reply(updateSprintDetails(sprintId, _.finish))
+    case RemoveSprint(sprintId) =>
+      reply(updateSprintDetails(sprintId, _.markRemoved))
+    case DefineBaseStoryPoints(sprintId, base) =>
+      reply(updateSprintDetails(sprintId, _.defineBaseStoryPoints(BigDecimal(base))))
+  }
+  
+  private def lastActive: Box[NumericalSprintIdWithDetails] = {
+    optionalLastNumericalSprint.filter(_.isActive)
+  }
+  
+  private def optionalLastNumericalSprint: Box[NumericalSprintIdWithDetails] = {
+    currentSprints.lastOption.map(NumericalSprintIdWithDetails.apply _ tupled)
   }
 
-  private def doStartSprint(name: String, start: Date, end: Date): LAFuture[Any] = {
-    for {
+  private def doStartSprint(name: String, start: Date, end: Date): LAFuture[Box[Any]] = {
+    (for {
       userStories <- boardStateProvider.currentUserStories
-      details = SprintDetails(name, start, end)
+      details = MajorSprintDetails(name, start, end)
       // wysyłamy do siebie, żeby mieć pewność, że fetch będzie miał dobry currentSprintsInfo
       createResult <- this ?? NextSprint(details, userStories)
-    } yield createResult
+    } yield createResult).map(Full(_))
   }
 
-  private def optionalLastNumericalSprint(sprints: Seq[SprintWithDetails]): Option[SprintInfo] = {
-    sprints.flatMap { sprintWithDetails =>
-      sprintWithDetails.id.parseInt.toOption.map { numericalId =>
-        numericalId -> sprintWithDetails.details
-      }
-    }.sortBy {
-      case (numericalId, details) => numericalId
-    }.lastOption.map {
-      case (numericalId, details) => SprintInfo(numericalId, details)
-    }
+  private def updateSprintDetails(sprintId: String, f: SprintDetails => Box[SprintDetails]): LAFuture[Box[Any]] = {
+    (for {
+      numericalSprintId <- sprintId.parseInt.toBox
+      details <- currentSprints.get(numericalSprintId).toBox or
+        Failure(s"Cannot find sprint with given id $numericalSprintId")
+      updatedDetails <- f(details)
+    } yield {
+      currentSprints = currentSprints.updated(numericalSprintId, updatedDetails)
+      projectActor ?? UpdateSprintDetails(numericalSprintId.toString, updatedDetails, new Date)
+    }).toFutureOfBox
   }
 
+  
   private case object Init
 
-  private case class NextSprint(details: SprintDetails, userStories: Seq[UserStory])
+  private case class NextSprint(details: MajorSprintDetails, userStories: Seq[UserStory])
 }
 
-case class SprintInfo(id: Int, details: SprintDetails) {
-  def isActive: Boolean = !details.isRemoved && details.isActive
+case class NumericalSprintIdWithDetails(numericalId: Int, details: SprintDetails) {
+  def id: String = numericalId.toString
   
-  def next(details: SprintDetails): SprintInfo = {
-    SprintInfo(id + 1, details)
+  def isActive: Boolean = details.isActive
+  
+  def next(details: SprintDetails): NumericalSprintIdWithDetails = {
+    NumericalSprintIdWithDetails(numericalId + 1, details)
   }
-
-  def finish: SprintInfo = copy(details = details.finish)
-
-  def markRemoved: SprintInfo = copy(details = details.markRemoved)
 }
 
-object SprintInfo {
-  def zero(details: SprintDetails): SprintInfo = SprintInfo(0, details)
+object NumericalSprintIdWithDetails {
+  def zero(details: SprintDetails): NumericalSprintIdWithDetails = NumericalSprintIdWithDetails(0, details)
+
+  implicit val byIdOrdering: Ordering[NumericalSprintIdWithDetails] = Ordering.by(_.id)
 }
 
 case object FetchCurrentSprintsBoardState
 
-case class FetchedBoardState(sprintId: String, details: SprintDetails, userStories: Seq[UserStory]) {
+case class FetchedBoardState(sprintId: String, details: MajorSprintDetails, userStories: Seq[UserStory]) {
   override def toString: String = s"id: $sprintId, details: $details, user stories count: ${userStories.size}"
 }
 
 object FetchedBoardState {
-  def apply(info: SprintInfo, userStories: Seq[UserStory]): FetchedBoardState = {
-    FetchedBoardState(info.id.toString, info.details, userStories)
+  def apply(idWithDetails: NumericalSprintIdWithDetails, userStories: Seq[UserStory]): FetchedBoardState = {
+    FetchedBoardState(idWithDetails.id, idWithDetails.details.toMajor, userStories)
   }
 }
 
 case class StartSprint(name: String, start: Date, end: Date) extends NgModel
 
-case class DoFinishSprint(id: String)
+case class FinishSprint(id: String)
 
-case class DoRemoveSprint(id: String)
+case class RemoveSprint(id: String)
+
+case class DefineBaseStoryPoints(id: String, baseStoryPoints: Double) extends NgModel

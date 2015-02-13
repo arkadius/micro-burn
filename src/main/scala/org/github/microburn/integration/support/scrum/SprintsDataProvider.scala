@@ -16,9 +16,9 @@
 package org.github.microburn.integration.support.scrum
 
 import net.liftweb.actor.LAFuture
-import org.github.microburn.domain.SprintDetails
+import org.github.microburn.domain.MajorSprintDetails
 
 trait SprintsDataProvider {
   def allSprintIds: LAFuture[Seq[Long]]
-  def sprintDetails(sprintId: String): LAFuture[SprintDetails]
+  def sprintDetails(sprintId: String): LAFuture[MajorSprintDetails]
 }

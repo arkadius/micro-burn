@@ -18,6 +18,7 @@ package org.github.microburn.integration.support.kanban
 import java.util.Date
 
 import net.liftweb.actor.LAFuture
+import org.github.microburn.domain.MajorSprintDetails
 import org.github.microburn.domain.actors.{ProjectActor, UpdateSprint}
 import org.github.microburn.integration.IntegrationProvider
 
@@ -37,7 +38,7 @@ class KanbanIntegrationProvider(protected val boardStateProvider: BoardStateProv
         .mapTo[Option[FetchedBoardState]]
         .withLoggingFinished { state => s"fetched sprint state: ${state.map(_.toString)}"  }
       updateResult <- fetchedCurrentSprintsBoardState.map { fetchedState =>
-        projectActor ?? UpdateSprint(fetchedState.sprintId, fetchedState.userStories, finishSprint = false, timestamp)
+        projectActor ?? UpdateSprint(fetchedState.sprintId, fetchedState.userStories, fetchedState.details, timestamp)
       }.toFutureOfOption
     } yield updateResult
   }

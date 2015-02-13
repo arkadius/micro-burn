@@ -41,7 +41,7 @@ class ScrumSimulatorTest extends FlatSpec with Matchers with ProjectActorHelper 
 
     val state = (simulator ?? FetchCurrentSprintsBoardState).mapTo[Option[FetchedBoardState]].await(5.seconds)
 
-    state.value shouldBe FetchedBoardState("1", givenSprint.details, boardStateProvider.givenUserStories)
+    state.value shouldBe FetchedBoardState("1", givenSprint.details.toMajor, boardStateProvider.givenUserStories)
   }
 
   it should "finish sprint" in {
@@ -52,7 +52,7 @@ class ScrumSimulatorTest extends FlatSpec with Matchers with ProjectActorHelper 
     val simulator = new ScrumSimulator(boardStateProvider, projectActor)(5.seconds)
     def sprintIsActive = projectHasOnlyOneSprint(givenId, projectActor)
 
-    simulator ! DoFinishSprint("1")
+    simulator ! FinishSprint("1")
 
     (for {
       state <- (simulator ?? FetchCurrentSprintsBoardState).mapTo[Option[FetchedBoardState]]
@@ -87,8 +87,8 @@ class ScrumSimulatorTest extends FlatSpec with Matchers with ProjectActorHelper 
     val simulator = new ScrumSimulator(boardStateProvider, projectActor)(5.seconds)
     def noSprints = projectHasNoSprint(projectActor)
 
-    simulator ! DoFinishSprint("1")
-    simulator ! DoRemoveSprint("1")
+    simulator ! FinishSprint("1")
+    simulator ! RemoveSprint("1")
 
     (for {
       state <- (simulator ?? FetchCurrentSprintsBoardState).mapTo[Option[FetchedBoardState]]
@@ -107,7 +107,7 @@ class ScrumSimulatorTest extends FlatSpec with Matchers with ProjectActorHelper 
     val givenStart = new Date(1000)
     val givenEnd = new Date(2000)
 
-    val expectedDetails = SprintDetails(givenName, givenStart, givenEnd)
+    val expectedDetails = MajorSprintDetails(givenName, givenStart, givenEnd)
     def sprintIsActive = projectHasOnlyOneActiveSprint(expectedSprintId, projectActor)
 
     (for {

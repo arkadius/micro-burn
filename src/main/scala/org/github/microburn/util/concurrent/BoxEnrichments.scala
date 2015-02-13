@@ -13,25 +13,25 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package org.github.microburn.repository
+package org.github.microburn.util.concurrent
 
-import java.io.File
+import net.liftweb.common._
 
-import org.github.microburn.domain.SampleSprint
-import org.scalatest.{Matchers, FlatSpec}
 
-class SprintDetailsRepositoryTest extends FlatSpec with Matchers {
+object BoxEnrichments {
 
-  import org.scalatest.OptionValues._
+  implicit class EnrichedValidation[E <: Exception, A](validation: scalaz.Validation[E, A]) {
+    def toBox: Box[A] = validation match {
+      case scalaz.Success(value) => Full(value)
+      case scalaz.Failure(ex)    => Failure(ex.getMessage, Full(ex), Empty)
+    }
+  }
 
-  it should "work round trip" in {
-    val sprint = SampleSprint.withOverridenBase(BigDecimal("1.4"))
-    val repo = SprintDetailsRepository(new File(s"target/sprints/${sprint.id}"))
-
-    repo.saveDetails(sprint)
-
-    val loadedSprint = repo.loadDetails.value
-    loadedSprint shouldEqual sprint.details
+  implicit class OptionEnrichment[T](option: Option[T]) {
+    def toBox: Box[T] = option match {
+      case Some(value) => Full(value)
+      case None        => Empty
+    }
   }
 
 }

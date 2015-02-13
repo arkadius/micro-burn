@@ -35,15 +35,12 @@ class SprintActor(var sprint: Sprint)
   override protected def messageHandler: PartialFunction[Any, Unit] = {
     case GetDetails =>
       reply(DetailsWithBaseStoryPoints(sprint.details, sprintBase.baseStoryPointsForStart))
-    case FinishSprint(sprintId, timestamp) =>
+    case UpdateSprintDetails(sprintId, details, timestamp) =>
       require(sprintId == sprint.id)
-      updateSprintAndReply(sprint.finish(timestamp))
-    case RemoveSprint(sprintId, timestamp) =>
+      updateSprintAndReply(sprint.updateDetails(details)(timestamp))
+    case UpdateSprint(sprintId, userStories, details, timestamp) =>
       require(sprintId == sprint.id)
-      updateSprintAndReply(sprint.markRemoved(timestamp))
-    case UpdateSprint(sprintId, userStories, finishSprint, timestamp) =>
-      require(sprintId == sprint.id)
-      updateSprintAndReply(sprint.update(userStories, finishSprint)(timestamp))
+      updateSprintAndReply(sprint.update(userStories, details)(timestamp))
     case GetStoryPointsHistory(sprintId: String) =>
       require(sprintId == sprint.id)
       reply(SprintHistory(
@@ -68,6 +65,8 @@ class SprintActor(var sprint: Sprint)
     repo.saveUpdateResult(result)
     if (result.importantBoardStateChange)
       changeNotifyingActor ! BoardStateChanged(sprint.id)
+    else if (result.importantDetailsChange)
+      changeNotifyingActor ! SprintDetailsChanged(sprint.id)
     reply(sprint.id)
   }
 
@@ -75,37 +74,18 @@ class SprintActor(var sprint: Sprint)
 
 case class BoardStateChanged(sprintId: String)
 
+case class SprintDetailsChanged(sprintId: String)
+
 case object GetDetails
 
 case class DetailsWithBaseStoryPoints(details: SprintDetails, baseStoryPointsSum: BigDecimal)
 
+case class UpdateSprintDetails(sprintId: String, details: SprintDetails, timestamp: Date)
+
+case class UpdateSprint(sprintId: String, userStories: Seq[UserStory], details: MajorSprintDetails, timestamp: Date)
+
+case class GetStoryPointsHistory(sprintId: String)
+
 case class SprintHistory(sprintBase: SprintBase,
                          columnStates: Seq[DateWithColumnsState],
                          sprintDetails: SprintDetails)
-
-class SprintActorFactory(config: ProjectConfig, initialFetchToSprintStartAcceptableDelayMinutes: FiniteDuration, changeNotifyingActor: LiftActor) {
-  private val baseDeterminer = new SprintBaseStateDeterminer(initialFetchToSprintStartAcceptableDelayMinutes)
-
-  def fromRepo(sprintId: String): Option[SprintActor] = {
-    val repo = createRepo(sprintId)
-    repo.loadSprint.map { sprint =>
-      new SprintActor(sprint)(repo, baseDeterminer, config, changeNotifyingActor)
-    }
-  }
-
-  def migrateSprint(sprintId: String, details: SprintDetails, userStories: Seq[UserStory]): SprintActor = {
-    createSprint(sprintId, details, userStories, details.end)
-  }
-
-  def createSprint(sprintId: String, details: SprintDetails, userStories: Seq[UserStory], timestamp: Date): SprintActor = {
-    val sprint = Sprint.withEmptyEvents(sprintId, details, BoardState(userStories.toIndexedSeq, timestamp))
-    val repo = createRepo(sprintId)
-    repo.saveSprint(sprint)
-    new SprintActor(sprint)(repo, baseDeterminer, config, changeNotifyingActor)
-  }
-
-  private def createRepo(sprintId: String): SprintRepository = {
-    val sprintRoot = new File(config.dataRoot, sprintId)
-    SprintRepository(sprintRoot, sprintId)
-  }
-}

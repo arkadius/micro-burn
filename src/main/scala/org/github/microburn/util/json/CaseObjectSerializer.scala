@@ -23,7 +23,7 @@ case class CaseObjectSerializer[T <: AnyRef](obj: T) extends Serializer[T] {
   private val idValue = JString(obj.getClass.getName)
 
   override def deserialize(implicit format: Formats): PartialFunction[(TypeInfo, JValue), T] = {
-    case (_, JObject(List(JField(ID_FIELD, value)))) => obj
+    case (_, JObject(List(JField(ID_FIELD, value)))) if value == idValue => obj
   }
 
   override def serialize(implicit format: Formats): PartialFunction[Any, JValue] = {

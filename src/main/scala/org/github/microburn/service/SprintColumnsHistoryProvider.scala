@@ -59,7 +59,7 @@ class SprintColumnsHistoryProvider(projectActor: ProjectActor,
   }
 
   private def computeToAppend(history: SprintHistory): Option[DateWithColumnsState] = {
-    val nowOrSprintsEndForFinished = history.sprintDetails.finished.option(history.sprintDetails.end).getOrElse(new Date)
+    val nowOrSprintsEndForFinished = history.sprintDetails.isFinished.option(history.sprintDetails.end).getOrElse(new Date)
     val last = history.columnStates.last
     val lastAvailableBeforeNow = last.date.before(nowOrSprintsEndForFinished)
     lastAvailableBeforeNow.option {

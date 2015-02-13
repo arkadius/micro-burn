@@ -31,32 +31,28 @@ case class Sprint(id: String,
 
   def initialDoneTasksStoryPointsSum(implicit projectConfig: ProjectConfig): BigDecimal = initialBoard.doneTasksStoryPointsSum
 
-  def finish(timestamp: Date): SprintUpdateResult = {
+  def updateDetails(newDetails: SprintDetails)
+                   (timestamp: Date): SprintUpdateResult = {
+    val changedDetails = details.update(newDetails)
+
     val updatedSprint = copy(
-      details = details.finish
+      details = changedDetails openOr details
     )
-    SprintUpdateResult(currentBoard, updatedSprint, Nil, sprintFinished = true, sprintRemoved = false, timestamp)
+    SprintUpdateResult(updatedSprint, Nil, changedDetails.isDefined, timestamp)
   }
 
-  def markRemoved(timestamp: Date): SprintUpdateResult = {
-    val updatedSprint = copy(
-      details = details.markRemoved
-    )
-    SprintUpdateResult(currentBoard, updatedSprint, Nil, sprintFinished = false, sprintRemoved = true, timestamp)
-  }
-
-  def update(updatedUserStories: Seq[UserStory], finishSprint: Boolean)
+  def update(updatedUserStories: Seq[UserStory], updateDetails: MajorSprintDetails)
             (timestamp: Date): SprintUpdateResult = {
     val updatedBoard = BoardState(updatedUserStories, timestamp)
     val newAddedEvents = currentBoard.diff(updatedBoard)
-    val finished = !isActive || finishSprint
+    val changedDetails = details.update(updateDetails)
     
     val updatedSprint = copy(
-      details = if (finished) details.finish else details,
+      details = changedDetails openOr details,
       currentBoard = updatedBoard,
       events = events ++ newAddedEvents      
     )
-    SprintUpdateResult(updatedBoard, updatedSprint, newAddedEvents, finished, sprintRemoved = false, timestamp)
+    SprintUpdateResult(updatedSprint, newAddedEvents, changedDetails.isDefined, timestamp)
   }
   
   def columnStatesHistory(implicit config: ProjectConfig): Seq[DateWithColumnsState] = {
@@ -76,30 +72,10 @@ case class Sprint(id: String,
   }
 }
 
-case class SprintDetails(name: String, start: Date, end: Date, isActive: Boolean, isRemoved: Boolean, overriddenBaseStoryPointsSum: Option[BigDecimal]) {
-  def finished = !isActive
-
-  def finish = copy(isActive = false)
-
-  def markRemoved = copy(isRemoved = true)
-
-  def defineBaseStoryPoints(base: BigDecimal) = copy(overriddenBaseStoryPointsSum = Some(base))
-}
-
-object SprintDetails {
-  def apply(name: String, start: Date, end: Date): SprintDetails = SprintDetails(name, start, end, isActive = true)
-
-  def apply(name: String, start: Date, end: Date, isActive: Boolean): SprintDetails = SprintDetails(name, start, end, isActive, isRemoved = false, overriddenBaseStoryPointsSum = None)
-}
-
-case class SprintUpdateResult(private val stateBeforeUpdate: BoardState,
-                              updatedSprint: Sprint,
+case class SprintUpdateResult(updatedSprint: Sprint,
                               newAddedEvents: Seq[TaskEvent],
-                              sprintFinished: Boolean,
-                              sprintRemoved: Boolean,
+                              importantDetailsChange: Boolean,
                               timestamp: Date) {
-  def importantDetailsChange: Boolean = sprintFinished || sprintRemoved// co ze zmianą nazwy/dat?
-  
   def importantBoardStateChange: Boolean = newAddedEvents.nonEmpty
 }
 

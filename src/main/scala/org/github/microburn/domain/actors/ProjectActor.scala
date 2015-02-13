@@ -43,9 +43,11 @@ class ProjectActor(config: ProjectConfig, initialFetchToSprintStartAcceptableDel
   ).toMap
 
   override protected def lowPriority: PartialFunction[Any, Unit] = {
-    case GetProjectState(includeRemoved) =>
-      reply(prepareProjectState(includeRemoved))
-    case CreateNewSprint(sprintId, details, userStories, timestamp) if details.finished =>
+    case GetProjectState =>
+      reply(prepareProjectState)
+    case GetFullProjectState =>
+      reply(prepareFullProjectState)
+    case CreateNewSprint(sprintId, details, userStories, timestamp) if details.isFinished =>
       sprintActors += sprintId -> sprintFactory.migrateSprint(sprintId, details, userStories)
       updateListeners()
       reply(sprintId)
@@ -53,69 +55,64 @@ class ProjectActor(config: ProjectConfig, initialFetchToSprintStartAcceptableDel
       sprintActors += sprintId -> sprintFactory.createSprint(sprintId, details, userStories, timestamp)
       updateListeners()
       reply(sprintId)
-    case finish: FinishSprint =>
-      val resultFuture = sprintActors(finish.sprintId) !< finish
-      resultFuture.onSuccess { _ =>
-        updateListeners()
-      }
+    case updateDetails: UpdateSprintDetails =>
+      val resultFuture = sprintActors(updateDetails.sprintId) !< updateDetails
       reply(resultFuture)
-    case remove: RemoveSprint =>
-      sprintActors(remove.sprintId) ! remove
-      updateListeners()
-      reply(Unit)
     case update: UpdateSprint =>
       val resultFuture = sprintActors(update.sprintId) !< update
-      resultFuture.onSuccess { _ =>
-        if (update.detailsUpdated)
-          updateListeners()
-      }
       reply(resultFuture)
     case getHistory: GetStoryPointsHistory =>
       val future = sprintActors.get(getHistory.sprintId).map { sprintActor =>
         (sprintActor !< getHistory).map(Full(_))
       }.getOrElse(LAFuture[Box[_]](() => Failure("Sprint with given id does not exist")))
       reply(future)
+    case detailsChanged: SprintDetailsChanged =>
+      updateListeners()
     case boardStateChanged: BoardStateChanged =>
       sendListenersMessage(boardStateChanged)
   }
 
-  override protected def createUpdate: Any = prepareProjectState(includeRemoved = false)
+  override protected def createUpdate: Any = prepareProjectState
 
-  private def prepareProjectState(includeRemoved: Boolean): LAFuture[ProjectState] = {
+  private def prepareProjectState: LAFuture[ProjectState] = fetchDetails.map { sprints =>
+    ProjectState(sprints.filterNot(_.isRemoved).map(_.toMajor))
+  }
+
+  private def prepareFullProjectState: LAFuture[FullProjectState] = fetchDetails.map { sprints =>
+    FullProjectState(sprints)
+  }
+
+  private def fetchDetails: LAFuture[List[SprintIdWithDetails]] = {
     val sprintWithStateFutures = sprintActors.map {
       case (sprintId, sprintActor) =>
         (sprintActor !< GetDetails).mapTo[DetailsWithBaseStoryPoints] map { details =>
-          SprintWithDetails(sprintId, details.details, details.baseStoryPointsSum.toDouble)
+          SprintIdWithDetails(sprintId, details.details, details.baseStoryPointsSum.toDouble)
         }
     }.toSeq
     LAFuture.collect(sprintWithStateFutures : _*).map { sprints =>
-      val filtered = sprints.filter { sprint =>
-        !sprint.isRemoved || includeRemoved
-      }
-      ProjectState(filtered.sortBy(_.id))
+      sprints.sortBy(_.id)
     }
   }
 }
 
-case class GetProjectState(includeRemoved: Boolean = false)
+case object GetProjectState
 
-case class ProjectState(sprints: Seq[SprintWithDetails]) extends NgModel {
+case object GetFullProjectState
+
+case class ProjectState(sprints: Seq[SprintIdWithMajorDetails]) extends NgModel {
   def sprintIds: Set[String] = sprints.map(_.id).toSet
 }
 
-case class SprintWithDetails(id: String, details: SprintDetails, baseStoryPoints: Double) {
+case class FullProjectState(sprints: Seq[SprintIdWithDetails])
+
+case class SprintIdWithDetails(id: String, details: SprintDetails, baseStoryPoints: Double) {
   def isActive: Boolean = details.isActive
   def isRemoved: Boolean = details.isRemoved
+  def toMajor: SprintIdWithMajorDetails = SprintIdWithMajorDetails(id, details.toMajor, baseStoryPoints)
 }
 
-case class CreateNewSprint(sprintId: String, details: SprintDetails, userStories: Seq[UserStory], timestamp: Date)
-
-case class FinishSprint(sprintId: String, timestamp: Date)
-
-case class RemoveSprint(sprintId: String, timestamp: Date)
-
-case class UpdateSprint(sprintId: String, userStories: Seq[UserStory], finishSprint: Boolean, timestamp: Date) {
-  def detailsUpdated: Boolean = finishSprint
+case class SprintIdWithMajorDetails(id: String, details: MajorSprintDetails, baseStoryPoints: Double) {
+  def isActive: Boolean = details.isActive
 }
 
-case class GetStoryPointsHistory(sprintId: String)
+case class CreateNewSprint(sprintId: String, details: MajorSprintDetails, userStories: Seq[UserStory], timestamp: Date)

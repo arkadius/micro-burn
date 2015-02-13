@@ -16,6 +16,7 @@
 package org.github.microburn.snippet
 
 import net.liftmodules.ng.Angular._
+import net.liftweb.common.Box
 import org.github.microburn.ApplicationContext
 import org.github.microburn.integration.support.kanban._
 
@@ -31,9 +32,10 @@ object MicroBurnServices {
     ApplicationContext().integrationProvider match {
       case s: ScrumSimulation =>
         module.factory("scrumSimulatorSvc", jsObjFactory()
-          .future[StartSprint, Any]("startSprint",  (start: StartSprint) => (s.scrumSimulator ?? start).boxed)
-          .future("finishSprint", (sprintId: String) => (s.scrumSimulator ?? DoFinishSprint(sprintId)).boxed)
-          .future("removeSprint", (sprintId: String) => (s.scrumSimulator ?? DoRemoveSprint(sprintId)).boxed)
+          .future[StartSprint, Any]("startSprint",  (start: StartSprint) => (s.scrumSimulator ?? start).mapTo[Box[Any]])
+          .future("finishSprint", (sprintId: String) => (s.scrumSimulator ?? FinishSprint(sprintId)).mapTo[Box[Any]])
+          .future("removeSprint", (sprintId: String) => (s.scrumSimulator ?? RemoveSprint(sprintId)).mapTo[Box[Any]])
+          .future("defineBase", (base: DefineBaseStoryPoints) => (s.scrumSimulator ?? base).mapTo[Box[Any]])
         )
       case _ =>
         module

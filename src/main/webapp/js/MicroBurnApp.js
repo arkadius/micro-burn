@@ -101,12 +101,20 @@ app.controller("ProjectCtrl", ['$scope', '$timeout', 'historySvc', 'scrumSimulat
   }
 
   $scope.cancelBase = function () {
+    $("#base-sp").blur();
     $scope.editBaseMode = false;
     $scope.editedSprint.baseStoryPoints = $scope.selectedSprint.baseStoryPoints;
   };
 
   $scope.saveBase = function () {
-    console.log("save"); // FIXME usługa
+    $("#base-sp").blur();
+    wrapServiceCall(function() {
+      var input = {
+        id: $scope.selectedSprint.id,
+        baseStoryPoints: parseFloat($scope.editedSprint.baseStoryPoints)
+      };
+      return scrumSimulatorSvc.defineBase(input);
+    });
   };
 
   $scope.editSprint = function () {
@@ -115,7 +123,7 @@ app.controller("ProjectCtrl", ['$scope', '$timeout', 'historySvc', 'scrumSimulat
     var end = new Date(start);
     end.setDate(start.getDate() + 7); //TODO: konfigurowalne
     $scope.editedSprint = {
-      name: "Sprint " + (nextSprintId() + 1), // +1 for natural indexing,
+      name: "Sprint " + nextSprintNo(),
       start: start.dateFormat(window.dateFormat),
       end: end.dateFormat(window.dateFormat),
       baseStoryPoints: ""
@@ -126,10 +134,10 @@ app.controller("ProjectCtrl", ['$scope', '$timeout', 'historySvc', 'scrumSimulat
     });
   };
 
-  function nextSprintId() {
-    var maxId = -1;
+  function nextSprintNo() {
+    var maxId = 0;
     $scope.projectState.sprints.forEach(function(sprint) {
-      var parsedId = parseInt(sprint.id);
+      var parsedId = parseInt(sprint.details.name.replace( /^\D+/g, ''));
       if (!isNaN(parsedId)) {
         maxId = Math.max(maxId, parsedId);
       }
@@ -289,5 +297,16 @@ app.directive('focusOn', function() {
     scope.$on(attr.focusOn, function(e) {
       elem[0].focus();
     });
+  };
+});
+
+app.directive('selectOnClick', function () {
+  return {
+    restrict: 'A',
+    link: function (scope, element, attrs) {
+      element.on('click', function () {
+        this.select();
+      });
+    }
   };
 });

@@ -19,9 +19,8 @@ import java.util.Date
 
 import net.liftweb.actor.LAFuture
 import org.github.microburn.domain.actors._
-import org.github.microburn.domain.{SprintDetails, UserStory}
+import org.github.microburn.domain.{MajorSprintDetails, UserStory}
 import org.github.microburn.integration.IntegrationProvider
-import org.github.microburn.integration.support.kanban.ScrumSimulator
 
 class ScrumIntegrationProvider(sprintsProvider: SprintsDataProvider, tasksProvider: TasksDataProvider)(projectActor: ProjectActor)
   extends IntegrationProvider {
@@ -37,7 +36,7 @@ class ScrumIntegrationProvider(sprintsProvider: SprintsDataProvider, tasksProvid
   }
 
   private def parallelCurrentAndUpdatedSprints: LAFuture[(ProjectState, Seq[Long])] = {
-    val currentStateFuture = (projectActor ?? GetProjectState()).mapTo[ProjectState]
+    val currentStateFuture = (projectActor ?? GetProjectState).mapTo[ProjectState]
       .withLoggingFinished("current sprint ids: " + _.sprints.map(_.id).mkString(", "))
     val updatedIdsFuture = sprintsProvider.allSprintIds.withLoggingFinished("updated sprints ids: " + _.mkString(", "))
     for {
@@ -75,13 +74,13 @@ class ScrumIntegrationProvider(sprintsProvider: SprintsDataProvider, tasksProvid
       case withDetails if withDetails.isActive =>
         for {
           (details, userStories) <- parallelSprintDetailsAndUserStories(withDetails.id)
-          updateResult <- (projectActor ?? UpdateSprint(withDetails.id, userStories, !details.isActive, timestamp)).mapTo[String]
+          updateResult <- (projectActor ?? UpdateSprint(withDetails.id, userStories, details, timestamp)).mapTo[String]
         } yield updateResult
     }
     LAFuture.collect(updateResults : _*)
   }
 
-  private def parallelSprintDetailsAndUserStories(sprintId: String): LAFuture[(SprintDetails, Seq[UserStory])] = {
+  private def parallelSprintDetailsAndUserStories(sprintId: String): LAFuture[(MajorSprintDetails, Seq[UserStory])] = {
     val detailsFuture = sprintsProvider.sprintDetails(sprintId).withLoggingFinished(s"sprint details for sprint $sprintId: " + _)
     val tasksFuture = tasksProvider.userStories(sprintId).withLoggingFinished(s"user stories count for sprint $sprintId: " + _.size)
     for {

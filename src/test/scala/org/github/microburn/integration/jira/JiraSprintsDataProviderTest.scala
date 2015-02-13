@@ -18,9 +18,8 @@ package org.github.microburn.integration.jira
 import java.util.Locale
 
 import akka.actor.ActorSystem
-import com.typesafe.config.ConfigFactory
 import org.github.microburn.TestConfig
-import org.github.microburn.domain.SprintDetails
+import org.github.microburn.domain.MajorSprintDetails
 import org.github.microburn.integration.RestIntegrationTest
 import org.joda.time.DateTime
 import org.scalatest.{FlatSpec, Matchers}
@@ -47,7 +46,7 @@ class JiraSprintsDataProviderTest extends FlatSpec with RestIntegrationTest with
     val provider = new JiraSprintsDataProvider(jiraConfig, Locale.ENGLISH)
     val result = provider.sprintDetails("21").await(5 seconds)
     println("result: " + result)
-    result shouldEqual SprintDetails(
+    result shouldEqual MajorSprintDetails(
       "Sprint 1",
       new DateTime(2013, 11, 20, 14, 30).toDate, // 20/nov/13 14:30
       new DateTime(2013, 11, 27, 14, 30).toDate, // 27/nov/13 14:30
