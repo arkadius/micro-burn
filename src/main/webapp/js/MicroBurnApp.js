@@ -207,9 +207,18 @@ app.directive('sprintChart', ['$cookies', function ($cookies) {
         interpolation: "step-after",
         series: series
       });
+      window.graph = graph;
 
       function toDays(millis) {
         return Math.floor((millis - startDate) / (1000 * 60 * 60 * 24))
+      }
+
+      function ticksBetween(minX, maxX) {
+        var maxTicks = 7;
+        var delta = (maxX - minX) / maxTicks;
+        return _.range(0, maxTicks+1).map(function (i) {
+          return minX + i * delta;
+        });
       }
 
       var xAxes = new Rickshaw.Graph.Axis.X({
@@ -246,6 +255,9 @@ app.directive('sprintChart', ['$cookies', function ($cookies) {
         }
         if (history) {
           startDate = history.startDate;
+
+          var minX = Number.MAX_VALUE;
+          var maxX = Number.MIN_VALUE;
           history.series.forEach(function (column, i) { // przepisujemy, bo wykres ma uchwyt do serii
             if (column.name == 'Estimate') {
               column.color = "rgba(255, 0, 0, 0.5)";
@@ -257,8 +269,13 @@ app.directive('sprintChart', ['$cookies', function ($cookies) {
             if ($cookies["disabled_" + i]) {
               column.disabled = true;
             }
+            column.data.forEach(function (probe) {
+              minX = Math.min(minX, probe.x);
+              maxX = Math.max(maxX, probe.x);
+            });
             series.push(column);
           });
+          xAxes.tickValues = ticksBetween(minX, maxX);
         } else {
           startDate = null;
         }
