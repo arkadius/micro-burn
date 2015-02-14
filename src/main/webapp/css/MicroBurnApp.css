@@ -87,6 +87,10 @@ input:disabled {
     left: 40px;
 }
 
+#sprint-chart-container .tick text {
+    stroke: none;
+}
+
 #sprint-chart-container > #y-axis {
     position: absolute;
     top: 0;
