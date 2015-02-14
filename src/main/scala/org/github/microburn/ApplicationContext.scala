@@ -28,6 +28,8 @@ class ApplicationContext private(val projectActor: ProjectActor,
                                  val columnsHistoryProvider: SprintColumnsHistoryProvider,
                                  appConfig: ApplicationConfig) {
   def connectorConfig: ConnectorConfig = appConfig.connectorConfig
+
+  def authorizationConfig: AuthorizationConfig = appConfig.authorizationConfig
 }
 
 object ApplicationContext {

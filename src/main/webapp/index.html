@@ -14,26 +14,28 @@
           <div>
             <span class="sprint-details">
               from: <input id="start-date" type="text" ng-model="editedSprint.start" class="date-input" ng-focus="!createMode && enterEditStartMode()"
-                           ng-disabled="selectedSprint == null && !createMode || selectedSprint != null && !selectedSprint.details.isActive || removeDecisionMode"
+                           ng-disabled="!scrumSimulation || selectedSprint == null && !createMode || selectedSprint != null && !selectedSprint.details.isActive || removeDecisionMode"
                            ng-keydown="$event.keyCode == 13 && saveStart() || $event.keyCode == 27 && cancelEditStart()">
               <span ng-show="editStartMode">
                 <button class="ok-button"  ng-click="saveStart()"></button>
                 <button class="cancel-button" ng-click="cancelEditStart()"></button>
               </span>
                 to: <input id="end-date" type="text" ng-model="editedSprint.end" class="date-input" ng-focus="!createMode && enterEditEndMode()"
-                           ng-disabled="selectedSprint == null && !createMode || selectedSprint != null && !selectedSprint.details.isActive || removeDecisionMode"
+                           ng-disabled="!scrumSimulation || selectedSprint == null && !createMode || selectedSprint != null && !selectedSprint.details.isActive || removeDecisionMode"
                            ng-keydown="$event.keyCode == 13 && saveEnd() || $event.keyCode == 27 && cancelEditEnd()">
               <span ng-show="editEndMode">
                 <button class="ok-button"  ng-click="saveEnd()"></button>
                 <button class="cancel-button" ng-click="cancelEditEnd()"></button>
               </span>
-              base sp: <input id="base-sp" type="text" ng-model="editedSprint.baseStoryPoints" ng-focus="!createMode && enterEditBaseMode()"
-                              ng-disabled="selectedSprint == null || !selectedSprint.details.isActive || removeDecisionMode"
-                              ng-keydown="$event.keyCode == 13 && saveBase() || $event.keyCode == 27 && cancelEditBase()"
-                              select-on-click class="number-input">
-              <span ng-show="editBaseMode">
-                <button class="ok-button"  ng-click="saveBase()"></button>
-                <button class="cancel-button" ng-click="cancelEditBase()"></button>
+              <span ng-show="scrumSimulation">
+                base sp: <input id="base-sp" type="text" ng-model="editedSprint.baseStoryPoints" ng-focus="!createMode && enterEditBaseMode()"
+                                ng-disabled="selectedSprint == null || !selectedSprint.details.isActive || removeDecisionMode"
+                                ng-keydown="$event.keyCode == 13 && saveBase() || $event.keyCode == 27 && cancelEditBase()"
+                                select-on-click class="number-input">
+                <span ng-show="editBaseMode">
+                  <button class="ok-button"  ng-click="saveBase()"></button>
+                  <button class="cancel-button" ng-click="cancelEditBase()"></button>
+                </span>
               </span>
               <script type="application/javascript">
                 $('.date-input').datetimepicker({
@@ -43,7 +45,7 @@
                 });
                 $(".number-input").numeric(".");
               </script>
-              <span id="actions-group-panel">
+              <span id="actions-group-panel" ng-show="scrumSimulation">
                 <span id="actions-panel">
                   <button ng-click="finishSprint()" ng-disabled="!selectedSprint.details.isActive">Finish</button>
                   <button ng-click="createSprint()" ng-disabled="existsActiveSprint || createMode || removeDecisionMode || editBaseMode || editStartMode || editEndMode">Create new</button>

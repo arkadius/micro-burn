@@ -24,12 +24,12 @@ object ConfigExtensions {
   import collection.convert.wrapAsScala._
 
   implicit class ConfigExtension(config: Config) {
-    def optional[T](path: String)(f: Config => String => T): Option[T] = {
+    def optional[T](f: Config => String => T, path: String): Option[T] = {
       config.hasPath(path).option(f(config)(path))
     }
 
     def getDefinedBoolean(path: String, notDefinedDefault: => Boolean = false): Boolean = {
-      config.optional(path)(_.getBoolean).getOrElse(notDefinedDefault)
+      config.optional(_.getBoolean, path).getOrElse(notDefinedDefault)
     }
 
     def getBigDecimal(path: String): BigDecimal = {

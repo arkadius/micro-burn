@@ -14,8 +14,16 @@ function wrapServiceCall(call) {
 
 var app = angular.module("MicroBurnApp", ["MicroBurnServices", 'ngCookies']);
 
-app.controller("ProjectCtrl", ['$scope', '$timeout', 'historySvc', 'scrumSimulatorSvc', function ($scope, $timeout, historySvc, scrumSimulatorSvc) {
-  window.scrumSimulatorSvc = scrumSimulatorSvc;
+var ctrlDeclaration = ['$scope', '$timeout', 'historySvc'];
+
+if (window.scrumSimulation) {
+  ctrlDeclaration.push('scrumSimulatorSvc');
+}
+
+ctrlDeclaration.push(function ($scope, $timeout, historySvc, scrumSimulatorSvc) {
+  if (window.scrumSimulation) {
+    $scope.scrumSimulation = true;
+  }
 
   $scope.projectState = {
     sprints: []
@@ -235,7 +243,9 @@ app.controller("ProjectCtrl", ['$scope', '$timeout', 'historySvc', 'scrumSimulat
   $scope.discardRemove = function () {
     disableModes();
   }
-}]);
+});
+
+app.controller("ProjectCtrl", ctrlDeclaration);
 
 app.directive('sprintChart', ['$cookies', function ($cookies) {
   return {

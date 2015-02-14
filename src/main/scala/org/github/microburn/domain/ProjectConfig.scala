@@ -53,7 +53,7 @@ object ProjectConfig {
     if (nonBacklogColumns.size < 2)
       throw new scala.IllegalArgumentException("You must define at least two column")
     val nonBacklogColumnsWithAtLeastOneDone = makeAtLeastOneColumnDone(nonBacklogColumns)
-    val defaultStoryPointsForUserStrories = config.optional("defaultStoryPointsForUserStrories")(_.getBigDecimal)
+    val defaultStoryPointsForUserStrories = config.optional(_.getBigDecimal, "defaultStoryPointsForUserStrories")
     val splitSpBetweenTechnicalTasks = config.getDefinedBoolean("splitSpBetweenTechnicalTasks")
     val dataRoot = new File(config.getString("dataRoot"))
     ProjectConfig(
@@ -90,11 +90,11 @@ object ProjectConfig {
   }
 
   private def statusesFromStatusIds(columnConfig: Config): Option[List[String]] = {
-    columnConfig.optional("statusIds")(_.getStringList).map(_.toList)
+    columnConfig.optional(_.getStringList, "statusIds").map(_.toList)
   }
 
   private def statusesFromId(columnConfig: Config): Option[List[String]] = {
-    columnConfig.optional("id")(_.getString).map(List(_))
+    columnConfig.optional(_.getString, "id").map(List(_))
   }
   
   private def parseDayOfWeekWeights(config: Config): IndexedSeq[BigDecimal] = {

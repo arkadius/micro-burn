@@ -17,30 +17,39 @@ package org.github.microburn.snippet
 
 import net.liftmodules.ng.Angular._
 import net.liftweb.common.Box
+import net.liftweb.http.S
+import net.liftweb.http.js.JE.JsVar
+import net.liftweb.http.js.JsCmds.{Script, JsCrVar}
+import net.liftweb.http.js.JsExp
 import org.github.microburn.ApplicationContext
 import org.github.microburn.integration.support.kanban._
 
 object MicroBurnServices {
   import org.github.microburn.util.concurrent.FutureEnrichments._
   import org.github.microburn.util.concurrent.LiftActorEnrichments._
-
-  def render = renderIfNotAlreadyDefined {
-    val module = angular.module("MicroBurnServices")
-      .factory("historySvc", jsObjFactory()
+  
+  def render = {
+    val givenSecret = S.param("secret").toOption
+    val scrumSimulation = ApplicationContext().integrationProvider match {
+      case s: ScrumSimulation if givenSecret == ApplicationContext().authorizationConfig.secretForScrumSimulation => Some(s.scrumSimulator)
+      case s: ScrumSimulation if ApplicationContext().authorizationConfig.secretForScrumSimulation.isEmpty => Some(s.scrumSimulator)
+      case _ => None
+    }
+    Script(JsCrVar("scrumSimulation", JsExp.boolToJsExp(scrumSimulation.isDefined))) +: renderIfNotAlreadyDefined {
+      val module = angular.module("MicroBurnServices")
+        .factory("historySvc", jsObjFactory()
         .future("getHistory", (sprintId: String) => ApplicationContext().columnsHistoryProvider.columnsHistory(sprintId))
-      )
-    ApplicationContext().integrationProvider match {
-      case s: ScrumSimulation =>
-        module.factory("scrumSimulatorSvc", jsObjFactory()
-          .future[StartSprint, Any]("startSprint",  (start: StartSprint) => (s.scrumSimulator ?? start).mapTo[Box[Any]])
-          .future("finishSprint", (sprintId: String) => (s.scrumSimulator ?? FinishSprint(sprintId)).mapTo[Box[Any]])
-          .future("removeSprint", (sprintId: String) => (s.scrumSimulator ?? RemoveSprint(sprintId)).mapTo[Box[Any]])
-          .future("updateStartDate", (start: UpdateStartDate) => (s.scrumSimulator ?? start).mapTo[Box[Any]])
-          .future("updateEndDate", (end: UpdateEndDate) => (s.scrumSimulator ?? end).mapTo[Box[Any]])
-          .future("defineBase", (base: DefineBaseStoryPoints) => (s.scrumSimulator ?? base).mapTo[Box[Any]])
         )
-      case _ =>
-        module
+      scrumSimulation.map { scrumSimulator =>
+        module.factory("scrumSimulatorSvc", jsObjFactory()
+          .future[StartSprint, Any]("startSprint", (start: StartSprint) => (scrumSimulator ?? start).mapTo[Box[Any]])
+          .future("finishSprint", (sprintId: String) => (scrumSimulator ?? FinishSprint(sprintId)).mapTo[Box[Any]])
+          .future("removeSprint", (sprintId: String) => (scrumSimulator ?? RemoveSprint(sprintId)).mapTo[Box[Any]])
+          .future("updateStartDate", (start: UpdateStartDate) => (scrumSimulator ?? start).mapTo[Box[Any]])
+          .future("updateEndDate", (end: UpdateEndDate) => (scrumSimulator ?? end).mapTo[Box[Any]])
+          .future("defineBase", (base: DefineBaseStoryPoints) => (scrumSimulator ?? base).mapTo[Box[Any]])
+        )
+      } getOrElse module
     }
   }
 }

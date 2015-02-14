@@ -27,6 +27,7 @@ import scala.concurrent.duration.FiniteDuration
 case class ApplicationConfig(connectorConfig: ConnectorConfig,
                              projectConfig: ProjectConfig,
                              durations: DurationsConfig,
+                             authorizationConfig: AuthorizationConfig,
                              integrationProvidersFactory: ProjectActor => IntegrationProvider)
 
 object ApplicationConfig {
@@ -43,6 +44,7 @@ object ApplicationConfig {
       connectorConfig = ConnectorConfig(config.getConfig("connector")),
       projectConfig = ProjectConfig(config.getConfig("project")),
       durations = durations,
+      authorizationConfig = AuthorizationConfig(config.getConfig("authorization")),
       integrationProvidersFactory = providersFactory)
   }
 
@@ -55,6 +57,18 @@ object ConnectorConfig {
     ConnectorConfig(
       config.getInt("port"),
       config.getString("contextPath")
+    )
+  }
+}
+
+case class AuthorizationConfig(secretForScrumSimulation: Option[String])
+
+object AuthorizationConfig {
+  import org.github.microburn.util.config.ConfigExtensions._
+
+  def apply(config: Config): AuthorizationConfig = {
+    AuthorizationConfig(
+      config.optional(_.getString, "secretForScrumSimulation")
     )
   }
 }
