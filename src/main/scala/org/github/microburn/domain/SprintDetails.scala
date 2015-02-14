@@ -17,6 +17,7 @@ package org.github.microburn.domain
 
 import java.util.Date
 import net.liftweb.common._
+import org.joda.time.{DateTime, Days}
 
 import scalaz.Scalaz._
 
@@ -44,10 +45,36 @@ case class SprintDetails private(name: String,
   }
 
   def defineBaseStoryPoints(base: BigDecimal): Box[SprintDetails] = {
-    if (isRemoved)
-      Failure("Cannot update removed sprint")
+    if (!isActive)
+      Failure("Cannot update not active sprint")
+    else if (base >= 1000)
+      Failure("Story points base must be lower than 1000")
+    else if (base.scale > 3)
+      Failure("Story points base must be defined with at most 3 numbers precision")
     else
       Full(copy(overriddenBaseStoryPointsSum = Some(base)))
+  }
+
+  def updateStartDate(start: Date): Box[SprintDetails] = {
+    if (!isActive)
+      Failure("Cannot update not active sprint")
+    else if (!start.before(end))
+      Failure("Start date must be before end date")
+    else if (Days.daysBetween(new DateTime(start), new DateTime(end)).getDays > 365)
+      Failure("Sprint cannot be longer than 1 year")
+    else
+      Full(copy(start = start))
+  }
+
+  def updateEndDate(end: Date): Box[SprintDetails] = {
+    if (!isActive)
+      Failure("Cannot update not active sprint")
+    else if (!start.before(end))
+      Failure("Start date must be before end date")
+    else if (Days.daysBetween(new DateTime(start), new DateTime(end)).getDays > 365)
+      Failure("Sprint cannot be longer than 1 year")
+    else
+      Full(copy(end = end))
   }
 
   def update(upd: MajorSprintDetails): Box[SprintDetails] = {

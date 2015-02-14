@@ -5,6 +5,7 @@ function wrapServiceCall(call) {
   var callResult = call();
   callResult.catch(function (msg) {
     window.alert("Error: " + msg);
+    $("#cover").hide();
   });
   callResult.then(function () {
     $("#cover").hide();
@@ -21,6 +22,7 @@ app.controller("ProjectCtrl", ['$scope', '$timeout', 'historySvc', 'scrumSimulat
   };
   $scope.sprintsOrdered = [];
   $scope.existsActiveSprint = false;
+  $scope.selectedSprintMissingOrActive = false;
 
   $scope.editedSprint = {
     name: "",
@@ -29,7 +31,7 @@ app.controller("ProjectCtrl", ['$scope', '$timeout', 'historySvc', 'scrumSimulat
     baseStoryPoints: ""
   };
 
-  $scope.editMode = false;
+  $scope.createMode = false;
   $scope.removeDecisionMode = false;
   $scope.editBaseMode = false;
 
@@ -67,9 +69,11 @@ app.controller("ProjectCtrl", ['$scope', '$timeout', 'historySvc', 'scrumSimulat
   });
 
   function disableModes() {
-    $scope.editMode = false;
+    $scope.createMode = false;
     $scope.removeDecisionMode = false;
-    $scope.editBaseMode = false;
+    $scope.cancelEditStart();
+    $scope.cancelEditEnd();
+    $scope.cancelEditBase();
   }
 
   $scope.$watch("selectedSprint", function (sprint) {
@@ -100,12 +104,60 @@ app.controller("ProjectCtrl", ['$scope', '$timeout', 'historySvc', 'scrumSimulat
     }
   }
 
-  $scope.cancelBase = function () {
-    $("#base-sp").blur();
-    $scope.editBaseMode = false;
-    $scope.editedSprint.baseStoryPoints = $scope.selectedSprint.baseStoryPoints;
+  $scope.enterEditStartMode = function () {
+    $scope.editStartMode = true;
+    $scope.cancelEditEnd();
+    $scope.cancelEditBase();
+  };
+  $scope.enterEditEndMode = function () {
+    $scope.cancelEditStart();
+    $scope.editEndMode = true;
+    $scope.cancelEditBase();
+  };
+  $scope.enterEditBaseMode = function () {
+    $scope.cancelEditStart();
+    $scope.cancelEditEnd();
+    $scope.editBaseMode = true;
   };
 
+  $scope.cancelEditStart = function () {
+    $scope.editStartMode = false;
+    if ($scope.selectedSprint)
+      $scope.editedSprint.start = new Date($scope.selectedSprint.details.start).dateFormat(window.dateFormat);
+  };
+  $scope.cancelEditEnd = function () {
+    $scope.editEndMode = false;
+    if ($scope.selectedSprint)
+      $scope.editedSprint.end = new Date($scope.selectedSprint.details.end).dateFormat(window.dateFormat);
+  };
+  $scope.cancelEditBase = function () {
+    $scope.editBaseMode = false;
+    if ($scope.selectedSprint)
+      $scope.editedSprint.baseStoryPoints = $scope.selectedSprint.baseStoryPoints;
+  };
+
+  $scope.saveStart = function () {
+    $("#start-date").blur();
+    $(".xdsoft_datetimepicker").hide();
+    wrapServiceCall(function() {
+      var input = {
+        id: $scope.selectedSprint.id,
+        startDate: Date.parseDate($scope.editedSprint.start, window.dateFormat).toISOString().replace(/\..*Z/, "Z")
+      };
+      return scrumSimulatorSvc.updateStartDate(input);
+    });
+  };
+  $scope.saveEnd = function () {
+    $("#end-date").blur();
+    $(".xdsoft_datetimepicker").hide();
+    wrapServiceCall(function() {
+      var input = {
+        id: $scope.selectedSprint.id,
+        endDate: Date.parseDate($scope.editedSprint.end, window.dateFormat).toISOString().replace(/\..*Z/, "Z")
+      };
+      return scrumSimulatorSvc.updateEndDate(input);
+    });
+  };
   $scope.saveBase = function () {
     $("#base-sp").blur();
     wrapServiceCall(function() {
@@ -117,7 +169,7 @@ app.controller("ProjectCtrl", ['$scope', '$timeout', 'historySvc', 'scrumSimulat
     });
   };
 
-  $scope.editSprint = function () {
+  $scope.createSprint = function () {
     $scope.selectedSprint = null;
     var start = new Date();
     var end = new Date(start);
@@ -128,9 +180,9 @@ app.controller("ProjectCtrl", ['$scope', '$timeout', 'historySvc', 'scrumSimulat
       end: end.dateFormat(window.dateFormat),
       baseStoryPoints: ""
     };
-    $scope.editMode = true;
+    $scope.createMode = true;
     $timeout(function (){
-      $scope.$broadcast('editModeEntered');
+      $scope.$broadcast('createModeEntered');
     });
   };
 
@@ -157,6 +209,9 @@ app.controller("ProjectCtrl", ['$scope', '$timeout', 'historySvc', 'scrumSimulat
   };
 
   $scope.finishSprint = function () {
+    $scope.cancelEditStart();
+    $scope.cancelEditEnd();
+    $scope.cancelEditBase();
     wrapServiceCall(function() {
       return scrumSimulatorSvc.finishSprint($scope.selectedSprint.id);
     });
@@ -172,7 +227,7 @@ app.controller("ProjectCtrl", ['$scope', '$timeout', 'historySvc', 'scrumSimulat
     });
   };
 
-  $scope.discardEdit = function () {
+  $scope.discardCreate = function () {
     $scope.selectedSprint = $scope.sprintsOrdered[0];
     disableModes();
   };
@@ -278,6 +333,7 @@ app.directive('sprintChart', ['$cookies', function ($cookies) {
           xAxes.tickValues = ticksBetween(minX, maxX);
         } else {
           startDate = null;
+          xAxes.tickValues = null;
         }
 
         graph.render();

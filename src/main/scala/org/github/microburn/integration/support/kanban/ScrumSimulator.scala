@@ -76,6 +76,10 @@ class ScrumSimulator(boardStateProvider: BoardStateProvider, projectActor: Proje
       reply(updateSprintDetails(sprintId, _.finish))
     case RemoveSprint(sprintId) =>
       reply(updateSprintDetails(sprintId, _.markRemoved))
+    case UpdateStartDate(sprintId, start) =>
+      reply(updateSprintDetails(sprintId, _.updateStartDate(start)))
+    case UpdateEndDate(sprintId, end) =>
+      reply(updateSprintDetails(sprintId, _.updateEndDate(end)))
     case DefineBaseStoryPoints(sprintId, base) =>
       reply(updateSprintDetails(sprintId, _.defineBaseStoryPoints(BigDecimal(base))))
   }
@@ -108,7 +112,6 @@ class ScrumSimulator(boardStateProvider: BoardStateProvider, projectActor: Proje
       projectActor ?? UpdateSprintDetails(numericalSprintId.toString, updatedDetails, new Date)
     }).toFutureOfBox
   }
-
   
   private case object Init
 
@@ -148,5 +151,9 @@ case class StartSprint(name: String, start: Date, end: Date) extends NgModel
 case class FinishSprint(id: String)
 
 case class RemoveSprint(id: String)
+
+case class UpdateStartDate(id: String, startDate: Date) extends NgModel
+
+case class UpdateEndDate(id: String, endDate: Date) extends NgModel
 
 case class DefineBaseStoryPoints(id: String, baseStoryPoints: Double) extends NgModel

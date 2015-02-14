@@ -35,6 +35,8 @@ object MicroBurnServices {
           .future[StartSprint, Any]("startSprint",  (start: StartSprint) => (s.scrumSimulator ?? start).mapTo[Box[Any]])
           .future("finishSprint", (sprintId: String) => (s.scrumSimulator ?? FinishSprint(sprintId)).mapTo[Box[Any]])
           .future("removeSprint", (sprintId: String) => (s.scrumSimulator ?? RemoveSprint(sprintId)).mapTo[Box[Any]])
+          .future("updateStartDate", (start: UpdateStartDate) => (s.scrumSimulator ?? start).mapTo[Box[Any]])
+          .future("updateEndDate", (end: UpdateEndDate) => (s.scrumSimulator ?? end).mapTo[Box[Any]])
           .future("defineBase", (base: DefineBaseStoryPoints) => (s.scrumSimulator ?? base).mapTo[Box[Any]])
         )
       case _ =>
