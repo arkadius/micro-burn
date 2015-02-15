@@ -18,6 +18,7 @@ package org.github.microburn.integration.support.scrum
 import java.util.Date
 
 import net.liftweb.actor.LAFuture
+import net.liftweb.common.Box
 import org.github.microburn.domain.actors._
 import org.github.microburn.domain.{MajorSprintDetails, UserStory}
 import org.github.microburn.integration.IntegrationProvider
@@ -62,10 +63,10 @@ class ScrumIntegrationProvider(sprintsProvider: SprintsDataProvider, tasksProvid
     val createResults = missing.map { sprintId =>
       for {
         (details, userStories) <- parallelSprintDetailsAndUserStories(sprintId.toString)
-        createResult <- (projectActor !< CreateNewSprint(sprintId.toString, details, userStories, timestamp)).mapTo[String]
+        createResult <- (projectActor !< CreateNewSprint(sprintId.toString, details, userStories, timestamp)).mapTo[Box[String]].map(_.toOption)
       } yield createResult
     }
-    LAFuture.collect(createResults : _*)
+    LAFuture.collect(createResults : _*).map(_.flatten)
   }
 
   private def updateActiveSprints(current: ProjectState)

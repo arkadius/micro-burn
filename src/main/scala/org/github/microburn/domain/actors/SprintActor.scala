@@ -15,15 +15,12 @@
  */
 package org.github.microburn.domain.actors
 
-import java.io.File
 import java.util.Date
 
 import net.liftweb.actor.LiftActor
 import org.github.microburn.domain._
 import org.github.microburn.repository.SprintRepository
 import org.github.microburn.util.logging.Slf4jLogging
-
-import scala.concurrent.duration.FiniteDuration
 
 class SprintActor(var sprint: Sprint)
                  (repo: SprintRepository,

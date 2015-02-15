@@ -57,25 +57,25 @@ case class SprintDetails private(name: String,
   def updateStartDate(start: Date): Box[SprintDetails] = {
     for {
       _ <- validateIsActive
-      _ <- validateInterval(start, end)
+      _ <- validateInterval(start, this.end)
     } yield copy(start = start)
   }
 
   def updateEndDate(end: Date): Box[SprintDetails] = {
     for {
       _ <- validateIsActive
-      _ <- validateInterval(start, end)
+      _ <- validateInterval(this.start, end)
     } yield copy(end = end)
   }
 
   def update(upd: MajorSprintDetails): Box[SprintDetails] = {
     for {
-      _ <- Failure("Cannot update removed sprint") if isRemoved
+      _ <- Failure("Cannot update removed sprint") when isRemoved
       changedDetails <- (
-        upd.name != name ||
-        upd.start != start ||
-        upd.end != end ||
-        upd.isActive != isActive
+        upd.name != this.name ||
+        upd.start != this.start ||
+        upd.end != this.end ||
+        upd.isActive != this.isActive
       ).option {
         copy(name = upd.name, start = upd.start, end = upd.end, state = SprintState(upd.isActive))
       }

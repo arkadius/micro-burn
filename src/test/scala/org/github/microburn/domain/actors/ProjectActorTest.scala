@@ -37,7 +37,7 @@ class ProjectActorTest extends FlatSpec with Matchers with ProjectActorHelper {
     }
   }
 
-  it should "reply with correct active actors finishing with FinishSprint" in {
+  it should "reply with correct active actors finishing with UpdateSprintDetails" in {
     finishActorCheck { sprint =>
       UpdateSprintDetails(sprint.id, sprint.details.finish.openOrThrowException(""), new Date)
     }
