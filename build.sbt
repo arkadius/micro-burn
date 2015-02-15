@@ -52,7 +52,7 @@ libraryDependencies ++= {
     "com.typesafe" % "config" % "1.2.1",
     "net.databinder.dispatch" %% "dispatch-json4s-native" % "0.11.2",
     "net.liftmodules"      %%   s"ng_$liftEdition" % "0.6.3",
-    "net.liftmodules"      %%   s"ng-js_$liftEdition" % "0.2_1.3.8",
+    // nie został użyty lift-ng-js, bo trzeba było nadpisać zachowanie angulara (onreadystatechange zamiast onload)
     "net.liftmodules"      %%   s"lift-jquery-module_2.6" % "2.8",
     "net.liftweb"          %%  "lift-webkit"      % liftV,
     "org.eclipse.jetty"     %  "jetty-server"     % jettyV,

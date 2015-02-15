@@ -16,10 +16,7 @@
 package bootstrap.liftweb
 
 import net.liftmodules.JQueryModule
-import net.liftweb.common._
 import net.liftweb.http._
-import net.liftweb.http.js.JsCmds.Run
-import net.liftweb.http.js.{JsCmd, JsExp}
 import net.liftweb.http.js.jquery.JQueryArtifacts
 import org.github.microburn.ApplicationContext
 
@@ -41,7 +38,6 @@ class Boot {
     JQueryModule.init()
 
     net.liftmodules.ng.Angular.init()
-    net.liftmodules.ng.AngularJS.init("cookies")
 
     val context = ApplicationContext()
     context.updater.start()
