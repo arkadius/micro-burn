@@ -16,16 +16,17 @@
 package org.github.microburn.service
 
 import org.github.microburn.domain.ProjectConfig
+import org.github.microburn.util.logging.Slf4jLogging
 import org.joda.time._
 
 import scala.collection.immutable.Seq
 import scala.math.BigDecimal.RoundingMode
 import scalaz.Scalaz._
 
-object EstimateComputer {
+object EstimateComputer extends Slf4jLogging {
 
   def estimatesBetween(start: DateTime, end: DateTime, storyPointsSum: BigDecimal)
-                      (implicit config: ProjectConfig): List[Probe] = {
+                      (implicit config: ProjectConfig): List[Probe] = measure("estimates computation") {
     if (storyPointsSum == BigDecimal(0)) {
       List(
         Probe(start, BigDecimal(0)),

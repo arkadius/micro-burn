@@ -15,11 +15,28 @@
  */
 package org.github.microburn.util.logging
 
+import net.liftweb.actor.LAFuture
 import org.slf4j.LoggerFactory
 
-trait Slf4jLogging extends Logging {
+trait Slf4jLogging {
   private lazy val logger = LoggerFactory.getLogger(getClass)
 
+  def measure[T](taskName: => String)(runTask: => T): T = {
+    val before = System.currentTimeMillis()
+    val result = runTask
+    debug(s"$taskName took ${System.currentTimeMillis()-before} ms")
+    result
+  }
+
+  def measureFuture[T](taskName: => String)(prepareFuture: => LAFuture[T]): LAFuture[T] = {
+    val before = System.currentTimeMillis()
+    val resultFuture = prepareFuture
+    resultFuture.onComplete { result =>
+      debug(s"$taskName took ${System.currentTimeMillis()-before} ms")
+    }
+    resultFuture
+  }
+  
   def info(mes: => String) = if (logger.isInfoEnabled) logger.info(mes)
   def warn(mes: => String) = if (logger.isWarnEnabled) logger.warn(mes)
   def debug(mes: => String) = if (logger.isDebugEnabled) logger.debug(mes)

@@ -33,7 +33,7 @@ class ProjectUpdater(provider: IntegrationProvider, fetchPeriod: FiniteDuration)
 
   private def repeat(): Unit = {
     val timestamp = new Date
-    provider.updateProject(timestamp).onComplete { result =>
+    measureFuture("update of project")(provider.updateProject(timestamp)).onComplete { result =>
       result match {
         case Failure(msg, ex, _) => error(s"Error while updating project data: ${ex.map(_.getMessage).openOr(msg)}")
         case _ =>

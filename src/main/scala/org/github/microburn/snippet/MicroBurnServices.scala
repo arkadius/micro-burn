@@ -23,8 +23,9 @@ import net.liftweb.http.js.JsCmds.{Script, JsCrVar}
 import net.liftweb.http.js.JsExp
 import org.github.microburn.ApplicationContext
 import org.github.microburn.integration.support.kanban._
+import org.github.microburn.util.logging.Slf4jLogging
 
-object MicroBurnServices {
+object MicroBurnServices extends Slf4jLogging {
   import org.github.microburn.util.concurrent.FutureEnrichments._
   import org.github.microburn.util.concurrent.LiftActorEnrichments._
   
@@ -38,7 +39,7 @@ object MicroBurnServices {
     Script(JsCrVar("scrumSimulation", JsExp.boolToJsExp(scrumSimulation.isDefined))) +: renderIfNotAlreadyDefined {
       val module = angular.module("MicroBurnServices")
         .factory("historySvc", jsObjFactory()
-        .future("getHistory", (sprintId: String) => ApplicationContext().columnsHistoryProvider.columnsHistory(sprintId))
+        .future("getHistory", (sprintId: String) => measureFuture("renderable history computation")(ApplicationContext().columnsHistoryProvider.columnsHistory(sprintId)))
         )
       scrumSimulation.map { scrumSimulator =>
         module.factory("scrumSimulatorSvc", jsObjFactory()

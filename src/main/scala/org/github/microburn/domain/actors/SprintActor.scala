@@ -21,6 +21,7 @@ import java.util.Date
 import net.liftweb.actor.LiftActor
 import org.github.microburn.domain._
 import org.github.microburn.repository.SprintRepository
+import org.github.microburn.util.logging.Slf4jLogging
 
 import scala.concurrent.duration.FiniteDuration
 
@@ -28,7 +29,7 @@ class SprintActor(var sprint: Sprint)
                  (repo: SprintRepository,
                   baseDeterminer: SprintBaseStateDeterminer,
                   config: ProjectConfig,
-                  changeNotifyingActor: LiftActor) extends LiftActor {
+                  changeNotifyingActor: LiftActor) extends LiftActor with Slf4jLogging {
 
   implicit val configImplicit = config
 
@@ -45,7 +46,7 @@ class SprintActor(var sprint: Sprint)
       require(sprintId == sprint.id)
       reply(SprintHistory(
         sprintBase = sprintBase,
-        columnStates = sprint.columnStatesHistory,
+        columnStates = measure("history computation")(sprint.columnStatesHistory),
         sprintDetails = sprint.details
       ))
   }
