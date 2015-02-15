@@ -1294,7 +1294,10 @@
 				.on('xchange.xdsoft', function (event) {
 					clearTimeout(xchangeTimer);
 					xchangeTimer = setTimeout(function () {
-						var table =	'',
+            if (!_xdsoft_datetime.currentTime)
+              return;
+
+            var table =	'',
 							start = new Date(_xdsoft_datetime.currentTime.getFullYear(), _xdsoft_datetime.currentTime.getMonth(), 1, 12, 0, 0),
 							i = 0,
 							j,

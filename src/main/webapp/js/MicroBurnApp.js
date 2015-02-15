@@ -237,6 +237,8 @@ ctrlDeclaration.push(function ($scope, $timeout, historySvc, scrumSimulatorSvc) 
 
   $scope.discardCreate = function () {
     $scope.selectedSprint = $scope.sprintsOrdered[0];
+    $scope.editedSprint.start = ""; // nie można przenieść do obsługi selectedSprint bo zepsuje się createSprint
+    $scope.editedSprint.end = "";
     disableModes();
   };
 
