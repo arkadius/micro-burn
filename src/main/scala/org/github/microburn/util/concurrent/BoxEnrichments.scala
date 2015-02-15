@@ -20,6 +20,17 @@ import net.liftweb.common._
 
 object BoxEnrichments {
 
+  implicit class EnrichedFailure(failureExpr: => Failure) {
+    def whenNot(expr: => Boolean) = when(!expr)
+
+    def when(expr: => Boolean): Box[Unit] = {
+      if (expr)
+        failureExpr
+      else
+        Full(Unit)
+    }
+  }
+  
   implicit class EnrichedValidation[E <: Exception, A](validation: scalaz.Validation[E, A]) {
     def toBox: Box[A] = validation match {
       case scalaz.Success(value) => Full(value)

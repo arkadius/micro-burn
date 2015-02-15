@@ -15,14 +15,14 @@
             <span class="sprint-details">
               from: <input id="start-date" type="text" ng-model="editedSprint.start" class="date-input" ng-focus="!createMode && enterEditStartMode()"
                            ng-disabled="!scrumSimulation || selectedSprint == null && !createMode || selectedSprint != null && !selectedSprint.details.isActive || removeDecisionMode"
-                           ng-keydown="$event.keyCode == 13 && saveStart() || $event.keyCode == 27 && cancelEditStart()">
+                           ng-keydown="!createMode && $event.keyCode == 13 && saveStart() || $event.keyCode == 27 && cancelEditStart()">
               <span ng-show="editStartMode">
                 <button class="ok-button"  ng-click="saveStart()"></button>
                 <button class="cancel-button" ng-click="cancelEditStart()"></button>
               </span>
                 to: <input id="end-date" type="text" ng-model="editedSprint.end" class="date-input" ng-focus="!createMode && enterEditEndMode()"
                            ng-disabled="!scrumSimulation || selectedSprint == null && !createMode || selectedSprint != null && !selectedSprint.details.isActive || removeDecisionMode"
-                           ng-keydown="$event.keyCode == 13 && saveEnd() || $event.keyCode == 27 && cancelEditEnd()">
+                           ng-keydown="!createMode && $event.keyCode == 13 && saveEnd() || $event.keyCode == 27 && cancelEditEnd()">
               <span ng-show="editEndMode">
                 <button class="ok-button"  ng-click="saveEnd()"></button>
                 <button class="cancel-button" ng-click="cancelEditEnd()"></button>

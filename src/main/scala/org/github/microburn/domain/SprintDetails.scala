@@ -27,6 +27,9 @@ case class SprintDetails private(name: String,
                                  state: SprintState,
                                  overriddenBaseStoryPointsSum: Option[BigDecimal]) {
 
+  import org.github.microburn.util.concurrent.BoxEnrichments._
+  import SprintDetails._
+
   def isActive = state == ActiveState
 
   def isFinished = state == FinishedState
@@ -38,64 +41,60 @@ case class SprintDetails private(name: String,
   def markRemoved: Box[SprintDetails] = verifyAndMoveTo(RemovedState)
 
   private def verifyAndMoveTo(newState: SprintState): Box[SprintDetails] = {
-    if (!state.canMoveTo(newState))
-      Failure(s"Cannot change state from $state to $newState for sprint '$name'")
-    else
-      Full(copy(state = newState))
+    for {
+      _ <- Failure(s"Cannot change state from $state to $newState for sprint '$name'") whenNot state.canMoveTo(newState)
+    } yield copy(state = newState)
   }
 
   def defineBaseStoryPoints(base: BigDecimal): Box[SprintDetails] = {
-    if (!isActive)
-      Failure("Cannot update not active sprint")
-    else if (base >= 1000)
-      Failure("Story points base must be lower than 1000")
-    else if (base.scale > 3)
-      Failure("Story points base must be defined with at most 3 numbers precision")
-    else
-      Full(copy(overriddenBaseStoryPointsSum = Some(base)))
+    for {
+      _ <- validateIsActive
+      _ <- Failure("Story points base must be lower than 1000") when base >= 1000
+      _ <- Failure("Story points base must be defined with at most 3 numbers precision") when base.scale > 3
+    } yield copy(overriddenBaseStoryPointsSum = Some(base))
   }
 
   def updateStartDate(start: Date): Box[SprintDetails] = {
-    if (!isActive)
-      Failure("Cannot update not active sprint")
-    else if (!start.before(end))
-      Failure("Start date must be before end date")
-    else if (Days.daysBetween(new DateTime(start), new DateTime(end)).getDays > 365)
-      Failure("Sprint cannot be longer than 1 year")
-    else
-      Full(copy(start = start))
+    for {
+      _ <- validateIsActive
+      _ <- validateInterval(start, end)
+    } yield copy(start = start)
   }
 
   def updateEndDate(end: Date): Box[SprintDetails] = {
-    if (!isActive)
-      Failure("Cannot update not active sprint")
-    else if (!start.before(end))
-      Failure("Start date must be before end date")
-    else if (Days.daysBetween(new DateTime(start), new DateTime(end)).getDays > 365)
-      Failure("Sprint cannot be longer than 1 year")
-    else
-      Full(copy(end = end))
+    for {
+      _ <- validateIsActive
+      _ <- validateInterval(start, end)
+    } yield copy(end = end)
   }
 
   def update(upd: MajorSprintDetails): Box[SprintDetails] = {
-    if (isRemoved)
-      Failure("Cannot update removed sprint")
-    else
-      (upd.name != name ||
-       upd.start != start ||
-       upd.end != end ||
-       upd.isActive != isActive).option {
+    for {
+      _ <- Failure("Cannot update removed sprint") if isRemoved
+      changedDetails <- (
+        upd.name != name ||
+        upd.start != start ||
+        upd.end != end ||
+        upd.isActive != isActive
+      ).option {
         copy(name = upd.name, start = upd.start, end = upd.end, state = SprintState(upd.isActive))
       }
+    } yield changedDetails
   }
 
   def update(newDetails: SprintDetails): Box[SprintDetails] = {
-    if (!state.canMoveTo(newDetails.state))
-      Failure(s"Cannot change state from $state to ${newDetails.state} for sprint '$name'")
-    else
-      (newDetails != this).option {
+    for {
+      _ <- Failure(s"Cannot change state from $state to ${newDetails.state} for sprint '$name'") whenNot state.canMoveTo(newDetails.state)
+      changedDetails <- (
+        newDetails != this
+      ).option {
         newDetails
       }
+    } yield changedDetails
+  }
+
+  private def validateIsActive: Box[Unit] = {
+    Failure("Cannot update not active sprint") whenNot isActive
   }
 
   def toMajor: MajorSprintDetails = MajorSprintDetails(name, start, end, isActive)
@@ -106,11 +105,25 @@ case class MajorSprintDetails(name: String, start: Date, end: Date, isActive: Bo
 }
 
 object SprintDetails {
-  def apply(updateDetails: MajorSprintDetails): SprintDetails = {
-    SprintDetails(updateDetails.name, updateDetails.start, updateDetails.end, updateDetails.isActive)
+  import org.github.microburn.util.concurrent.BoxEnrichments._
+
+  def create(updateDetails: MajorSprintDetails): Box[SprintDetails] = {
+    create(updateDetails.name, updateDetails.start, updateDetails.end, updateDetails.isActive)
   }
 
-  def apply(name: String, start: Date, end: Date, isActive: Boolean = true): SprintDetails = {
-    SprintDetails(name, start, end, SprintState(isActive), overriddenBaseStoryPointsSum = None)
+  def create(name: String, start: Date, end: Date, isActive: Boolean = true): Box[SprintDetails] = {
+    for {
+      _ <- validateInterval(start, end)
+    } yield SprintDetails(name, start, end, SprintState(isActive), overriddenBaseStoryPointsSum = None)
   }
+
+  private def validateInterval(start: Date, end: Date): Box[Unit] = {
+    for {
+      _ <- Failure("Start date must be before end date") whenNot start.before(end)
+      _ <- Failure("Sprint cannot be longer than 1 year") when Days.daysBetween(new DateTime(start), new DateTime(end)).getDays > 365
+    } yield Unit
+  }
+
+
+
 }

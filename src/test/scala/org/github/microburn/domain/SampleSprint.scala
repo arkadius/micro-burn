@@ -19,11 +19,11 @@ import java.util.Date
 
 object SampleSprint {
 
-  val sampleDetails = SprintDetails(
+  val sampleDetails = SprintDetails.create(
     name = "fooName",
     start = new Date(1000),
     end = new Date(2000)
-  )
+  ).openOrThrowException("")
 
   def withEmptyEvents(userStories: UserStory*): Sprint = {
     Sprint.withEmptyEvents("foo", sampleDetails, BoardState(userStories, new Date(2000)))

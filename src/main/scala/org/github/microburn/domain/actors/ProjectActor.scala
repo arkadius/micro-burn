@@ -48,13 +48,23 @@ class ProjectActor(config: ProjectConfig, initialFetchToSprintStartAcceptableDel
     case GetFullProjectState =>
       reply(prepareFullProjectState)
     case CreateNewSprint(sprintId, details, userStories, timestamp) if details.isFinished =>
-      sprintActors += sprintId -> sprintFactory.migrateSprint(sprintId, details, userStories)
-      updateListeners()
-      reply(sprintId)
+      val createResult = for {
+        validatedSprint <- sprintFactory.migrateSprint(sprintId, details, userStories)
+      } yield {
+        sprintActors += sprintId -> validatedSprint
+        updateListeners()
+        sprintId
+      }
+      reply(createResult)
     case CreateNewSprint(sprintId, details, userStories, timestamp) =>
-      sprintActors += sprintId -> sprintFactory.createSprint(sprintId, details, userStories, timestamp)
-      updateListeners()
-      reply(sprintId)
+      val createResult = for {
+        validatedSprint <- sprintFactory.createSprint(sprintId, details, userStories, timestamp)
+      } yield {
+        sprintActors += sprintId -> validatedSprint
+        updateListeners()
+        sprintId
+      }
+      reply(createResult)
     case updateDetails: UpdateSprintDetails =>
       val resultFuture = sprintActors(updateDetails.sprintId) !< updateDetails
       reply(resultFuture)

@@ -68,10 +68,14 @@ class ScrumSimulator(boardStateProvider: BoardStateProvider, projectActor: Proje
           doStartSprint(name, start, end)
       reply(startFuture)
     case NextSprint(major, userStories) =>
-      val fullDetails = SprintDetails(major)
-      val next = optionalLastNumericalSprint.map(_.next(fullDetails)).getOrElse(NumericalSprintIdWithDetails.zero(fullDetails))
-      currentSprints += next.numericalId -> next.details
-      reply(projectActor !< CreateNewSprint(next.id, major, userStories, new Date))
+      val future = (for {
+        validatedTullDetails <- SprintDetails.create(major)
+      } yield {
+        val next = optionalLastNumericalSprint.map(_.next(validatedTullDetails)).getOrElse(NumericalSprintIdWithDetails.zero(validatedTullDetails))
+        currentSprints += next.numericalId -> next.details
+        projectActor !< CreateNewSprint(next.id, major, userStories, new Date)
+      }).toFutureOfBox
+      reply(future)
     case FinishSprint(sprintId) =>
       reply(updateSprintDetails(sprintId, _.finish))
     case RemoveSprint(sprintId) =>
@@ -92,13 +96,13 @@ class ScrumSimulator(boardStateProvider: BoardStateProvider, projectActor: Proje
     currentSprints.lastOption.map(NumericalSprintIdWithDetails.apply _ tupled)
   }
 
-  private def doStartSprint(name: String, start: Date, end: Date): LAFuture[Box[Any]] = {
-    (for {
+  private def doStartSprint(name: String, start: Date, end: Date): LAFuture[Any] = {
+    for {
       userStories <- boardStateProvider.currentUserStories
       details = MajorSprintDetails(name, start, end)
       // wysyłamy do siebie, żeby mieć pewność, że fetch będzie miał dobry currentSprintsInfo
       createResult <- this ?? NextSprint(details, userStories)
-    } yield createResult).map(Full(_))
+    } yield createResult
   }
 
   private def updateSprintDetails(sprintId: String, f: SprintDetails => Box[SprintDetails]): LAFuture[Box[Any]] = {

@@ -19,6 +19,7 @@ import java.io.File
 import java.util.Date
 
 import net.liftweb.actor.LiftActor
+import net.liftweb.common.Box
 import org.github.microburn.domain._
 import org.github.microburn.repository.SprintRepository
 
@@ -34,15 +35,19 @@ class SprintActorFactory(config: ProjectConfig, initialFetchToSprintStartAccepta
     }
   }
 
-  def migrateSprint(sprintId: String, majorDetails: MajorSprintDetails, userStories: Seq[UserStory]): SprintActor = {
+  def migrateSprint(sprintId: String, majorDetails: MajorSprintDetails, userStories: Seq[UserStory]): Box[SprintActor] = {
     createSprint(sprintId, majorDetails, userStories, majorDetails.end)
   }
 
-  def createSprint(sprintId: String, majorDetails: MajorSprintDetails, userStories: Seq[UserStory], timestamp: Date): SprintActor = {
-    val sprint = Sprint.withEmptyEvents(sprintId, SprintDetails(majorDetails), BoardState(userStories.toIndexedSeq, timestamp))
-    val repo = createRepo(sprintId)
-    repo.saveSprint(sprint)
-    new SprintActor(sprint)(repo, baseDeterminer, config, changeNotifyingActor)
+  def createSprint(sprintId: String, majorDetails: MajorSprintDetails, userStories: Seq[UserStory], timestamp: Date): Box[SprintActor] = {
+    for {
+      validatedDetails <- SprintDetails.create(majorDetails)
+    } yield {
+      val sprint = Sprint.withEmptyEvents(sprintId, validatedDetails, BoardState(userStories.toIndexedSeq, timestamp))
+      val repo = createRepo(sprintId)
+      repo.saveSprint(sprint)
+      new SprintActor(sprint)(repo, baseDeterminer, config, changeNotifyingActor)
+    }
   }
 
   private def createRepo(sprintId: String): SprintRepository = {
