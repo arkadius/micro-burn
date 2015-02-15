@@ -129,24 +129,27 @@ ctrlDeclaration.push(function ($scope, $timeout, historySvc, scrumSimulatorSvc) 
   };
 
   $scope.cancelEditStart = function () {
+    $("#start-date").blur();
+    $(".xdsoft_datetimepicker").hide();
     $scope.editStartMode = false;
     if ($scope.selectedSprint)
       $scope.editedSprint.start = new Date($scope.selectedSprint.details.start).dateFormat(window.dateFormat);
   };
   $scope.cancelEditEnd = function () {
+    $("#end-date").blur();
+    $(".xdsoft_datetimepicker").hide();
     $scope.editEndMode = false;
     if ($scope.selectedSprint)
       $scope.editedSprint.end = new Date($scope.selectedSprint.details.end).dateFormat(window.dateFormat);
   };
   $scope.cancelEditBase = function () {
+    $("#base-sp").blur();
     $scope.editBaseMode = false;
     if ($scope.selectedSprint)
       $scope.editedSprint.baseStoryPoints = $scope.selectedSprint.baseStoryPoints;
   };
 
   $scope.saveStart = function () {
-    $("#start-date").blur();
-    $(".xdsoft_datetimepicker").hide();
     wrapServiceCall(function() {
       var input = {
         id: $scope.selectedSprint.id,
@@ -156,8 +159,6 @@ ctrlDeclaration.push(function ($scope, $timeout, historySvc, scrumSimulatorSvc) 
     });
   };
   $scope.saveEnd = function () {
-    $("#end-date").blur();
-    $(".xdsoft_datetimepicker").hide();
     wrapServiceCall(function() {
       var input = {
         id: $scope.selectedSprint.id,
@@ -167,7 +168,6 @@ ctrlDeclaration.push(function ($scope, $timeout, historySvc, scrumSimulatorSvc) 
     });
   };
   $scope.saveBase = function () {
-    $("#base-sp").blur();
     wrapServiceCall(function() {
       var input = {
         id: $scope.selectedSprint.id,
