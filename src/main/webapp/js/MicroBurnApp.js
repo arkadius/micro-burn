@@ -344,7 +344,7 @@ app.directive('sprintChart', ['$cookies', function ($cookies) {
           history.series.forEach(function (column, i) { // przepisujemy, bo wykres ma uchwyt do serii
             if (column.name == 'Estimate') {
               column.color = "rgba(255, 0, 0, 0.5)";
-            } else if (i == history.series.length - 1) { // FIXME: ostatni DONE powinien być rozpoznawany za pomocą isDone
+            } else if (column.doneColumn) {
               column.color = "rgba(0, 0, 0, 0.9)";
             } else {
               column.color = "rgba(0, 0, 255, 0." + i + ")";

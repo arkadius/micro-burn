@@ -74,7 +74,7 @@ class SprintColumnsHistoryProvider(projectActor: ProjectActor,
         val storyPoints = allColumnsInfo.storyPointsForColumn(column.index)
         HistoryProbe(allColumnsInfo.date, storyPoints)
       }.toList
-      ColumnHistory(column.name, storyPointsForColumn)
+      ColumnHistory(column.name, column.isDoneColumn, storyPointsForColumn)
     }
   }
 
@@ -82,13 +82,13 @@ class SprintColumnsHistoryProvider(projectActor: ProjectActor,
     val estimates = EstimateComputer.estimatesBetween(start, end, storyPointsSum).map { probe =>
       HistoryProbe(probe.date.toDate, probe.sp)
     }
-    ColumnHistory("Estimate", estimates)
+    ColumnHistory("Estimate", doneColumn = false, estimates)
   }
 }
 
 case class ColumnsHistory(startDate: Long, series: List[ColumnHistory])
 
-case class ColumnHistory(name: String, data: List[HistoryProbe])
+case class ColumnHistory(name: String, doneColumn: Boolean, data: List[HistoryProbe])
 
 case class HistoryProbe private(x: Long, y: Double)
 

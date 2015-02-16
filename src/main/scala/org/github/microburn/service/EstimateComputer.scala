@@ -25,6 +25,8 @@ import scalaz.Scalaz._
 
 object EstimateComputer extends Slf4jLogging {
 
+  private final val COMPARING_SCALE = 1
+
   def estimatesBetween(start: DateTime, end: DateTime, storyPointsSum: BigDecimal)
                       (implicit config: ProjectConfig): List[Probe] = measure("estimates computation") {
     if (storyPointsSum == BigDecimal(0)) {
@@ -42,9 +44,9 @@ object EstimateComputer extends Slf4jLogging {
     val intervalsAndSums = intervalAndSumMillisAfterThem(daysIntervals(start, end))
     val weightedSumOfIntervalsMillis = intervalsAndSums.lastOption.map(_.weightedSumAfter).getOrElse(BigDecimal(0))
     val steps = computeSteps(storyPointsSum)
-    val computeWeitghtedMillis = millisForStoryPoints(storyPointsSum, weightedSumOfIntervalsMillis) _
+    val computeWeightedMillis = millisForStoryPoints(storyPointsSum, weightedSumOfIntervalsMillis) _
     steps.map { storyPoints =>
-      val date = momentInIntervals(intervalsAndSums, computeWeitghtedMillis(storyPoints))
+      val date = momentInIntervals(intervalsAndSums, computeWeightedMillis(storyPoints))
       Probe(date, storyPoints)
     }.toList
   }
@@ -79,7 +81,11 @@ object EstimateComputer extends Slf4jLogging {
 
   private def momentInIntervals(intervalsAndSums: Seq[IntervalAndSumMillis], weightedMillis: BigDecimal)
                                (implicit config: ProjectConfig): DateTime = {
-    intervalsAndSums.find(weightedMillis <= _.weightedSumAfter).map { intervalAndSum =>
+    intervalsAndSums.find { interval =>
+      val weightedMillisScaled = weightedMillis.setScale(COMPARING_SCALE, RoundingMode.DOWN)
+      val weightedSumAfterScaled = interval.weightedSumAfter.setScale(COMPARING_SCALE, RoundingMode.UP)
+      weightedMillisScaled <= weightedSumAfterScaled
+    }.map { intervalAndSum =>
       intervalAndSum.dateAfter(weightedMillis - intervalAndSum.weightedSumBefore)
     } getOrElse { throw new IllegalArgumentException("Interval too short - cannot estimate") }
   }
