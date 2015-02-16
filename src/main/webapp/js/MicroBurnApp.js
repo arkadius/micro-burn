@@ -25,6 +25,8 @@ ctrlDeclaration.push(function ($scope, $timeout, historySvc, scrumSimulatorSvc) 
     $scope.scrumSimulation = true;
   }
 
+  var clientFetchPromise = null;
+
   $scope.projectState = {
     sprints: []
   };
@@ -103,12 +105,16 @@ ctrlDeclaration.push(function ($scope, $timeout, historySvc, scrumSimulatorSvc) 
   });
 
   function refreshChart() {
+    $timeout.cancel(clientFetchPromise);
     if ($scope.selectedSprint) {
       historySvc.getHistory($scope.selectedSprint.id).then(function (history) {
         $scope.history = history;
+      }).finally(function() {
+        clientFetchPromise = $timeout(refreshChart, window.clientFetchIfNoChangesPeriod);
       });
     } else {
       $scope.history = null;
+      clientFetchPromise = $timeout(refreshChart, window.clientFetchIfNoChangesPeriod);
     }
   }
 

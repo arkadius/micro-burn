@@ -36,6 +36,7 @@ object MicroBurnServices extends Slf4jLogging {
     }
     Script(
       JsCrVar("scrumSimulation", JsExp.boolToJsExp(scrumSimulation.isDefined)) &
+      JsCrVar("clientFetchIfNoChangesPeriod", JsExp.longToJsExp(ApplicationContext().clientFetchIfNoChangesPeriod.toMillis)) &
       JsCrVar("defaultSprintDuration", JsExp.intToJsExp(ApplicationContext().defaultSprintDuration.getDays))
     ) +: renderIfNotAlreadyDefined {
       val module = angular.module("MicroBurnServices")

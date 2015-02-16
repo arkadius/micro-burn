@@ -23,15 +23,17 @@ import org.github.microburn.integration.Integration
 import org.github.microburn.service.{ProjectUpdater, SprintColumnsHistoryProvider}
 import org.joda.time.Days
 
+import scala.concurrent.duration.FiniteDuration
+
 class ApplicationContext private(val projectActor: ProjectActor,
                                  val updater: ProjectUpdater,
                                  val integration: Integration,
                                  val columnsHistoryProvider: SprintColumnsHistoryProvider,
                                  appConfig: ApplicationConfig) {
   def connectorConfig: ConnectorConfig = appConfig.connectorConfig
-
   def authorizationConfig: AuthorizationConfig = appConfig.authorizationConfig
 
+  def clientFetchIfNoChangesPeriod: FiniteDuration = appConfig.durations.clientFetchIfNoChangesPeriod
   def defaultSprintDuration: Days = appConfig.durations.defaultSprintDuration
 }
 

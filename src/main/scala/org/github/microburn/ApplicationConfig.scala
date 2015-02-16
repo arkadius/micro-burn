@@ -79,6 +79,7 @@ case class PartiallyPreparedConfig(durations: DurationsConfig)
 case class DurationsConfig(initializationTimeout: FiniteDuration,
                            fetchPeriod: FiniteDuration,
                            initialFetchToSprintStartAcceptableDelayMinutes: FiniteDuration,
+                           clientFetchIfNoChangesPeriod: FiniteDuration,
                            defaultSprintDuration: Days)
 
 object DurationsConfig {
@@ -89,6 +90,7 @@ object DurationsConfig {
       config.getDuration("initializationTimeout", TimeUnit.MILLISECONDS).millis,
       config.getDuration("fetchPeriod", TimeUnit.MILLISECONDS).millis,
       config.getDuration("initialFetchToSprintStartAcceptableDelay", TimeUnit.MILLISECONDS).millis,
+      config.getDuration("clientFetchIfNoChangesPeriod", TimeUnit.MILLISECONDS).millis,
       Days.days(config.getDuration("defaultSprintDuration", TimeUnit.DAYS).toInt)
     )
   }
