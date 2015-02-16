@@ -21,6 +21,7 @@ import com.typesafe.config.Config
 import org.github.microburn.domain.ProjectConfig
 import org.github.microburn.domain.actors.ProjectActor
 import org.github.microburn.integration.{IntegrationProvider, IntegrationProviderConfigurer}
+import org.joda.time.Days
 
 import scala.concurrent.duration.FiniteDuration
 
@@ -77,7 +78,8 @@ case class PartiallyPreparedConfig(durations: DurationsConfig)
 
 case class DurationsConfig(initializationTimeout: FiniteDuration,
                            fetchPeriod: FiniteDuration,
-                           initialFetchToSprintStartAcceptableDelayMinutes: FiniteDuration)
+                           initialFetchToSprintStartAcceptableDelayMinutes: FiniteDuration,
+                           defaultSprintDuration: Days)
 
 object DurationsConfig {
   import concurrent.duration._
@@ -86,7 +88,8 @@ object DurationsConfig {
     DurationsConfig(
       config.getDuration("initializationTimeout", TimeUnit.MILLISECONDS).millis,
       config.getDuration("fetchPeriod", TimeUnit.MILLISECONDS).millis,
-      config.getDuration("initialFetchToSprintStartAcceptableDelay", TimeUnit.MILLISECONDS).millis
+      config.getDuration("initialFetchToSprintStartAcceptableDelay", TimeUnit.MILLISECONDS).millis,
+      Days.days(config.getDuration("defaultSprintDuration", TimeUnit.DAYS).toInt)
     )
   }
 }

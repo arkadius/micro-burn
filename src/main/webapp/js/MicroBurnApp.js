@@ -179,20 +179,36 @@ ctrlDeclaration.push(function ($scope, $timeout, historySvc, scrumSimulatorSvc) 
 
   $scope.createSprint = function () {
     $scope.selectedSprint = null;
-    var start = new Date();
-    var end = new Date(start);
-    end.setDate(start.getDate() + 7); //TODO: konfigurowalne
-    $scope.editedSprint = {
-      name: "Sprint " + nextSprintNo(),
-      start: start.dateFormat(window.dateFormat),
-      end: end.dateFormat(window.dateFormat),
-      baseStoryPoints: ""
-    };
+    var start = trimToHours(new Date());
+    var end = plusDefaultSprintDuration(start);
     $scope.createMode = true;
-    $timeout(function (){
-      $scope.$broadcast('createModeEntered');
-    });
+    $scope.editedSprint.name = "Sprint " + nextSprintNo();
+    $scope.editedSprint.start = start.dateFormat(window.dateFormat);
+    $scope.editedSprint.baseStoryPoints = "";
   };
+
+  $scope.$watch("editedSprint.start", function (start) {
+    if ($scope.createMode) {
+      var startDate = Date.parseDate($scope.editedSprint.start, window.dateFormat);
+      if (startDate) {
+        var end = plusDefaultSprintDuration(startDate);
+        $scope.editedSprint.end = end.dateFormat(window.dateFormat);
+      }
+    }
+  });
+
+  function plusDefaultSprintDuration(start) {
+    var end = new Date(start);
+    end.setDate(start.getDate() + window.defaultSprintDuration);
+    return end;
+  }
+
+  function trimToHours(date) {
+    date.setMilliseconds(0);
+    date.setSeconds(0);
+    date.setMinutes(0);
+    return date;
+  }
 
   function nextSprintNo() {
     var maxId = 0;

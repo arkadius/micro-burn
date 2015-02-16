@@ -36,7 +36,10 @@ object MicroBurnServices extends Slf4jLogging {
       case s: ScrumSimulation if ApplicationContext().authorizationConfig.secretForScrumSimulation.isEmpty => Some(s.scrumSimulator)
       case _ => None
     }
-    Script(JsCrVar("scrumSimulation", JsExp.boolToJsExp(scrumSimulation.isDefined))) +: renderIfNotAlreadyDefined {
+    Script(
+      JsCrVar("scrumSimulation", JsExp.boolToJsExp(scrumSimulation.isDefined)) &
+      JsCrVar("defaultSprintDuration", JsExp.intToJsExp(ApplicationContext().defaultSprintDuration.getDays))
+    ) +: renderIfNotAlreadyDefined {
       val module = angular.module("MicroBurnServices")
         .factory("historySvc", jsObjFactory()
         .future("getHistory", (sprintId: String) => measureFuture("renderable history computation")(ApplicationContext().columnsHistoryProvider.columnsHistory(sprintId)))

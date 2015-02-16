@@ -21,6 +21,7 @@ import com.typesafe.config.ConfigFactory
 import org.github.microburn.domain.actors.ProjectActor
 import org.github.microburn.integration.IntegrationProvider
 import org.github.microburn.service.{ProjectUpdater, SprintColumnsHistoryProvider}
+import org.joda.time.Days
 
 class ApplicationContext private(val projectActor: ProjectActor,
                                  val updater: ProjectUpdater,
@@ -30,6 +31,8 @@ class ApplicationContext private(val projectActor: ProjectActor,
   def connectorConfig: ConnectorConfig = appConfig.connectorConfig
 
   def authorizationConfig: AuthorizationConfig = appConfig.authorizationConfig
+
+  def defaultSprintDuration: Days = appConfig.durations.defaultSprintDuration
 }
 
 object ApplicationContext {
