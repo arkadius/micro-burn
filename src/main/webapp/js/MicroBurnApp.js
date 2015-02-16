@@ -187,10 +187,13 @@ ctrlDeclaration.push(function ($scope, $timeout, historySvc, scrumSimulatorSvc) 
     $scope.selectedSprint = null;
     var start = trimToHours(new Date());
     var end = plusDefaultSprintDuration(start);
-    $scope.createMode = true;
     $scope.editedSprint.name = "Sprint " + nextSprintNo();
     $scope.editedSprint.start = start.dateFormat(window.dateFormat);
     $scope.editedSprint.baseStoryPoints = "";
+    $scope.createMode = true;
+    $timeout(function (){
+      $scope.$broadcast('createModeEntered');
+    });
   };
 
   $scope.$watch("editedSprint.start", function (start) {
