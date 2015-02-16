@@ -28,7 +28,7 @@ import spray.routing.{Directives, Route}
 import scala.concurrent.duration._
 import scala.reflect.io.Path
 
-class ScrumIntegrationProviderTest extends FlatSpec with RestIntegrationTest with Directives with Matchers {
+class ScrumIntegrationTest extends FlatSpec with RestIntegrationTest with Directives with Matchers {
   import org.github.microburn.util.concurrent.FutureEnrichments._
 
   override def route: Route = JiraSprintsDataProviderTest.route ~ JiraTasksDataProviderTest.route
@@ -39,7 +39,7 @@ class ScrumIntegrationProviderTest extends FlatSpec with RestIntegrationTest wit
     Path(projectConfig.dataRoot).deleteRecursively()
     val projectActor = new ProjectActor(projectConfig, initialFetchToSprintStartAcceptableDelayMinutes = 1.second)
     val jiraConfig = JiraConfig(config.getConfig("jira"))
-    val provider = new ScrumIntegrationProvider(
+    val provider = new ScrumIntegration(
       new JiraSprintsDataProvider(jiraConfig, Locale.ENGLISH),
       new JiraTasksDataProvider(jiraConfig)
     )(projectActor)

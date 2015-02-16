@@ -18,18 +18,18 @@ package org.github.microburn.integration
 import com.typesafe.config.Config
 import org.github.microburn.{PartiallyPreparedConfig, DurationsConfig}
 import org.github.microburn.domain.actors.ProjectActor
-import org.github.microburn.integration.jira.JiraProviderConfigurer
-import org.github.microburn.integration.trello.TrelloProviderConfigurer
+import org.github.microburn.integration.jira.JiraIntegrationConfigurer
+import org.github.microburn.integration.trello.TrelloConfigurer
 
-trait IntegrationProviderConfigurer {
-  def tryConfigure(partiallyPreparedConfig: PartiallyPreparedConfig): PartialFunction[Config, ProjectActor => IntegrationProvider]
+trait IntegrationConfigurer {
+  def tryConfigure(partiallyPreparedConfig: PartiallyPreparedConfig): PartialFunction[Config, ProjectActor => Integration]
 }
 
-object IntegrationProviderConfigurer {
-  private val supportedProviders = Seq(JiraProviderConfigurer, TrelloProviderConfigurer)
+object IntegrationConfigurer {
+  private val supportedIntegrations = Seq(JiraIntegrationConfigurer, TrelloConfigurer)
 
-  def firstConfiguredProvidersFactory(partiallyPreparedConfig: PartiallyPreparedConfig): PartialFunction[Config, ProjectActor => IntegrationProvider] =
-    supportedProviders.map(_.tryConfigure(partiallyPreparedConfig)).foldLeft(PartialFunction.empty[Config, ProjectActor => IntegrationProvider]) { case (acc, tryConfigure) =>
+  def firstConfiguredIntegration(partiallyPreparedConfig: PartiallyPreparedConfig): PartialFunction[Config, ProjectActor => Integration] =
+    supportedIntegrations.map(_.tryConfigure(partiallyPreparedConfig)).foldLeft(PartialFunction.empty[Config, ProjectActor => Integration]) { case (acc, tryConfigure) =>
       acc orElse tryConfigure
     }
 }

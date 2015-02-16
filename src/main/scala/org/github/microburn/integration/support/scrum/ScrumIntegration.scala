@@ -21,10 +21,10 @@ import net.liftweb.actor.LAFuture
 import net.liftweb.common.Box
 import org.github.microburn.domain.actors._
 import org.github.microburn.domain.{MajorSprintDetails, UserStory}
-import org.github.microburn.integration.IntegrationProvider
+import org.github.microburn.integration.Integration
 
-class ScrumIntegrationProvider(sprintsProvider: SprintsDataProvider, tasksProvider: TasksDataProvider)(projectActor: ProjectActor)
-  extends IntegrationProvider {
+class ScrumIntegration(sprintsProvider: SprintsDataProvider, tasksProvider: TasksDataProvider)(projectActor: ProjectActor)
+  extends Integration {
 
   import org.github.microburn.util.concurrent.FutureEnrichments._
   import org.github.microburn.util.concurrent.LiftActorEnrichments._

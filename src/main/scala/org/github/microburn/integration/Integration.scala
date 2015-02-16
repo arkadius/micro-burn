@@ -19,6 +19,6 @@ import java.util.Date
 
 import net.liftweb.actor.LAFuture
 
-trait IntegrationProvider {
+trait Integration {
   def updateProject(implicit timestamp: Date): LAFuture[_]
 }

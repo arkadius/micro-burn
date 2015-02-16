@@ -20,12 +20,12 @@ import java.util.Date
 import net.liftweb.common.Failure
 import net.liftweb.util.Helpers._
 import net.liftweb.util.Schedule
-import org.github.microburn.integration.IntegrationProvider
+import org.github.microburn.integration.Integration
 import org.github.microburn.util.logging.Slf4jLogging
 
 import scala.concurrent.duration.FiniteDuration
 
-class ProjectUpdater(provider: IntegrationProvider, fetchPeriod: FiniteDuration) extends Slf4jLogging {
+class ProjectUpdater(provider: Integration, fetchPeriod: FiniteDuration) extends Slf4jLogging {
 
   import org.github.microburn.util.concurrent.FutureEnrichments._
   

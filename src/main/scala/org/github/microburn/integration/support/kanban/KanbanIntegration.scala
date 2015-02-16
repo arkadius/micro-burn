@@ -20,13 +20,13 @@ import java.util.Date
 import net.liftweb.actor.LAFuture
 import org.github.microburn.domain.MajorSprintDetails
 import org.github.microburn.domain.actors.{ProjectActor, UpdateSprint}
-import org.github.microburn.integration.IntegrationProvider
+import org.github.microburn.integration.Integration
 
 import scala.concurrent.duration.FiniteDuration
 
-class KanbanIntegrationProvider(protected val boardStateProvider: BoardStateProvider, protected val initializationTimeout: FiniteDuration)
+class KanbanIntegration(protected val boardStateProvider: BoardStateProvider, protected val initializationTimeout: FiniteDuration)
                                (protected val projectActor: ProjectActor)
-  extends IntegrationProvider
+  extends Integration
   with ScrumSimulation {
 
   import org.github.microburn.util.concurrent.FutureEnrichments._

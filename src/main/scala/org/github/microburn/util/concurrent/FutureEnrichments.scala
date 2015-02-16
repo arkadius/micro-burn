@@ -30,6 +30,8 @@ object FutureEnrichments {
   implicit class EnrichedLAFuture[T](laFuture: LAFuture[T]) extends Slf4jLogging {
     import scala.reflect._
 
+    def mapToBox: LAFuture[Box[Any]] = mapTo[Box[Any]]
+
     def mapTo[TT: ClassTag]: LAFuture[TT] = {
       laFuture.map {
         case t: TT => t

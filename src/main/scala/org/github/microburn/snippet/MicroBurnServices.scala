@@ -16,10 +16,8 @@
 package org.github.microburn.snippet
 
 import net.liftmodules.ng.Angular._
-import net.liftweb.common.Box
 import net.liftweb.http.S
-import net.liftweb.http.js.JE.JsVar
-import net.liftweb.http.js.JsCmds.{Script, JsCrVar}
+import net.liftweb.http.js.JsCmds.{JsCrVar, Script}
 import net.liftweb.http.js.JsExp
 import org.github.microburn.ApplicationContext
 import org.github.microburn.integration.support.kanban._
@@ -31,7 +29,7 @@ object MicroBurnServices extends Slf4jLogging {
   
   def render = {
     val givenSecret = S.param("secret").toOption
-    val scrumSimulation = ApplicationContext().integrationProvider match {
+    val scrumSimulation = ApplicationContext().integration match {
       case s: ScrumSimulation if givenSecret == ApplicationContext().authorizationConfig.secretForScrumSimulation => Some(s.scrumSimulator)
       case s: ScrumSimulation if ApplicationContext().authorizationConfig.secretForScrumSimulation.isEmpty => Some(s.scrumSimulator)
       case _ => None
@@ -46,12 +44,12 @@ object MicroBurnServices extends Slf4jLogging {
         )
       scrumSimulation.map { scrumSimulator =>
         module.factory("scrumSimulatorSvc", jsObjFactory()
-          .future[StartSprint, Any]("startSprint", (start: StartSprint) => (scrumSimulator ?? start).mapTo[Box[Any]])
-          .future("finishSprint", (sprintId: String) => (scrumSimulator ?? FinishSprint(sprintId)).mapTo[Box[Any]])
-          .future("removeSprint", (sprintId: String) => (scrumSimulator ?? RemoveSprint(sprintId)).mapTo[Box[Any]])
-          .future("updateStartDate", (start: UpdateStartDate) => (scrumSimulator ?? start).mapTo[Box[Any]])
-          .future("updateEndDate", (end: UpdateEndDate) => (scrumSimulator ?? end).mapTo[Box[Any]])
-          .future("defineBase", (base: DefineBaseStoryPoints) => (scrumSimulator ?? base).mapTo[Box[Any]])
+          .future[StartSprint, Any]("startSprint", (start: StartSprint) => (scrumSimulator ?? start).mapToBox)
+          .future("finishSprint", (sprintId: String) => (scrumSimulator ?? FinishSprint(sprintId)).mapToBox)
+          .future("removeSprint", (sprintId: String) => (scrumSimulator ?? RemoveSprint(sprintId)).mapToBox)
+          .future("updateStartDate", (start: UpdateStartDate) => (scrumSimulator ?? start).mapToBox)
+          .future("updateEndDate", (end: UpdateEndDate) => (scrumSimulator ?? end).mapToBox)
+          .future("defineBase", (base: DefineBaseStoryPoints) => (scrumSimulator ?? base).mapToBox)
         )
       } getOrElse module
     }

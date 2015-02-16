@@ -19,13 +19,13 @@ import java.io.File
 
 import com.typesafe.config.ConfigFactory
 import org.github.microburn.domain.actors.ProjectActor
-import org.github.microburn.integration.IntegrationProvider
+import org.github.microburn.integration.Integration
 import org.github.microburn.service.{ProjectUpdater, SprintColumnsHistoryProvider}
 import org.joda.time.Days
 
 class ApplicationContext private(val projectActor: ProjectActor,
                                  val updater: ProjectUpdater,
-                                 val integrationProvider: IntegrationProvider,
+                                 val integration: Integration,
                                  val columnsHistoryProvider: SprintColumnsHistoryProvider,
                                  appConfig: ApplicationConfig) {
   def connectorConfig: ConnectorConfig = appConfig.connectorConfig
@@ -46,8 +46,8 @@ object ApplicationContext {
         .resolveWith(ConfigFactory.parseResources("predefined.conf"))
     val appConfig = ApplicationConfig(config)
     val projectActor = new ProjectActor(appConfig.projectConfig, appConfig.durations.initialFetchToSprintStartAcceptableDelayMinutes)
-    val integrationProvider = appConfig.integrationProvidersFactory(projectActor)
-    val updater = new ProjectUpdater(integrationProvider, appConfig.durations.fetchPeriod)
+    val integration = appConfig.integrationFactory(projectActor)
+    val updater = new ProjectUpdater(integration, appConfig.durations.fetchPeriod)
     val columnsHistoryProvider = new SprintColumnsHistoryProvider(
       projectActor,
       appConfig.durations.initialFetchToSprintStartAcceptableDelayMinutes
@@ -56,7 +56,7 @@ object ApplicationContext {
     new ApplicationContext(
       projectActor            = projectActor,
       updater                 = updater,
-      integrationProvider     = integrationProvider,
+      integration             = integration,
       columnsHistoryProvider  = columnsHistoryProvider,
       appConfig               = appConfig)
   }

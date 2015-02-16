@@ -16,11 +16,11 @@
 package org.github.microburn.integration.support.kanban
 
 import org.github.microburn.domain.actors.ProjectActor
-import org.github.microburn.integration.IntegrationProvider
+import org.github.microburn.integration.Integration
 
 import scala.concurrent.duration.FiniteDuration
 
-trait ScrumSimulation { self: IntegrationProvider =>
+trait ScrumSimulation { self: Integration =>
   protected def boardStateProvider: BoardStateProvider
   protected def projectActor: ProjectActor
   protected def initializationTimeout: FiniteDuration

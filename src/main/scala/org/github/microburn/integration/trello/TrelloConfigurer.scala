@@ -18,14 +18,14 @@ package org.github.microburn.integration.trello
 import com.typesafe.config.Config
 import org.github.microburn.PartiallyPreparedConfig
 import org.github.microburn.domain.actors.ProjectActor
-import org.github.microburn.integration.support.kanban.KanbanIntegrationProvider
-import org.github.microburn.integration.{IntegrationProvider, IntegrationProviderConfigurer}
+import org.github.microburn.integration.support.kanban.KanbanIntegration
+import org.github.microburn.integration.{Integration, IntegrationConfigurer}
 
-object TrelloProviderConfigurer extends IntegrationProviderConfigurer{
-  override def tryConfigure(partiallyPreparedConfig: PartiallyPreparedConfig): PartialFunction[Config, (ProjectActor) => IntegrationProvider] = {
+object TrelloConfigurer extends IntegrationConfigurer {
+  override def tryConfigure(partiallyPreparedConfig: PartiallyPreparedConfig): PartialFunction[Config, (ProjectActor) => Integration] = {
     case config if config.hasPath("trello.token") =>
       val trelloConfig = TrelloConfig(config.getConfig("trello"))
-      new KanbanIntegrationProvider(
+      new KanbanIntegration(
         new TrelloBoardStateProvider(trelloConfig),
         partiallyPreparedConfig.durations.initializationTimeout
       )(_)

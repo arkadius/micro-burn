@@ -20,7 +20,7 @@ import java.util.concurrent.TimeUnit
 import com.typesafe.config.Config
 import org.github.microburn.domain.ProjectConfig
 import org.github.microburn.domain.actors.ProjectActor
-import org.github.microburn.integration.{IntegrationProvider, IntegrationProviderConfigurer}
+import org.github.microburn.integration.{Integration, IntegrationConfigurer}
 import org.joda.time.Days
 
 import scala.concurrent.duration.FiniteDuration
@@ -29,14 +29,14 @@ case class ApplicationConfig(connectorConfig: ConnectorConfig,
                              projectConfig: ProjectConfig,
                              durations: DurationsConfig,
                              authorizationConfig: AuthorizationConfig,
-                             integrationProvidersFactory: ProjectActor => IntegrationProvider)
+                             integrationFactory: ProjectActor => Integration)
 
 object ApplicationConfig {
   
   def apply(config: Config): ApplicationConfig = {
     val durations = DurationsConfig(config.getConfig("durations"))
     val partiallyPreparedConfig = PartiallyPreparedConfig(durations)
-    val providersFactory = IntegrationProviderConfigurer.firstConfiguredProvidersFactory(partiallyPreparedConfig).applyOrElse(
+    val integrationFactory = IntegrationConfigurer.firstConfiguredIntegration(partiallyPreparedConfig).applyOrElse(
       config,
       (_:Config) => throw new IllegalArgumentException("You must define configuration of service that you want to integrate with")
     )
@@ -46,7 +46,7 @@ object ApplicationConfig {
       projectConfig = ProjectConfig(config.getConfig("project")),
       durations = durations,
       authorizationConfig = AuthorizationConfig(config.getConfig("authorization")),
-      integrationProvidersFactory = providersFactory)
+      integrationFactory = integrationFactory)
   }
 
 }
@@ -82,7 +82,7 @@ case class DurationsConfig(initializationTimeout: FiniteDuration,
                            defaultSprintDuration: Days)
 
 object DurationsConfig {
-  import concurrent.duration._
+  import scala.concurrent.duration._
 
   def apply(config: Config): DurationsConfig = {
     DurationsConfig(

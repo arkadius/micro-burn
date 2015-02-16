@@ -18,15 +18,15 @@ package org.github.microburn.integration.jira
 import com.typesafe.config.Config
 import org.github.microburn.PartiallyPreparedConfig
 import org.github.microburn.domain.actors.ProjectActor
-import org.github.microburn.integration.support.scrum.ScrumIntegrationProvider
-import org.github.microburn.integration.{IntegrationProvider, IntegrationProviderConfigurer}
+import org.github.microburn.integration.support.scrum.ScrumIntegration
+import org.github.microburn.integration.{Integration, IntegrationConfigurer}
 
-object JiraProviderConfigurer extends IntegrationProviderConfigurer {
-  override def tryConfigure(partiallyPreparedConfig: PartiallyPreparedConfig): PartialFunction[Config, ProjectActor => IntegrationProvider] = {
+object JiraIntegrationConfigurer extends IntegrationConfigurer {
+  override def tryConfigure(partiallyPreparedConfig: PartiallyPreparedConfig): PartialFunction[Config, ProjectActor => Integration] = {
     case config if config.hasPath("jira") =>
       val jiraConfig = JiraConfig(config.getConfig("jira"))
       val sprintsDataProvider = new JiraSprintsDataProvider(jiraConfig)
       val tasksDataProvider = new JiraTasksDataProvider(jiraConfig)
-      new ScrumIntegrationProvider(sprintsDataProvider, tasksDataProvider)(_)
+      new ScrumIntegration(sprintsDataProvider, tasksDataProvider)(_)
   }
 }
