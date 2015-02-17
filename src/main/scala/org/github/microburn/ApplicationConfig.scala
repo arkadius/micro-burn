@@ -20,6 +20,7 @@ import java.util.concurrent.TimeUnit
 import com.typesafe.config.Config
 import org.github.microburn.domain.ProjectConfig
 import org.github.microburn.domain.actors.ProjectActor
+import org.github.microburn.integration.support.kanban.ScrumManagementMode
 import org.github.microburn.integration.{Integration, IntegrationConfigurer}
 import org.joda.time.Days
 
@@ -35,7 +36,8 @@ object ApplicationConfig {
   
   def apply(config: Config): ApplicationConfig = {
     val durations = DurationsConfig(config.getConfig("durations"))
-    val partiallyPreparedConfig = PartiallyPreparedConfig(durations)
+    val projectConfig = ProjectConfig(config.getConfig("project"))
+    val partiallyPreparedConfig = new PartiallyPreparedConfig(durations, projectConfig)
     val integrationFactory = IntegrationConfigurer.firstConfiguredIntegration(partiallyPreparedConfig).applyOrElse(
       config,
       (_:Config) => throw new IllegalArgumentException("You must define configuration of service that you want to integrate with")
@@ -43,7 +45,7 @@ object ApplicationConfig {
 
     ApplicationConfig(
       connectorConfig = ConnectorConfig(config.getConfig("connector")),
-      projectConfig = ProjectConfig(config.getConfig("project")),
+      projectConfig = projectConfig,
       durations = durations,
       authorizationConfig = AuthorizationConfig(config.getConfig("authorization")),
       integrationFactory = integrationFactory)
@@ -74,7 +76,11 @@ object AuthorizationConfig {
   }
 }
 
-case class PartiallyPreparedConfig(durations: DurationsConfig)
+class PartiallyPreparedConfig(durations: DurationsConfig, projectConfig: ProjectConfig) {
+  def initializationTimeout: FiniteDuration = durations.initializationTimeout
+
+  def optionalScrumManagementMode: Option[ScrumManagementMode] = projectConfig.optionalScrumManagementMode
+}
 
 case class DurationsConfig(initializationTimeout: FiniteDuration,
                            fetchPeriod: FiniteDuration,

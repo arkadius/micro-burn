@@ -84,7 +84,7 @@ case class UserStory(taskId: String,
 
   override def storyPointsOfSelf(implicit config: ProjectConfig): BigDecimal  = {
     optionalStoryPoints orElse
-      config.defaultStoryPointsForUserStrories getOrElse
+      config.defaultStoryPointsForUserStories getOrElse
       BigDecimal(0)
   }
 

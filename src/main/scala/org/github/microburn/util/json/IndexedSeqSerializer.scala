@@ -23,7 +23,7 @@ object IndexedSeqSerializer extends Serializer[IndexedSeq[_]] {
       case JArray(xs) =>
         val t = ptype.getOrElse(throw new MappingException("parameterized type not known"))
         xs.map(x => Extraction.extract(x, TypeInfo(t.getActualTypeArguments()(0).asInstanceOf[Class[_]], None))).toIndexedSeq
-      case x => throw new MappingException("Can't convert " + x + " to IndexedSeq")
+      case x => throw new MappingException(s"Can't convert $x to IndexedSeq")
     }
   }
 

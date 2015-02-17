@@ -15,16 +15,10 @@
  */
 package org.github.microburn.integration.support.kanban
 
-import org.github.microburn.domain.actors.ProjectActor
-import org.github.microburn.integration.Integration
+class AutomaticScrumManager(scrumSimulator: ScrumSimulator, modeDetails: AutomaticManagementMode) {
 
-import scala.concurrent.duration.FiniteDuration
+  def start(): Unit = { // FIXME: obsłużyć mode
 
-trait ScrumSimulation { self: Integration =>
-  protected def boardStateProvider: BoardStateProvider
-  protected def projectActor: ProjectActor
-  protected def initializationTimeout: FiniteDuration
-  protected val automaticScopeChange: Boolean
+  }
 
-  val scrumSimulator: ScrumSimulator = new ScrumSimulator(boardStateProvider, projectActor, automaticScopeChange)(initializationTimeout)
 }

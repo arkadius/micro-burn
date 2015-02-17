@@ -26,7 +26,7 @@ object BigDecimalSerializer extends Serializer[BigDecimal] {
         BigDecimal(xs)
       case JString(xs) =>
         BigDecimal(xs)
-      case x => throw new MappingException("Can't convert " + x + " to BigDecimal")
+      case x => throw new MappingException(s"Can't convert $x to BigDecimal")
     }
   }
 

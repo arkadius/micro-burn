@@ -19,15 +19,17 @@ import java.io.File
 import java.util
 
 import com.typesafe.config.Config
+import org.github.microburn.integration.support.kanban.{ScrumManagementModeParser, ScrumManagementMode}
 
 import scalaz._
 import Scalaz._
 
 case class ProjectConfig(nonBacklogColumns: List[BoardColumn],
                          dataRoot: File,
-                         defaultStoryPointsForUserStrories: Option[BigDecimal],
+                         defaultStoryPointsForUserStories: Option[BigDecimal],
                          splitSpBetweenTechnicalTasks: Boolean,
-                         dayOfWeekWeights: IndexedSeq[BigDecimal]) {
+                         dayOfWeekWeights: IndexedSeq[BigDecimal],
+                         optionalScrumManagementMode: Option[ScrumManagementMode]) {
 
   private val statuses = (for {
     column <- nonBacklogColumns
@@ -50,8 +52,7 @@ object ProjectConfig {
 
   def apply(config: Config): ProjectConfig = {
     val nonBacklogColumns = parseNonBacklogColumns(config)
-    if (nonBacklogColumns.size < 2)
-      throw new scala.IllegalArgumentException("You must define at least two column")
+    require(nonBacklogColumns.size >= 2, "You must define at least two column")
     val nonBacklogColumnsWithAtLeastOneDone = makeAtLeastOneColumnDone(nonBacklogColumns)
     val defaultStoryPointsForUserStrories = config.optional(_.getBigDecimal, "defaultStoryPointsForUserStrories")
     val splitSpBetweenTechnicalTasks = config.getDefinedBoolean("splitSpBetweenTechnicalTasks")
@@ -59,9 +60,11 @@ object ProjectConfig {
     ProjectConfig(
       nonBacklogColumns = nonBacklogColumnsWithAtLeastOneDone,
       dataRoot = dataRoot,
-      defaultStoryPointsForUserStrories = defaultStoryPointsForUserStrories,
+      defaultStoryPointsForUserStories = defaultStoryPointsForUserStrories,
       splitSpBetweenTechnicalTasks = splitSpBetweenTechnicalTasks,
-      dayOfWeekWeights = parseDayOfWeekWeights(config))
+      dayOfWeekWeights = parseDayOfWeekWeights(config),
+      optionalScrumManagementMode = ScrumManagementModeParser.parse(config)
+    )
   }
 
   private def makeAtLeastOneColumnDone(columns: List[BoardColumn]): List[BoardColumn] = {

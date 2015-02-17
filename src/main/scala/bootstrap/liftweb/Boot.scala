@@ -41,5 +41,6 @@ class Boot {
 
     val context = ApplicationContext()
     context.updater.start()
+    context.optionalAutomaticScrumManager.foreach(_.start())
   }
 }

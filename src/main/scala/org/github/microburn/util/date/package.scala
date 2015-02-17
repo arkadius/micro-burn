@@ -18,12 +18,42 @@ package org.github.microburn.util
 import java.text.SimpleDateFormat
 import java.util.TimeZone
 
+import org.joda.time.format.{DateTimeFormatterBuilder, DateTimeFormatter}
+
 package object date {
 
   def utcDateFormat = {
     val f = new SimpleDateFormat("yyyy-MM-dd'T'HH:mm:ss.SSS'Z'")
     f.setTimeZone(TimeZone.getTimeZone("UTC"))
     f
+  }
+
+  val dateTimeFormatterWithOptionalTimeFields: DateTimeFormatter = {
+    val secondParser = new DateTimeFormatterBuilder()
+      .appendLiteral(':')
+      .appendSecondOfMinute(1)
+      .toParser
+
+    val minuteParser = new DateTimeFormatterBuilder()
+      .appendLiteral(':')
+      .appendMinuteOfHour(1)
+      .appendOptional(secondParser)
+      .toParser
+
+    val hourParser = new DateTimeFormatterBuilder()
+      .appendLiteral(' ')
+      .appendHourOfDay(1)
+      .appendOptional(minuteParser)
+      .toParser
+
+    new DateTimeFormatterBuilder()
+      .appendYear(4, 4)
+      .appendLiteral('-')
+      .appendMonthOfYear(1)
+      .appendLiteral('-')
+      .appendDayOfMonth(1)
+      .appendOptional(hourParser)
+      .toFormatter
   }
 
 }

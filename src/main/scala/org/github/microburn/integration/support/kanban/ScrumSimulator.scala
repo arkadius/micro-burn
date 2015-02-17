@@ -27,8 +27,10 @@ import scala.collection.immutable.TreeMap
 import scala.concurrent.duration.FiniteDuration
 import scalaz.Scalaz._
 
-class ScrumSimulator(boardStateProvider: BoardStateProvider, projectActor: ProjectActor)
+class ScrumSimulator(boardStateProvider: BoardStateProvider, projectActor: ProjectActor, automaticScopeChange: Boolean)
                     (initializationTimeout: FiniteDuration) extends LiftActor {
+
+  // FIXME: obsłużyć automaticScopeChange
 
   import org.github.microburn.util.concurrent.FutureEnrichments._
   import org.github.microburn.util.concurrent.LiftActorEnrichments._

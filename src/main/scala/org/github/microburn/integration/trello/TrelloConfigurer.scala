@@ -24,10 +24,14 @@ import org.github.microburn.integration.{Integration, IntegrationConfigurer}
 object TrelloConfigurer extends IntegrationConfigurer {
   override def tryConfigure(partiallyPreparedConfig: PartiallyPreparedConfig): PartialFunction[Config, (ProjectActor) => Integration] = {
     case config if config.hasPath("trello.token") =>
+      val scrumManagementMode = partiallyPreparedConfig.optionalScrumManagementMode.getOrElse {
+        throw new IllegalStateException("You must define management mode")
+      }
       val trelloConfig = TrelloConfig(config.getConfig("trello"))
       new KanbanIntegration(
         new TrelloBoardStateProvider(trelloConfig),
-        partiallyPreparedConfig.durations.initializationTimeout
+        partiallyPreparedConfig.initializationTimeout,
+        scrumManagementMode.automaticScopeChange
       )(_)
   }
 }

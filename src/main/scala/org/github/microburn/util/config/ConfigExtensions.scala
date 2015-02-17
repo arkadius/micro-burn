@@ -15,13 +15,14 @@
  */
 package org.github.microburn.util.config
 
-import com.typesafe.config.Config
+import com.typesafe.config.{Config, ConfigException}
+import org.joda.time.{DateTime, DateTimeConstants}
+import org.github.microburn.util.date._
 
-import scalaz._
-import Scalaz._
+import scalaz.Scalaz._
 
 object ConfigExtensions {
-  import collection.convert.wrapAsScala._
+  import scala.collection.convert.wrapAsScala._
 
   implicit class ConfigExtension(config: Config) {
     def optional[T](f: Config => String => T, path: String): Option[T] = {
@@ -38,6 +39,27 @@ object ConfigExtensions {
 
     def getBigDecimalList(path: String): List[BigDecimal] = {
       config.getNumberList(path).map(n => BigDecimal(n.toString)).toList
+    }
+
+    def getDayOfWeek(path: String): Int = config.getString(path) match {
+      case "monday"     | "mon" | "mo" => DateTimeConstants.MONDAY
+      case "tuesday"    | "tue" | "tu" => DateTimeConstants.TUESDAY
+      case "wednesday"  | "wed" | "we" => DateTimeConstants.WEDNESDAY
+      case "thursday"   | "thu" | "th" => DateTimeConstants.THURSDAY
+      case "friday"     | "fri" | "fr" => DateTimeConstants.FRIDAY
+      case "saturday"   | "sat" | "sa" => DateTimeConstants.SATURDAY
+      case "sunday"     | "sun" | "su" => DateTimeConstants.SUNDAY
+      case other => throw new ConfigException.BadValue(path, s"Not supported day of week: $other")
+    }
+
+    def getDateTime(path: String): DateTime = {
+      val str = config.getString(path)
+      try {
+        dateTimeFormatterWithOptionalTimeFields.parseDateTime(str)
+      } catch {
+        case ex: IllegalArgumentException =>
+          throw new ConfigException.BadValue(path, s"Bad date: $str. Should be in format: yyyy-MM-dd HH:mm:ss. Time is optional", ex)
+      }
     }
   }
 }
