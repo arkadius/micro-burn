@@ -23,11 +23,11 @@ import org.github.microburn.domain._
 import org.github.microburn.domain.actors.{GetProjectState, ProjectState, ProjectActorHelper, ProjectActor}
 import org.scalatest._
 
-class ScrumSimulatorTest extends FlatSpec with Matchers with ProjectActorHelper {
+class ScrumSimulatorActorTest extends FlatSpec with Matchers with ProjectActorHelper {
 
   import scala.concurrent.duration._
   import org.github.microburn.util.concurrent.FutureEnrichments._
-  import org.github.microburn.util.concurrent.LiftActorEnrichments._
+  import org.github.microburn.util.concurrent.ActorEnrichments._
   import OptionValues._
 
   implicit val config = ProjectConfigUtils.defaultConfig
@@ -37,7 +37,7 @@ class ScrumSimulatorTest extends FlatSpec with Matchers with ProjectActorHelper 
     val projectActor = projectActorWithInitialSprint(givenSprint)
     val boardStateProvider = new MockBoardStateProvider
     boardStateProvider.givenUserStories = Seq(SampleTasks.openedUserStory(123))
-    val simulator = new ScrumSimulator(boardStateProvider, projectActor, automaticScopeChange = false)(5.seconds)
+    val simulator = new ScrumSimulatorActor(boardStateProvider, projectActor, automaticScopeChange = false)(5.seconds)
 
     val state = (simulator ?? FetchCurrentSprintsBoardState).mapTo[Option[FetchedBoardState]].await(5.seconds)
 
@@ -49,7 +49,7 @@ class ScrumSimulatorTest extends FlatSpec with Matchers with ProjectActorHelper 
     val givenSprint = SampleSprint.withEmptyEvents().copy(id = givenId)
     val projectActor = projectActorWithInitialSprint(givenSprint)
     val boardStateProvider = new MockBoardStateProvider
-    val simulator = new ScrumSimulator(boardStateProvider, projectActor, automaticScopeChange = false)(5.seconds)
+    val simulator = new ScrumSimulatorActor(boardStateProvider, projectActor, automaticScopeChange = false)(5.seconds)
     def sprintIsActive = projectHasOnlyOneSprint(givenId, projectActor)
 
     simulator ! FinishSprint("1")
@@ -84,7 +84,7 @@ class ScrumSimulatorTest extends FlatSpec with Matchers with ProjectActorHelper 
     val givenSprint = SampleSprint.withEmptyEvents().copy(id = givenId)
     val projectActor = projectActorWithInitialSprint(givenSprint)
     val boardStateProvider = new MockBoardStateProvider
-    val simulator = new ScrumSimulator(boardStateProvider, projectActor, automaticScopeChange = false)(5.seconds)
+    val simulator = new ScrumSimulatorActor(boardStateProvider, projectActor, automaticScopeChange = false)(5.seconds)
     def noSprints = projectHasNoSprint(projectActor)
 
     simulator ! FinishSprint("1")
@@ -102,7 +102,7 @@ class ScrumSimulatorTest extends FlatSpec with Matchers with ProjectActorHelper 
 
   private def checkSprintStart(projectActor: ProjectActor, expectedSprintId: String): Unit = {
     val boardStateProvider = new MockBoardStateProvider
-    val simulator = new ScrumSimulator(boardStateProvider, projectActor, automaticScopeChange = false)(5.seconds)
+    val simulator = new ScrumSimulatorActor(boardStateProvider, projectActor, automaticScopeChange = false)(5.seconds)
     val givenName = "Foo Name"
     val givenStart = new Date(1000)
     val givenEnd = new Date(2000)

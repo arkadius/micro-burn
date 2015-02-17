@@ -13,12 +13,24 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package org.github.microburn.integration.support.kanban
+package org.github.microburn.util.date
 
-class AutomaticScrumManager(scrumSimulator: ScrumSimulator, modeDetails: AutomaticManagementMode) {
+import org.joda.time.DateTime
 
-  def start(): Unit = { // FIXME: obsłużyć mode
+object DateTimeEnrichments {
 
+  implicit class EnrichedDateTime(dateTime: DateTime) {
+    def withTimeButNotBefore(time: Time): DateTime = {
+      val dateWithTime = dateTime.withTime(time)
+      if (dateWithTime.isBefore(dateTime))
+        dateWithTime.plusDays(1)
+      else
+        dateWithTime
+    }
+
+    def withTime(time: Time): DateTime = {
+      dateTime.withTime(time.hour, time.minute, 0, 0)
+    }
   }
 
 }

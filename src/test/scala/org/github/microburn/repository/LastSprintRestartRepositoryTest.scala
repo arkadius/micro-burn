@@ -17,18 +17,26 @@ package org.github.microburn.repository
 
 import java.io.File
 
-trait ProjectRepository {
-  def sprintRoots: Seq[File]
-}
+import org.joda.time.DateTime
+import org.scalatest.{FlatSpec, Matchers}
 
-object ProjectRepository {
-  def apply(projectRoot: File): ProjectRepository = {
-    new ProjectFSRepository(projectRoot)
-  }
-}
+class LastSprintRestartRepositoryTest extends FlatSpec with Matchers {
 
-class ProjectFSRepository(projectRoot: File) extends ProjectRepository {
-  override def sprintRoots: Seq[File] = {
-    Option(projectRoot.listFiles()).toSeq.flatten.filter(_.isDirectory)
+  import org.scalatest.OptionValues._
+
+  it should "do round-trip" in {
+    val dir = new File("target/sprints")
+    val file = new File(dir, "lastSprintRestart.txt")
+    if (file.exists())
+      file.delete()
+    val repo = LastSprintRestartRepository(dir)
+
+    repo.loadLastSprintRestart.isEmpty shouldBe true
+
+    val saved = new DateTime(2015, 1, 1, 12, 11)
+    repo.saveLastSprintRestart(saved)
+
+    repo.loadLastSprintRestart.value shouldEqual saved
   }
+
 }

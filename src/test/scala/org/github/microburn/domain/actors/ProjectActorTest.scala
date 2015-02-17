@@ -27,7 +27,7 @@ import scala.concurrent.duration._
 
 class ProjectActorTest extends FlatSpec with Matchers with ProjectActorHelper {
   import org.github.microburn.util.concurrent.FutureEnrichments._
-  import org.github.microburn.util.concurrent.LiftActorEnrichments._
+  import org.github.microburn.util.concurrent.ActorEnrichments._
 
   implicit val config = ProjectConfig(TestConfig.withDefaultsFallback().getConfig("project"))
 

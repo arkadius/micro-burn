@@ -13,20 +13,24 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package org.github.microburn.util.concurrent
+package org.github.microburn.util.validation
 
-import net.liftweb.actor.{LAFuture, LiftActor}
+import scalaz._
+import Scalaz._
 
-object LiftActorEnrichments {
-  import FutureEnrichments._
+object ValidationBuilder {
 
-  implicit class EnrichedLiftActor(actor: LiftActor) {    
-    def ??(msg: Any): LAFuture[Any] = {
-      val futureOfFuture = (actor !< msg).mapTo[LAFuture[Any]]
-      for {
-        future <- futureOfFuture
-        result <- future
-      } yield result
+  implicit class FailureBuilder[E](e: => E) {
+    def failureIf(expr: => Boolean): Validation[E, Unit] = {
+      if (expr)
+        e.failure
+      else
+        ().success
+    }
+
+    def failureIfNot(expr: => Boolean): Validation[E, Unit] = {
+      failureIf(!expr)
     }
   }
+
 }

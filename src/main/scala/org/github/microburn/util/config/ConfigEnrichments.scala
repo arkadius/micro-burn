@@ -15,16 +15,18 @@
  */
 package org.github.microburn.util.config
 
+import java.text.ParseException
+
 import com.typesafe.config.{Config, ConfigException}
-import org.joda.time.{DateTime, DateTimeConstants}
 import org.github.microburn.util.date._
+import org.joda.time.{DateTime, DateTimeConstants}
 
 import scalaz.Scalaz._
 
-object ConfigExtensions {
+object ConfigEnrichments {
   import scala.collection.convert.wrapAsScala._
 
-  implicit class ConfigExtension(config: Config) {
+  implicit class EnrichedConfig(config: Config) {
     def optional[T](f: Config => String => T, path: String): Option[T] = {
       config.hasPath(path).option(f(config)(path))
     }
@@ -41,6 +43,18 @@ object ConfigExtensions {
       config.getNumberList(path).map(n => BigDecimal(n.toString)).toList
     }
 
+    def getDayOfMonth(path: String): Int = {
+      val i = config.getInt(path)
+      if (1 <= i && i <= 31)
+        i
+      else
+        throw new ConfigException.BadValue(path, "Day of month should be between 1 and 31")
+    }
+
+    def getTime(path: String): Time = {
+      TimeParser.parse(config.getString(path)).valueOr(msg => throw new ConfigException.BadValue(path, msg))
+    }
+
     def getDayOfWeek(path: String): Int = config.getString(path) match {
       case "monday"     | "mon" | "mo" => DateTimeConstants.MONDAY
       case "tuesday"    | "tue" | "tu" => DateTimeConstants.TUESDAY
@@ -49,16 +63,16 @@ object ConfigExtensions {
       case "friday"     | "fri" | "fr" => DateTimeConstants.FRIDAY
       case "saturday"   | "sat" | "sa" => DateTimeConstants.SATURDAY
       case "sunday"     | "sun" | "su" => DateTimeConstants.SUNDAY
-      case other => throw new ConfigException.BadValue(path, s"Not supported day of week: $other")
+      case other => throw new ConfigException.BadValue(path, s"Invalid day of week: $other")
     }
 
-    def getDateTime(path: String): DateTime = {
+    def getDate(path: String): DateTime = {
       val str = config.getString(path)
       try {
-        dateTimeFormatterWithOptionalTimeFields.parseDateTime(str)
+        new DateTime(DateTimeFormats.dateFormat.parse(str))
       } catch {
-        case ex: IllegalArgumentException =>
-          throw new ConfigException.BadValue(path, s"Bad date: $str. Should be in format: yyyy-MM-dd HH:mm:ss. Time is optional", ex)
+        case ex: ParseException =>
+          throw new ConfigException.BadValue(path, s"Invalid date: $str. Should be in format: yyyy-MM-dd", ex)
       }
     }
   }

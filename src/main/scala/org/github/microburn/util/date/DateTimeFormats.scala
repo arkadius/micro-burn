@@ -13,22 +13,21 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package org.github.microburn.repository
+package org.github.microburn.util.date
 
-import java.io.File
+import java.text.SimpleDateFormat
+import java.util.TimeZone
 
-trait ProjectRepository {
-  def sprintRoots: Seq[File]
-}
+object DateTimeFormats {
 
-object ProjectRepository {
-  def apply(projectRoot: File): ProjectRepository = {
-    new ProjectFSRepository(projectRoot)
+  def utcDateTimeFormat = {
+    val f = new SimpleDateFormat("yyyy-MM-dd'T'HH:mm:ss.SSS'Z'")
+    f.setTimeZone(TimeZone.getTimeZone("UTC"))
+    f
   }
-}
 
-class ProjectFSRepository(projectRoot: File) extends ProjectRepository {
-  override def sprintRoots: Seq[File] = {
-    Option(projectRoot.listFiles()).toSeq.flatten.filter(_.isDirectory)
+  def dateFormat = {
+    new SimpleDateFormat("yyyy-MM-dd")
   }
+
 }

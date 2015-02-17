@@ -50,7 +50,7 @@ class TrelloCardsProvider(config: TrelloConfig) {
         val JString(columnId) = item \ "idList"
         val JBool(closed) = item \ "closed"
         val JString(dateStr) = item \ "dateLastActivity"
-        val dateLastActivity = utcDateFormat.parse(dateStr)
+        val dateLastActivity = DateTimeFormats.utcDateTimeFormat.parse(dateStr)
         val checkListItems = ChecklistExtractor.extract(item \ "checklists")
         Card(
           id = id,

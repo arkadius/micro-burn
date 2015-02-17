@@ -47,7 +47,7 @@ case class ProjectConfig(nonBacklogColumns: List[BoardColumn],
 case class BoardColumn(index: Int, name: String, statusIds: List[String], isDoneColumn: Boolean)
 
 object ProjectConfig {
-  import org.github.microburn.util.config.ConfigExtensions._
+  import org.github.microburn.util.config.ConfigEnrichments._
   import collection.convert.wrapAll._
 
   def apply(config: Config): ProjectConfig = {

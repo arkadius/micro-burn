@@ -30,7 +30,7 @@ class SprintColumnsHistoryProvider(projectActor: ProjectActor,
                                    initialFetchToSprintStartAcceptableDelayMinutes: FiniteDuration)
                                   (implicit config: ProjectConfig) {
   import org.github.microburn.util.concurrent.FutureEnrichments._
-  import org.github.microburn.util.concurrent.LiftActorEnrichments._
+  import org.github.microburn.util.concurrent.ActorEnrichments._
   
   def columnsHistory(sprintId: String): LAFuture[Box[ColumnsHistory]] = {
     (projectActor ?? GetStoryPointsHistory(sprintId)).mapTo[Box[SprintHistory]].map { historyBox =>

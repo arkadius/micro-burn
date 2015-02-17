@@ -32,7 +32,7 @@ class KanbanIntegration(protected val boardStateProvider: BoardStateProvider,
   with ScrumSimulation {
 
   import org.github.microburn.util.concurrent.FutureEnrichments._
-  import org.github.microburn.util.concurrent.LiftActorEnrichments._
+  import org.github.microburn.util.concurrent.ActorEnrichments._
 
   override def updateProject(implicit timestamp: Date): LAFuture[_] = {
     for {

@@ -18,7 +18,8 @@ package org.github.microburn.integration.support.kanban
 import java.text.ParseException
 
 import com.typesafe.config.Config
-import org.joda.time.DateTime
+import org.github.microburn.util.date.Time
+import org.joda.time.{DateTimeConstants, DateTime}
 
 sealed trait ScrumManagementMode {
   def automaticScopeChange: Boolean
@@ -30,16 +31,20 @@ case class AutomaticManagementMode(restartPeriod: RepeatPeriod) extends ScrumMan
   override def automaticScopeChange: Boolean = true
 }
 
-sealed trait RepeatPeriod
+sealed trait RepeatPeriod {
+  def n: Int
+  def time: Time
+  def optionalStartDate: Option[DateTime]
+}
 
-case class EveryNDays(n: Int, hour: Int, minute: Int, optionalStartDate: Option[DateTime]) extends RepeatPeriod
+case class EveryNDays(n: Int, time: Time, optionalStartDate: Option[DateTime]) extends RepeatPeriod
 
-case class EveryNWeeks(n: Int, dayOfWeek: Int, hour: Int, minute: Int, optionalStartDate: Option[DateTime]) extends RepeatPeriod
+case class EveryNWeeks(n: Int, dayOfWeek: Int, time: Time, optionalStartDate: Option[DateTime]) extends RepeatPeriod
 
-case class EveryNMonths(n: Int, dayOfMonth: Int, hour: Int, minute: Int, optionalStartDate: Option[DateTime]) extends RepeatPeriod
+case class EveryNMonths(n: Int, dayOfMonth: Int, time: Time, optionalStartDate: Option[DateTime]) extends RepeatPeriod
 
 object ScrumManagementModeParser {
-  import org.github.microburn.util.config.ConfigExtensions._
+  import org.github.microburn.util.config.ConfigEnrichments._
 
   def parse(config: Config): Option[ScrumManagementMode] = {
     config.optional(_.getConfig, "management").map { managementConfig =>
@@ -59,21 +64,17 @@ object ScrumManagementModeParser {
   private def parseAutomatic(config: Config): ScrumManagementMode = {
     val n = config.optional(_.getInt, "n").getOrElse(1)
     require(1 <= n && n <= 365, "n should be between 1 and 365")
-    val hour = config.optional(_.getInt, "hour").getOrElse(0)
-    require(0 <= hour && n <= 23, "hour should be between 0 and 23")
-    val minute = config.optional(_.getInt, "minute").getOrElse(0)
-    require(0 <= hour && n <= 59, "minute should be between 0 and 59")
-    val optionalStartDate = config.optional(_.getDateTime, "start-date")
+    val time = config.optional(_.getTime, "time").getOrElse(Time(0, 0))
+    val optionalStartDate = config.optional(_.getDate, "start-date")
     val period = config.getString("period") match {
       case "every-n-days" =>
-        EveryNDays(n, hour, minute, optionalStartDate)
+        EveryNDays(n, time, optionalStartDate)
       case "every-n-weeks" =>
-        val dayOfWeek = config.getDayOfWeek("day-of-week")
-        EveryNWeeks(n, dayOfWeek, hour, minute, optionalStartDate)
+        val dayOfWeek = config.optional(_.getDayOfWeek, "day-of-week").getOrElse(DateTimeConstants.MONDAY)
+        EveryNWeeks(n, dayOfWeek, time, optionalStartDate)
       case "every-n-months" =>
-        val dayOfMonth = config.getInt("day-of-month")
-        require(1 <= dayOfMonth && dayOfMonth <= 31, "day-of-month should be between 1 and 31")
-        EveryNMonths(n, dayOfMonth, hour, minute, optionalStartDate)
+        val dayOfMonth = config.optional(_.getDayOfMonth, "day-of-month").getOrElse(1)
+        EveryNMonths(n, dayOfMonth, time, optionalStartDate)
       case otherPeriodType =>
         throw new ParseException(s"Illegal period type: $otherPeriodType", -1)
     }

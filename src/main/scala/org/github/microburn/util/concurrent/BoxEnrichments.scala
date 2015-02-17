@@ -38,7 +38,7 @@ object BoxEnrichments {
     }
   }
 
-  implicit class OptionEnrichment[T](option: Option[T]) {
+  implicit class EnrichedOption[T](option: Option[T]) {
     def toBox: Box[T] = option match {
       case Some(value) => Full(value)
       case None        => Empty

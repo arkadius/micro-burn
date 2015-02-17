@@ -16,6 +16,7 @@
 package org.github.microburn.service
 
 import org.github.microburn.domain.ProjectConfig
+import org.github.microburn.util.date.DateMath
 import org.github.microburn.util.logging.Slf4jLogging
 import org.joda.time._
 
@@ -66,7 +67,7 @@ object EstimateComputer extends Slf4jLogging {
       prev.plusDays(1).withTimeAtStartOfDay()
     }
     val positiveIntervalsStream = startIntervalsStream.map { startOfInterval =>
-      val endOfInterval = minOfDates(end, startOfInterval.plusDays(1).withTimeAtStartOfDay())
+      val endOfInterval = DateMath.minOfDates(end, startOfInterval.plusDays(1).withTimeAtStartOfDay())
       endOfInterval.isAfter(startOfInterval).option(new Interval(startOfInterval, endOfInterval))
     }
     positiveIntervalsStream.takeWhile(_.isDefined).map(_.get).toList
@@ -90,12 +91,6 @@ object EstimateComputer extends Slf4jLogging {
     } getOrElse { throw new IllegalArgumentException("Interval too short - cannot estimate") }
   }
 
-  private def minOfDates(first: DateTime, sec: DateTime): DateTime = {
-    if (sec.isBefore(first))
-      sec
-    else
-      first
-  }
 
   private[service] case class IntervalAndSumMillis(interval: Interval, weightedSumBefore: BigDecimal) {
     def weightedSumAfter(implicit config: ProjectConfig): BigDecimal = weightedSumBefore + weight * interval.toDurationMillis

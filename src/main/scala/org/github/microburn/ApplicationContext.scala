@@ -18,20 +18,19 @@ package org.github.microburn
 import java.io.File
 
 import com.typesafe.config.ConfigFactory
-import org.github.microburn.domain.ProjectConfig
 import org.github.microburn.domain.actors.ProjectActor
 import org.github.microburn.integration.Integration
-import org.github.microburn.integration.support.kanban.{AutomaticScrumManager, AutomaticManagementMode, ScrumSimulation}
-import org.github.microburn.service.{ProjectUpdater, SprintColumnsHistoryProvider}
+import org.github.microburn.integration.support.kanban.AutomaticScrumManagerActor
+import org.github.microburn.service.{ProjectUpdaterActor, SprintColumnsHistoryProvider}
 import org.joda.time.Days
 
 import scala.concurrent.duration.FiniteDuration
 
 class ApplicationContext private(val projectActor: ProjectActor,
-                                 val updater: ProjectUpdater,
+                                 val updater: ProjectUpdaterActor,
                                  val integration: Integration,
                                  val columnsHistoryProvider: SprintColumnsHistoryProvider,
-                                 val optionalAutomaticScrumManager: Option[AutomaticScrumManager],
+                                 val optionalAutomaticScrumManager: Option[AutomaticScrumManagerActor],
                                  appConfig: ApplicationConfig) {
   def connectorConfig: ConnectorConfig = appConfig.connectorConfig
   def authorizationConfig: AuthorizationConfig = appConfig.authorizationConfig
@@ -52,9 +51,15 @@ object ApplicationContext {
     val appConfig = ApplicationConfig(config)
     val projectActor = new ProjectActor(appConfig.projectConfig, appConfig.durations.initialFetchToSprintStartAcceptableDelayMinutes)
     val integration = appConfig.integrationFactory(projectActor)
-    val optionalAutomaticScrumManager = prepareOptionalAutomaticScrumManager(appConfig.projectConfig, integration)
+    val optionalAutomaticScrumManager =
+      AutomaticScrumManagerActor.optionallyPrepareAutomaticScrumManager(
+        appConfig.projectConfig.optionalScrumManagementMode,
+        integration,
+        appConfig.projectConfig.dataRoot,
+        appConfig.durations.tickPeriod
+      )
 
-    val updater = new ProjectUpdater(integration, appConfig.durations.fetchPeriod)
+    val updater = new ProjectUpdaterActor(integration, appConfig.durations.fetchPeriod)
     val columnsHistoryProvider = new SprintColumnsHistoryProvider(
       projectActor,
       appConfig.durations.initialFetchToSprintStartAcceptableDelayMinutes
@@ -69,20 +74,4 @@ object ApplicationContext {
       optionalAutomaticScrumManager = optionalAutomaticScrumManager)
   }
 
-  private def prepareOptionalAutomaticScrumManager(projectConfig: ProjectConfig, integration: Integration): Option[AutomaticScrumManager] = {
-    integration match {
-      case scrumSimulation: ScrumSimulation =>
-        val managementMode = projectConfig.optionalScrumManagementMode.getOrElse {
-          throw new IllegalStateException("You must define management mode")
-        }
-        managementMode match {
-          case auto: AutomaticManagementMode =>
-            Some(new AutomaticScrumManager(scrumSimulation.scrumSimulator, auto))
-          case otherMode =>
-            None
-        }
-      case notSimulating =>
-        None
-    }
-  }
 }

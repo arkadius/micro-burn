@@ -13,22 +13,20 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package org.github.microburn.repository
+package org.github.microburn.util.concurrent
 
-import java.io.File
+import net.liftweb.actor.{LAFuture, LiftActor}
 
-trait ProjectRepository {
-  def sprintRoots: Seq[File]
-}
+object ActorEnrichments {
+  import FutureEnrichments._
 
-object ProjectRepository {
-  def apply(projectRoot: File): ProjectRepository = {
-    new ProjectFSRepository(projectRoot)
-  }
-}
-
-class ProjectFSRepository(projectRoot: File) extends ProjectRepository {
-  override def sprintRoots: Seq[File] = {
-    Option(projectRoot.listFiles()).toSeq.flatten.filter(_.isDirectory)
+  implicit class EnrichedLiftActor(actor: LiftActor) {    
+    def ??(msg: Any): LAFuture[Any] = {
+      val futureOfFuture = (actor !< msg).mapTo[LAFuture[Any]]
+      for {
+        future <- futureOfFuture
+        result <- future
+      } yield result
+    }
   }
 }

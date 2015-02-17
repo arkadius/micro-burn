@@ -75,7 +75,7 @@ class TaskEventsCsvRepository(taskEventsFile: File) extends TaskEventsRepository
     def taskName            = fields(4)
     def optionalStoryPoints = parseOptionalDecimal(fields(5))
     def status              = parseStatus(fields(6), fields(7))
-    val date                = utcDateFormat.parse(fields(8))
+    val date                = DateTimeFormats.utcDateTimeFormat.parse(fields(8))
     fields(0) match {
       case ADDED   => TaskAdded(taskId = taskId, parentUserStoryId = parentUserStoryId, isTechnicalTask = isTechnicalTask,
         taskName = taskName, optionalStoryPoints = optionalStoryPoints, status = status, date = date)
@@ -110,7 +110,7 @@ class TaskEventsCsvRepository(taskEventsFile: File) extends TaskEventsRepository
   }
 
   private def prepareFields(fields: Seq[Any]): Seq[Any] = fields.map {
-    case date: Date => utcDateFormat.format(date)
+    case date: Date => DateTimeFormats.utcDateTimeFormat.format(date)
     case optional: Option[_] => optional.getOrElse("")
     case other => other
   }

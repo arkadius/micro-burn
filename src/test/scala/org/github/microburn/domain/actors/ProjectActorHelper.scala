@@ -26,7 +26,7 @@ import scala.reflect.io.Path
 
 trait ProjectActorHelper extends Matchers {
 
-  import org.github.microburn.util.concurrent.LiftActorEnrichments._
+  import org.github.microburn.util.concurrent.ActorEnrichments._
   import org.github.microburn.util.concurrent.FutureEnrichments._
   import concurrent.duration._
   

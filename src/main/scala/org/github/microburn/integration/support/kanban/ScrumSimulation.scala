@@ -26,5 +26,5 @@ trait ScrumSimulation { self: Integration =>
   protected def initializationTimeout: FiniteDuration
   protected val automaticScopeChange: Boolean
 
-  val scrumSimulator: ScrumSimulator = new ScrumSimulator(boardStateProvider, projectActor, automaticScopeChange)(initializationTimeout)
+  val scrumSimulator: ScrumSimulatorActor = new ScrumSimulatorActor(boardStateProvider, projectActor, automaticScopeChange)(initializationTimeout)
 }

@@ -67,7 +67,7 @@ object ConnectorConfig {
 case class AuthorizationConfig(secretForScrumSimulation: Option[String])
 
 object AuthorizationConfig {
-  import org.github.microburn.util.config.ConfigExtensions._
+  import org.github.microburn.util.config.ConfigEnrichments._
 
   def apply(config: Config): AuthorizationConfig = {
     AuthorizationConfig(
@@ -86,7 +86,8 @@ case class DurationsConfig(initializationTimeout: FiniteDuration,
                            fetchPeriod: FiniteDuration,
                            initialFetchToSprintStartAcceptableDelayMinutes: FiniteDuration,
                            clientFetchIfNoChangesPeriod: FiniteDuration,
-                           defaultSprintDuration: Days)
+                           defaultSprintDuration: Days,
+                           tickPeriod: FiniteDuration)
 
 object DurationsConfig {
   import scala.concurrent.duration._
@@ -97,7 +98,8 @@ object DurationsConfig {
       config.getDuration("fetchPeriod", TimeUnit.MILLISECONDS).millis,
       config.getDuration("initialFetchToSprintStartAcceptableDelay", TimeUnit.MILLISECONDS).millis,
       config.getDuration("clientFetchIfNoChangesPeriod", TimeUnit.MILLISECONDS).millis,
-      Days.days(config.getDuration("defaultSprintDuration", TimeUnit.DAYS).toInt)
+      Days.days(config.getDuration("defaultSprintDuration", TimeUnit.DAYS).toInt),
+      config.getDuration("tickPeriod", TimeUnit.MILLISECONDS).millis
     )
   }
 }

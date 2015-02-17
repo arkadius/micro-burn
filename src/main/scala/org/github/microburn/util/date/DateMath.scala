@@ -13,22 +13,18 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package org.github.microburn.repository
+package org.github.microburn.util.date
 
-import java.io.File
+import org.joda.time.DateTime
 
-trait ProjectRepository {
-  def sprintRoots: Seq[File]
-}
+object DateMath {
 
-object ProjectRepository {
-  def apply(projectRoot: File): ProjectRepository = {
-    new ProjectFSRepository(projectRoot)
+  def minOfDates(dates: DateTime*): DateTime = {
+    dates.sortWith(_.compareTo(_) < 0).head
   }
-}
 
-class ProjectFSRepository(projectRoot: File) extends ProjectRepository {
-  override def sprintRoots: Seq[File] = {
-    Option(projectRoot.listFiles()).toSeq.flatten.filter(_.isDirectory)
+  def maxOfDates(dates: DateTime*): DateTime = {
+    dates.sortWith(_.compareTo(_) < 0).last
   }
+
 }

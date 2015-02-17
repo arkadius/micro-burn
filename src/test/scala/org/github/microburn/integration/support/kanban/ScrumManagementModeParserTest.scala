@@ -16,6 +16,7 @@
 package org.github.microburn.integration.support.kanban
 
 import com.typesafe.config.ConfigFactory
+import org.github.microburn.util.date.Time
 import org.joda.time.{DateTime, DateTimeConstants}
 import org.scalatest.{Matchers, FlatSpec}
 
@@ -48,7 +49,7 @@ class ScrumManagementModeParserTest extends FlatSpec with Matchers {
         |  mode = auto
         |  period = every-n-days
         |}
-      """.stripMargin)) shouldBe Some(AutomaticManagementMode(EveryNDays(1, 0, 0, None)))
+      """.stripMargin)) shouldBe Some(AutomaticManagementMode(EveryNDays(1, Time(0, 0), None)))
   }
 
   it should "parse automatic mode with every-n-weeks period" in {
@@ -58,10 +59,9 @@ class ScrumManagementModeParserTest extends FlatSpec with Matchers {
         |  period = every-n-weeks
         |  n = 2
         |  day-of-week = tuesday
-        |  hour = 2
-        |  minute = 11
+        |  time = "02:11"
         |}
-      """.stripMargin)) shouldBe Some(AutomaticManagementMode(EveryNWeeks(2, DateTimeConstants.TUESDAY, 2, 11, None)))
+      """.stripMargin)) shouldBe Some(AutomaticManagementMode(EveryNWeeks(2, DateTimeConstants.TUESDAY, Time(2, 11), None)))
   }
 
   it should "parse automatic mode with every-n-months period" in {
@@ -70,9 +70,9 @@ class ScrumManagementModeParserTest extends FlatSpec with Matchers {
         |  mode = auto
         |  period = every-n-months
         |  day-of-month = 13
-        |  start-date = "2015-06-01 12:11"
+        |  start-date = "2015-06-01"
         |}
-      """.stripMargin)) shouldBe Some(AutomaticManagementMode(EveryNMonths(1, 13, 0, 0, Some(new DateTime(2015, 6, 1, 12, 11)))))
+      """.stripMargin)) shouldBe Some(AutomaticManagementMode(EveryNMonths(1, 13, Time(0, 0), Some(new DateTime(2015, 6, 1, 0, 0)))))
   }
 
 }

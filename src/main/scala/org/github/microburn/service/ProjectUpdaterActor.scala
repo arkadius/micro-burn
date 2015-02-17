@@ -15,31 +15,19 @@
  */
 package org.github.microburn.service
 
-import java.util.Date
-
-import net.liftweb.common.Failure
-import net.liftweb.util.Helpers._
-import net.liftweb.util.Schedule
+import net.liftweb.actor.LAFuture
 import org.github.microburn.integration.Integration
+import org.github.microburn.util.concurrent.JobRepeatingActor
 import org.github.microburn.util.logging.Slf4jLogging
+import org.joda.time.DateTime
 
 import scala.concurrent.duration.FiniteDuration
 
-class ProjectUpdater(provider: Integration, fetchPeriod: FiniteDuration) extends Slf4jLogging {
+class ProjectUpdaterActor(provider: Integration, fetchPeriod: FiniteDuration) extends JobRepeatingActor with Slf4jLogging {
+  override protected val jobDescription: String = "updating project data"
 
-  import org.github.microburn.util.concurrent.FutureEnrichments._
-  
-  def start(): Unit = repeat()
+  override protected val tickPeriod: FiniteDuration = fetchPeriod
 
-  private def repeat(): Unit = {
-    val timestamp = new Date
-    measureFuture("update of project")(provider.updateProject(timestamp)).onComplete { result =>
-      result match {
-        case Failure(msg, ex, _) => error(s"Error while updating project data: ${ex.map(_.getMessage).openOr(msg)}")
-        case _ =>
-      }
-      Schedule.schedule(() => repeat(), fetchPeriod.toTimeSpan)
-    }
-  }
-
+  override protected def prepareFutureOfJob(timestamp: DateTime): LAFuture[_] =
+    measureFuture("update of project")(provider.updateProject(timestamp.toDate))
 }

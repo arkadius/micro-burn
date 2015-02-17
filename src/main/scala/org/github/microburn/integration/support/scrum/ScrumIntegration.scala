@@ -27,7 +27,7 @@ class ScrumIntegration(sprintsProvider: SprintsDataProvider, tasksProvider: Task
   extends Integration {
 
   import org.github.microburn.util.concurrent.FutureEnrichments._
-  import org.github.microburn.util.concurrent.LiftActorEnrichments._
+  import org.github.microburn.util.concurrent.ActorEnrichments._
 
   override def updateProject(implicit timestamp: Date): LAFuture[_] = {
     for {

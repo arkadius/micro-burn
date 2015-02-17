@@ -25,7 +25,7 @@ import org.github.microburn.util.logging.Slf4jLogging
 
 object MicroBurnServices extends Slf4jLogging {
   import org.github.microburn.util.concurrent.FutureEnrichments._
-  import org.github.microburn.util.concurrent.LiftActorEnrichments._
+  import org.github.microburn.util.concurrent.ActorEnrichments._
   
   def render = {
     val givenSecret = S.param("secret").toOption

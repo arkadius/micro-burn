@@ -27,13 +27,13 @@ import scala.collection.immutable.TreeMap
 import scala.concurrent.duration.FiniteDuration
 import scalaz.Scalaz._
 
-class ScrumSimulator(boardStateProvider: BoardStateProvider, projectActor: ProjectActor, automaticScopeChange: Boolean)
-                    (initializationTimeout: FiniteDuration) extends LiftActor {
+class ScrumSimulatorActor(boardStateProvider: BoardStateProvider, projectActor: ProjectActor, automaticScopeChange: Boolean)
+                         (initializationTimeout: FiniteDuration) extends LiftActor {
 
   // FIXME: obsłużyć automaticScopeChange
 
   import org.github.microburn.util.concurrent.FutureEnrichments._
-  import org.github.microburn.util.concurrent.LiftActorEnrichments._
+  import org.github.microburn.util.concurrent.ActorEnrichments._
   import org.github.microburn.util.concurrent.BoxEnrichments._
 
   private var currentSprints: TreeMap[Int, SprintDetails] = TreeMap.empty
@@ -56,7 +56,7 @@ class ScrumSimulator(boardStateProvider: BoardStateProvider, projectActor: Proje
       // czekamy, żeby poprawnie zostaną pobrane sprinty zanim ktoś zdąży wykonać inną akcję
       currentSprints = lastSprints.await(initializationTimeout)
     case FetchCurrentSprintsBoardState =>
-      val fetchedStateFuture = lastActive.toOption.map { last =>
+      val fetchedStateFuture = lastActive.map { last =>
         boardStateProvider.currentUserStories.map { userStories =>
           FetchedBoardState(last, userStories)
         }  
@@ -71,13 +71,18 @@ class ScrumSimulator(boardStateProvider: BoardStateProvider, projectActor: Proje
       reply(startFuture)
     case NextSprint(major, userStories) =>
       val future = (for {
-        validatedTullDetails <- SprintDetails.create(major)
+        validatedFullDetails <- SprintDetails.create(major)
       } yield {
-        val next = optionalLastNumericalSprint.map(_.next(validatedTullDetails)).getOrElse(NumericalSprintIdWithDetails.zero(validatedTullDetails))
+        val next = optionalLastNumericalSprint.map(_.next(validatedFullDetails)).getOrElse(NumericalSprintIdWithDetails.zero(validatedFullDetails))
         currentSprints += next.numericalId -> next.details
         projectActor !< CreateNewSprint(next.id, major, userStories, new Date)
       }).toFutureOfBox
       reply(future)
+    case FinishCurrentActiveSprint =>
+      val finishFuture = lastActive.map { sprint =>
+        this ?? FinishSprint(sprint.id)
+      }.toFutureOfOption
+      reply(finishFuture)
     case FinishSprint(sprintId) =>
       reply(updateSprintDetails(sprintId, _.finish))
     case RemoveSprint(sprintId) =>
@@ -90,11 +95,11 @@ class ScrumSimulator(boardStateProvider: BoardStateProvider, projectActor: Proje
       reply(updateSprintDetails(sprintId, _.defineBaseStoryPoints(BigDecimal(base))))
   }
   
-  private def lastActive: Box[NumericalSprintIdWithDetails] = {
+  private def lastActive: Option[NumericalSprintIdWithDetails] = {
     optionalLastNumericalSprint.filter(_.isActive)
   }
   
-  private def optionalLastNumericalSprint: Box[NumericalSprintIdWithDetails] = {
+  private def optionalLastNumericalSprint: Option[NumericalSprintIdWithDetails] = {
     currentSprints.lastOption.map(NumericalSprintIdWithDetails.apply _ tupled)
   }
 
@@ -153,6 +158,8 @@ object FetchedBoardState {
 }
 
 case class StartSprint(name: String, start: Date, end: Date) extends NgModel
+
+case object FinishCurrentActiveSprint
 
 case class FinishSprint(id: String)
 
