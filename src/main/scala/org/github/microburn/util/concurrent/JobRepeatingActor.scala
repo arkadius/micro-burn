@@ -16,7 +16,7 @@
 package org.github.microburn.util.concurrent
 
 import net.liftweb.actor.{LAFuture, LiftActor}
-import net.liftweb.common.Failure
+import net.liftweb.common.{Full, Failure}
 import net.liftweb.util.Schedule
 import org.github.microburn.util.logging.Slf4jLogging
 import org.joda.time.DateTime
@@ -39,7 +39,8 @@ trait JobRepeatingActor extends LiftActor { self: Slf4jLogging =>
       try {
         prepareFutureOfJob(timestamp).onComplete { result =>
           result match {
-            case Failure(msg, ex, _) => error(s"Error while $jobDescription: ${ex.map(_.getMessage).openOr(msg)}")
+            case Failure(msg, Full(ex), _) => error(s"Error while $jobDescription: msg", ex)
+            case Failure(msg, _, _) => error(s"Error while $jobDescription: msg")
             case _ =>
           }
           Schedule.schedule(this, Repeat, tickPeriod.toTimeSpan)

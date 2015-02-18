@@ -45,7 +45,7 @@ object MicroBurnServices extends Slf4jLogging {
     ) +: renderIfNotAlreadyDefined {
       val module = angular.module("MicroBurnServices")
         .factory("historySvc", jsObjFactory()
-        .future("getHistory", (sprintId: String) => measureFuture("renderable history computation")(ApplicationContext().columnsHistoryProvider.columnsHistory(sprintId)))
+        .future("getHistory", (sprintId: String) => measureFuture("history computation")(ApplicationContext().columnsHistoryProvider.columnsHistory(sprintId)))
         )
       optionalScrumManagement.map {
         case ScrumManagement(scrumSimulator, sprintsManagementEnabled) =>

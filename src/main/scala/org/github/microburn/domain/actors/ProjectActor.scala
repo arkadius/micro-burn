@@ -23,11 +23,12 @@ import net.liftweb.common.{Box, Failure, Full}
 import net.liftweb.http.ListenerManager
 import org.github.microburn.domain._
 import org.github.microburn.repository.ProjectRepository
+import org.github.microburn.util.logging.Slf4jLogging
 
 import scala.concurrent.duration.FiniteDuration
 
 class ProjectActor(config: ProjectConfig, initialFetchToSprintStartAcceptableDelayMinutes: FiniteDuration)
-  extends LiftActor with ListenerManager {
+  extends LiftActor with ListenerManager with Slf4jLogging {
 
   import org.github.microburn.util.concurrent.FutureEnrichments._
 
@@ -47,7 +48,8 @@ class ProjectActor(config: ProjectConfig, initialFetchToSprintStartAcceptableDel
       reply(prepareProjectState)
     case GetFullProjectState =>
       reply(prepareFullProjectState)
-    case CreateNewSprint(sprintId, details, userStories, timestamp) if details.isFinished =>
+    case c@CreateNewSprint(sprintId, details, userStories, timestamp) if details.isFinished =>
+      info(sprintId + ": " + details)
       val createResult = for {
         validatedSprint <- sprintFactory.migrateSprint(sprintId, details, userStories)
       } yield {
@@ -56,7 +58,8 @@ class ProjectActor(config: ProjectConfig, initialFetchToSprintStartAcceptableDel
         sprintId
       }
       reply(createResult)
-    case CreateNewSprint(sprintId, details, userStories, timestamp) =>
+    case c@CreateNewSprint(sprintId, details, userStories, timestamp) =>
+      info(sprintId + ": " + details)
       val createResult = for {
         validatedSprint <- sprintFactory.createSprint(sprintId, details, userStories, timestamp)
       } yield {
@@ -66,6 +69,7 @@ class ProjectActor(config: ProjectConfig, initialFetchToSprintStartAcceptableDel
       }
       reply(createResult)
     case updateDetails: UpdateSprintDetails =>
+      info(updateDetails.toString)
       val resultFuture = sprintActors(updateDetails.sprintId) !< updateDetails
       reply(resultFuture)
     case update: UpdateSprint =>

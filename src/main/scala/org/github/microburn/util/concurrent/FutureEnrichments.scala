@@ -48,10 +48,13 @@ object FutureEnrichments {
     }
 
     def withLoggingFinished(f: T => String) = {
-      laFuture.map { result =>
-        debug(s"Finished with ${f(result)}")
-        result
+      laFuture.onComplete {
+        case Full(result) => debug(s"Finished with ${f(result)}")
+        case Failure(msg, Full(ex), _) => error(s"Failed with $msg", ex)
+        case Failure(msg, _, _) => error(s"Failed with $msg")
+        case Empty => warn(s"Finished with empty box")
       }
+      laFuture
     }
 
     def ifMet(expr: => Boolean): LAFuture[Unit] = {

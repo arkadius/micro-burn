@@ -32,6 +32,7 @@ class AutomaticScrumManagerActor(scrumSimulator: ScrumSimulatorActor,
                                  repo: LastSprintRestartRepository,
                                  protected val tickPeriod: FiniteDuration) extends JobRepeatingActor with Slf4jLogging  {
   import org.github.microburn.util.concurrent.ActorEnrichments._
+  import org.github.microburn.util.concurrent.FutureEnrichments._
 
   override protected val jobDescription: String = "scheduling next sprint restart"
 
@@ -48,8 +49,8 @@ class AutomaticScrumManagerActor(scrumSimulator: ScrumSimulatorActor,
       scheduledRestart = nextRestart
       repo.saveLastSprintRestart(timestamp)
       for {
-        _ <- scrumSimulator ?? FinishCurrentActiveSprint
-        startResult <- scrumSimulator ?? start 
+        _ <- (scrumSimulator ?? FinishCurrentActiveSprint).withLoggingFinished("finished sprint id: " + _)
+        startResult <- (scrumSimulator ?? start).withLoggingFinished("started sprint id: " + _)
       } yield startResult
     }
   }
