@@ -34,10 +34,11 @@ class NextRestartComputer(restartPeriod: RepeatPeriod) {
           case months: EveryNMonths =>
             lastRestart.plusMonths(months.n).withDayOfMonth(months.dayOfMonth).withTime(restartPeriod.time)
         }
-        if (restartPeriod.optionalStartDate.exists(next.isBefore(_)))
+        val maxOfNextAndCurrent = DateMath.maxOfDates(next, currentDate)
+        if (restartPeriod.optionalStartDate.exists(maxOfNextAndCurrent.isBefore(_)))
           nextAfterStarOrCurrent(currentDate)
         else
-          next
+          maxOfNextAndCurrent
     }
     NextRestart(nextDate, periodName(nextDate))
   }

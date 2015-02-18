@@ -45,6 +45,7 @@ class AutomaticScrumManagerActor(scrumSimulator: ScrumSimulatorActor,
       val nextRestart = nextRestartComputer.compute(Some(scheduledRestart.date), timestamp)
       val start = StartSprint(s"Sprint ${scheduledRestart.periodName}", scheduledRestart.date.toDate, nextRestart.date.toDate)
       scheduledRestart = nextRestart
+      info(s"Scheduled sprint: ${start.name} finish and new start on ${scheduledRestart.date}")
       repo.saveLastSprintRestart(timestamp)
       for {
         _ <- scrumSimulator ?? FinishCurrentActiveSprint
