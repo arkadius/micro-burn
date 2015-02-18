@@ -18,9 +18,8 @@ package org.github.microburn
 import java.util.concurrent.TimeUnit
 
 import com.typesafe.config.Config
-import org.github.microburn.domain.ProjectConfig
+import org.github.microburn.domain.{ScrumManagementMode, ProjectConfig}
 import org.github.microburn.domain.actors.ProjectActor
-import org.github.microburn.integration.support.kanban.ScrumManagementMode
 import org.github.microburn.integration.{Integration, IntegrationConfigurer}
 import org.joda.time.Days
 
@@ -79,7 +78,7 @@ object AuthorizationConfig {
 class PartiallyPreparedConfig(durations: DurationsConfig, projectConfig: ProjectConfig) {
   def initializationTimeout: FiniteDuration = durations.initializationTimeout
 
-  def optionalScrumManagementMode: Option[ScrumManagementMode] = projectConfig.optionalScrumManagementMode
+  def scrumManagementMode: ScrumManagementMode = projectConfig.scrumManagementMode
 }
 
 case class DurationsConfig(initializationTimeout: FiniteDuration,

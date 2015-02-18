@@ -16,20 +16,15 @@
 package org.github.microburn.domain
 
 import java.io.File
-import java.util
 
 import com.typesafe.config.Config
-import org.github.microburn.integration.support.kanban.{ScrumManagementModeParser, ScrumManagementMode}
-
-import scalaz._
-import Scalaz._
 
 case class ProjectConfig(nonBacklogColumns: List[BoardColumn],
                          dataRoot: File,
                          defaultStoryPointsForUserStories: Option[BigDecimal],
                          splitSpBetweenTechnicalTasks: Boolean,
                          dayOfWeekWeights: IndexedSeq[BigDecimal],
-                         optionalScrumManagementMode: Option[ScrumManagementMode]) {
+                         scrumManagementMode: ScrumManagementMode) {
 
   private val statuses = (for {
     column <- nonBacklogColumns
@@ -48,7 +43,8 @@ case class BoardColumn(index: Int, name: String, statusIds: List[String], isDone
 
 object ProjectConfig {
   import org.github.microburn.util.config.ConfigEnrichments._
-  import collection.convert.wrapAll._
+
+  import scala.collection.convert.wrapAll._
 
   def apply(config: Config): ProjectConfig = {
     val nonBacklogColumns = parseNonBacklogColumns(config)
@@ -63,7 +59,7 @@ object ProjectConfig {
       defaultStoryPointsForUserStories = defaultStoryPointsForUserStrories,
       splitSpBetweenTechnicalTasks = splitSpBetweenTechnicalTasks,
       dayOfWeekWeights = parseDayOfWeekWeights(config),
-      optionalScrumManagementMode = ScrumManagementModeParser.parse(config)
+      scrumManagementMode = ScrumManagementModeParser.parse(config)
     )
   }
 

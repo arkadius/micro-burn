@@ -26,7 +26,7 @@ import org.github.microburn.repository.SprintRepository
 import scala.concurrent.duration.FiniteDuration
 
 class SprintActorFactory(config: ProjectConfig, initialFetchToSprintStartAcceptableDelayMinutes: FiniteDuration, changeNotifyingActor: LiftActor) {
-  private val baseDeterminer = new SprintBaseStateDeterminer(initialFetchToSprintStartAcceptableDelayMinutes)
+  private val baseDeterminer = new SprintBaseStateDeterminer(initialFetchToSprintStartAcceptableDelayMinutes, config.scrumManagementMode.sprintBaseDetermineMode)
 
   def fromRepo(sprintId: String): Option[SprintActor] = {
     val repo = createRepo(sprintId)

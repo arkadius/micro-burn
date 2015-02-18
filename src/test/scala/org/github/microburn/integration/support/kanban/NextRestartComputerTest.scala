@@ -15,6 +15,7 @@
  */
 package org.github.microburn.integration.support.kanban
 
+import org.github.microburn.domain.EveryNDays
 import org.github.microburn.util.date.Time
 import org.joda.time.{DateTimeConstants, DateTime}
 import org.scalatest.{Matchers, FlatSpec}

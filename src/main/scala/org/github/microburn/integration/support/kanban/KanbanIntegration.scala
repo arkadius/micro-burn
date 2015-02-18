@@ -25,8 +25,7 @@ import org.github.microburn.integration.Integration
 import scala.concurrent.duration.FiniteDuration
 
 class KanbanIntegration(protected val boardStateProvider: BoardStateProvider,
-                        protected val initializationTimeout: FiniteDuration,
-                        protected val automaticScopeChange: Boolean)
+                        protected val initializationTimeout: FiniteDuration)
                        (protected val projectActor: ProjectActor)
   extends Integration
   with ScrumSimulation {

@@ -37,6 +37,8 @@ class ApplicationContext private(val projectActor: ProjectActor,
 
   def clientFetchIfNoChangesPeriod: FiniteDuration = appConfig.durations.clientFetchIfNoChangesPeriod
   def defaultSprintDuration: Days = appConfig.durations.defaultSprintDuration
+
+  def hasAutomaticScrumManagement = optionalAutomaticScrumManager.isDefined
 }
 
 object ApplicationContext {
@@ -53,7 +55,7 @@ object ApplicationContext {
     val integration = appConfig.integrationFactory(projectActor)
     val optionalAutomaticScrumManager =
       AutomaticScrumManagerActor.optionallyPrepareAutomaticScrumManager(
-        appConfig.projectConfig.optionalScrumManagementMode,
+        appConfig.projectConfig.scrumManagementMode,
         integration,
         appConfig.projectConfig.dataRoot,
         appConfig.durations.tickPeriod

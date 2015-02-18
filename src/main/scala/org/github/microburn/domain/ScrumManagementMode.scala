@@ -13,23 +13,21 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package org.github.microburn.integration.support.kanban
+package org.github.microburn.domain
 
 import java.text.ParseException
 
 import com.typesafe.config.Config
 import org.github.microburn.util.date.Time
-import org.joda.time.{DateTimeConstants, DateTime}
+import org.joda.time.{DateTime, DateTimeConstants}
 
 sealed trait ScrumManagementMode {
-  def automaticScopeChange: Boolean
+  def sprintBaseDetermineMode: SprintBaseDetermineMode
 }
 
-case class ManualManagementMode(automaticScopeChange: Boolean) extends ScrumManagementMode
+case class ManualManagementMode(sprintBaseDetermineMode: SprintBaseDetermineMode) extends ScrumManagementMode
 
-case class AutomaticManagementMode(restartPeriod: RepeatPeriod) extends ScrumManagementMode {
-  override def automaticScopeChange: Boolean = true
-}
+case class AutomaticManagementMode(restartPeriod: RepeatPeriod, sprintBaseDetermineMode: SprintBaseDetermineMode) extends ScrumManagementMode
 
 sealed trait RepeatPeriod {
   def n: Int
@@ -46,19 +44,18 @@ case class EveryNMonths(n: Int, dayOfMonth: Int, time: Time, optionalStartDate: 
 object ScrumManagementModeParser {
   import org.github.microburn.util.config.ConfigEnrichments._
 
-  def parse(config: Config): Option[ScrumManagementMode] = {
-    config.optional(_.getConfig, "management").map { managementConfig =>
-      managementConfig.getString("mode") match {
-        case "manual" => parseManual(managementConfig)
-        case "auto" => parseAutomatic(managementConfig)
-        case otherMode => throw new ParseException(s"Invalid mode: $otherMode. Valid are: auto and manual", -1)
-      }
+  def parse(config: Config): ScrumManagementMode = {
+    val managementConfig = config.getConfig("management")
+    managementConfig.getString("mode") match {
+      case "manual" => parseManual(managementConfig)
+      case "auto" => parseAutomatic(managementConfig)
+      case otherMode => throw new ParseException(s"Invalid mode: $otherMode. Valid are: auto and manual", -1)
     }
   }
 
   private def parseManual(config: Config): ScrumManagementMode = {
-    val automaticScopeChange = config.optional(_.getBoolean, "automaticScopeChange").getOrElse(false)
-    ManualManagementMode(automaticScopeChange)
+    val sprintBaseMode = SprintBaseDetermineModeParser.parse(config).getOrElse(AutomaticOnSprintStartMode)
+    ManualManagementMode(sprintBaseMode)
   }
 
   private def parseAutomatic(config: Config): ScrumManagementMode = {
@@ -78,6 +75,7 @@ object ScrumManagementModeParser {
       case otherPeriodType =>
         throw new ParseException(s"Illegal period type: $otherPeriodType", -1)
     }
-    AutomaticManagementMode(period)
+    val sprintBaseMode = SprintBaseDetermineModeParser.parse(config).getOrElse(AutomaticOnScopeChangeMode)
+    AutomaticManagementMode(period, sprintBaseMode)
   }
 }

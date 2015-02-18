@@ -22,20 +22,24 @@ import net.liftweb.http.js.JsExp
 import org.github.microburn.ApplicationContext
 import org.github.microburn.integration.support.kanban._
 import org.github.microburn.util.logging.Slf4jLogging
+import scalaz.Scalaz._
 
 object MicroBurnServices extends Slf4jLogging {
   import org.github.microburn.util.concurrent.FutureEnrichments._
   import org.github.microburn.util.concurrent.ActorEnrichments._
   
   def render = {
+    val configuredSecret = ApplicationContext().authorizationConfig.secretForScrumSimulation
     val givenSecret = S.param("secret").toOption
-    val scrumSimulation = ApplicationContext().integration match {
-      case s: ScrumSimulation if givenSecret == ApplicationContext().authorizationConfig.secretForScrumSimulation => Some(s.scrumSimulator)
-      case s: ScrumSimulation if ApplicationContext().authorizationConfig.secretForScrumSimulation.isEmpty => Some(s.scrumSimulator)
-      case _ => None
+    val optionalScrumManagement = ApplicationContext().integration match {
+      case s: ScrumSimulation if configuredSecret.isEmpty | givenSecret == configuredSecret =>
+        Some(ScrumManagement(s.scrumSimulator,  !ApplicationContext().hasAutomaticScrumManagement))
+      case _ =>
+        None
     }
     Script(
-      JsCrVar("scrumSimulation", JsExp.boolToJsExp(scrumSimulation.isDefined)) &
+      JsCrVar("sprintsManagement", JsExp.boolToJsExp(optionalScrumManagement.exists(_.sprintsManagementEnabled))) &
+      JsCrVar("baseManagement", JsExp.boolToJsExp(optionalScrumManagement.isDefined)) &
       JsCrVar("clientFetchIfNoChangesPeriod", JsExp.longToJsExp(ApplicationContext().clientFetchIfNoChangesPeriod.toMillis)) &
       JsCrVar("defaultSprintDuration", JsExp.intToJsExp(ApplicationContext().defaultSprintDuration.getDays))
     ) +: renderIfNotAlreadyDefined {
@@ -43,16 +47,22 @@ object MicroBurnServices extends Slf4jLogging {
         .factory("historySvc", jsObjFactory()
         .future("getHistory", (sprintId: String) => measureFuture("renderable history computation")(ApplicationContext().columnsHistoryProvider.columnsHistory(sprintId)))
         )
-      scrumSimulation.map { scrumSimulator =>
-        module.factory("scrumSimulatorSvc", jsObjFactory()
-          .future[StartSprint, Any]("startSprint", (start: StartSprint) => (scrumSimulator ?? start).mapToBox)
-          .future("finishSprint", (sprintId: String) => (scrumSimulator ?? FinishSprint(sprintId)).mapToBox)
-          .future("removeSprint", (sprintId: String) => (scrumSimulator ?? RemoveSprint(sprintId)).mapToBox)
-          .future("updateStartDate", (start: UpdateStartDate) => (scrumSimulator ?? start).mapToBox)
-          .future("updateEndDate", (end: UpdateEndDate) => (scrumSimulator ?? end).mapToBox)
-          .future("defineBase", (base: DefineBaseStoryPoints) => (scrumSimulator ?? base).mapToBox)
-        )
+      optionalScrumManagement.map {
+        case ScrumManagement(scrumSimulator, sprintsManagementEnabled) =>
+          val baseManagement = jsObjFactory()
+            .future("defineBase", (base: DefineBaseStoryPoints) => (scrumSimulator ?? base).mapToBox)
+          val operations = sprintsManagementEnabled.option(
+            baseManagement
+              .future[StartSprint, Any]("startSprint", (start: StartSprint) => (scrumSimulator ?? start).mapToBox)
+              .future("finishSprint", (sprintId: String) => (scrumSimulator ?? FinishSprint(sprintId)).mapToBox)
+              .future("removeSprint", (sprintId: String) => (scrumSimulator ?? RemoveSprint(sprintId)).mapToBox)
+              .future("updateStartDate", (start: UpdateStartDate) => (scrumSimulator ?? start).mapToBox)
+              .future("updateEndDate", (end: UpdateEndDate) => (scrumSimulator ?? end).mapToBox)
+          ).getOrElse(baseManagement)
+          module.factory("scrumSimulatorSvc", operations)
       } getOrElse module
     }
   }
+
+  case class ScrumManagement(simulator: ScrumSimulatorActor, sprintsManagementEnabled: Boolean)
 }

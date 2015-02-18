@@ -37,7 +37,7 @@ class ScrumSimulatorActorTest extends FlatSpec with Matchers with ProjectActorHe
     val projectActor = projectActorWithInitialSprint(givenSprint)
     val boardStateProvider = new MockBoardStateProvider
     boardStateProvider.givenUserStories = Seq(SampleTasks.openedUserStory(123))
-    val simulator = new ScrumSimulatorActor(boardStateProvider, projectActor, automaticScopeChange = false)(5.seconds)
+    val simulator = new ScrumSimulatorActor(boardStateProvider, projectActor)(5.seconds)
 
     val state = (simulator ?? FetchCurrentSprintsBoardState).mapTo[Option[FetchedBoardState]].await(5.seconds)
 
@@ -49,7 +49,7 @@ class ScrumSimulatorActorTest extends FlatSpec with Matchers with ProjectActorHe
     val givenSprint = SampleSprint.withEmptyEvents().copy(id = givenId)
     val projectActor = projectActorWithInitialSprint(givenSprint)
     val boardStateProvider = new MockBoardStateProvider
-    val simulator = new ScrumSimulatorActor(boardStateProvider, projectActor, automaticScopeChange = false)(5.seconds)
+    val simulator = new ScrumSimulatorActor(boardStateProvider, projectActor)(5.seconds)
     def sprintIsActive = projectHasOnlyOneSprint(givenId, projectActor)
 
     simulator ! FinishSprint("1")
@@ -84,7 +84,7 @@ class ScrumSimulatorActorTest extends FlatSpec with Matchers with ProjectActorHe
     val givenSprint = SampleSprint.withEmptyEvents().copy(id = givenId)
     val projectActor = projectActorWithInitialSprint(givenSprint)
     val boardStateProvider = new MockBoardStateProvider
-    val simulator = new ScrumSimulatorActor(boardStateProvider, projectActor, automaticScopeChange = false)(5.seconds)
+    val simulator = new ScrumSimulatorActor(boardStateProvider, projectActor)(5.seconds)
     def noSprints = projectHasNoSprint(projectActor)
 
     simulator ! FinishSprint("1")
@@ -102,7 +102,7 @@ class ScrumSimulatorActorTest extends FlatSpec with Matchers with ProjectActorHe
 
   private def checkSprintStart(projectActor: ProjectActor, expectedSprintId: String): Unit = {
     val boardStateProvider = new MockBoardStateProvider
-    val simulator = new ScrumSimulatorActor(boardStateProvider, projectActor, automaticScopeChange = false)(5.seconds)
+    val simulator = new ScrumSimulatorActor(boardStateProvider, projectActor)(5.seconds)
     val givenName = "Foo Name"
     val givenStart = new Date(1000)
     val givenEnd = new Date(2000)

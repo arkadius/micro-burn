@@ -17,18 +17,23 @@ package org.github.microburn.domain
 
 import java.util.Date
 
+import com.typesafe.config.Config
 import org.joda.time.DateTime
 
 import scala.concurrent.duration.FiniteDuration
 
-class SprintBaseStateDeterminer(initialFetchToSprintStartAcceptableDelayMinutes: FiniteDuration) {
+class SprintBaseStateDeterminer(initialFetchToSprintStartAcceptableDelayMinutes: FiniteDuration, baseDetermineMode: SprintBaseDetermineMode) {
 
   def baseForSprint(details: SprintDetails,
                     initialDate: Date,
                     initialStoryPointsSum: BigDecimal,
                     initialDoneTasksStoryPointsSum: BigDecimal) = {
     val initialAfterStartPlusAcceptableDelay = initialAfterStartPlusDelay(initialDate, details.start)
-    val baseForStart = details.overriddenBaseStoryPointsSum getOrElse
+    val specifiedBaseForProject = baseDetermineMode match {
+      case SpecifiedBaseMode(storyPoints) => Some(storyPoints)
+      case AutomaticOnScopeChangeMode | AutomaticOnSprintStartMode => None
+    }
+    val baseForStart = details.overriddenBaseStoryPointsSum orElse specifiedBaseForProject getOrElse
       computeBaseForStart(initialStoryPointsSum, initialDoneTasksStoryPointsSum, initialAfterStartPlusAcceptableDelay)
     val baseForColumnChanges = computeBaseForColumnChanges(initialDoneTasksStoryPointsSum, initialAfterStartPlusAcceptableDelay, baseForStart)
     SprintBase(initialAfterStartPlusAcceptableDelay, baseForStart, baseForColumnChanges)

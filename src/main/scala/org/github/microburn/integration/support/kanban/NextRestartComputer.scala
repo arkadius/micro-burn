@@ -15,6 +15,7 @@
  */
 package org.github.microburn.integration.support.kanban
 
+import org.github.microburn.domain.{EveryNMonths, EveryNWeeks, EveryNDays, RepeatPeriod}
 import org.github.microburn.util.date.DateMath
 import org.joda.time.DateTime
 

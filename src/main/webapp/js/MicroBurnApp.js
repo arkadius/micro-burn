@@ -16,14 +16,13 @@ var app = angular.module("MicroBurnApp", ["MicroBurnServices", 'ngCookies']);
 
 var ctrlDeclaration = ['$scope', '$timeout', 'historySvc'];
 
-if (window.scrumSimulation) {
+if (window.sprintsManagement) {
   ctrlDeclaration.push('scrumSimulatorSvc');
 }
 
 ctrlDeclaration.push(function ($scope, $timeout, historySvc, scrumSimulatorSvc) {
-  if (window.scrumSimulation) {
-    $scope.scrumSimulation = true;
-  }
+  $scope.baseManagement = window.baseManagement;
+  $scope.sprintsManagement = window.sprintsManagement;
 
   var clientFetchPromise = null;
 

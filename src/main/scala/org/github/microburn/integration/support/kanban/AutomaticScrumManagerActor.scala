@@ -18,6 +18,7 @@ package org.github.microburn.integration.support.kanban
 import java.io.File
 
 import net.liftweb.actor.LAFuture
+import org.github.microburn.domain.{RepeatPeriod, AutomaticManagementMode, ScrumManagementMode}
 import org.github.microburn.integration.Integration
 import org.github.microburn.repository.LastSprintRestartRepository
 import org.github.microburn.util.concurrent.JobRepeatingActor
@@ -36,16 +37,15 @@ class AutomaticScrumManagerActor(scrumSimulator: ScrumSimulatorActor,
 
   private val nextRestartComputer = new NextRestartComputer(restartPeriod)
 
-  private var scheduledRestart: NextRestart = nextRestartComputer.compute(repo.loadLastSprintRestart, new DateTime())
+  private var scheduledRestart: NextRestart = computeNext(repo.loadLastSprintRestart, new DateTime())
 
   override protected def prepareFutureOfJob(timestamp: DateTime): LAFuture[_] = {
     if (timestamp.isBefore(scheduledRestart.date)) {
       LAFuture(() => Unit)
     } else {
-      val nextRestart = nextRestartComputer.compute(Some(scheduledRestart.date), timestamp)
+      val nextRestart = computeNext(Some(scheduledRestart.date), timestamp)
       val start = StartSprint(s"Sprint ${scheduledRestart.periodName}", scheduledRestart.date.toDate, nextRestart.date.toDate)
       scheduledRestart = nextRestart
-      info(s"Scheduled sprint: ${start.name} finish and new start on ${scheduledRestart.date}")
       repo.saveLastSprintRestart(timestamp)
       for {
         _ <- scrumSimulator ?? FinishCurrentActiveSprint
@@ -53,26 +53,34 @@ class AutomaticScrumManagerActor(scrumSimulator: ScrumSimulatorActor,
       } yield startResult
     }
   }
+
+  private def computeNext(optionalLastRestart: Option[DateTime], currentDate: DateTime): NextRestart = {
+    val next = nextRestartComputer.compute(optionalLastRestart, currentDate)
+    info(s"Scheduled: $next")
+    next
+  }
 }
 
 object AutomaticScrumManagerActor {
-  def optionallyPrepareAutomaticScrumManager(optionalScrumManagementMode: Option[ScrumManagementMode],
+  def optionallyPrepareAutomaticScrumManager(scrumManagementMode: ScrumManagementMode,
                                              integration: Integration,
                                              projectRoot: File,
                                              tickPeriod: FiniteDuration): Option[AutomaticScrumManagerActor] = {
     integration match {
       case scrumSimulation: ScrumSimulation =>
-        val managementMode = optionalScrumManagementMode.getOrElse {
-          throw new IllegalStateException("You must define management mode")
-        }
-        managementMode match {
+        scrumManagementMode match {
           case auto: AutomaticManagementMode =>
             Some(prepare(projectRoot, tickPeriod, scrumSimulation.scrumSimulator, auto.restartPeriod))
           case otherMode =>
             None
         }
       case notSimulating =>
-        None
+        scrumManagementMode match {
+          case auto: AutomaticManagementMode =>
+            throw new IllegalArgumentException("Automatic management mode is not available for integration without scrum simulation")
+          case otherMode =>
+            None
+        }
     }
   }
 
