@@ -29,12 +29,15 @@ class SprintBaseStateDeterminer(initialFetchToSprintStartAcceptableDelayMinutes:
                     initialStoryPointsSum: BigDecimal,
                     initialDoneTasksStoryPointsSum: BigDecimal) = {
     val initialAfterStartPlusAcceptableDelay = initialAfterStartPlusDelay(initialDate, details.start)
-    val specifiedBaseForProject = baseDetermineMode match {
-      case SpecifiedBaseMode(storyPoints) => Some(storyPoints)
-      case AutomaticOnScopeChangeMode | AutomaticOnSprintStartMode => None
-    }
-    val baseForStart = details.overriddenBaseStoryPointsSum orElse specifiedBaseForProject getOrElse
-      computeBaseForStart(initialStoryPointsSum, initialDoneTasksStoryPointsSum, initialAfterStartPlusAcceptableDelay)
+    val baseForStart = details.overriddenBaseStoryPointsSum getOrElse (baseDetermineMode match {
+      case SpecifiedBaseMode(storyPoints) =>
+        storyPoints
+      case AutomaticOnSprintStartMode =>
+        computeBaseForStart(initialStoryPointsSum, initialDoneTasksStoryPointsSum, initialAfterStartPlusAcceptableDelay)
+      case AutomaticOnScopeChangeMode =>
+        ??? // FIXME
+    })
+
     val baseForColumnChanges = computeBaseForColumnChanges(initialDoneTasksStoryPointsSum, initialAfterStartPlusAcceptableDelay, baseForStart)
     SprintBase(initialAfterStartPlusAcceptableDelay, baseForStart, baseForColumnChanges)
   }
