@@ -18,25 +18,41 @@ package org.github.microburn.integration.support.kanban
 import org.github.microburn.util.date.DateMath
 import org.joda.time.DateTime
 
-class NextRestartComputer(restartPeriod: RepeatPeriod, currentDate: => DateTime = new DateTime()) {
+class NextRestartComputer(restartPeriod: RepeatPeriod) {
   import org.github.microburn.util.date.DateTimeEnrichments._
 
-  def compute(optionalLastRestart: Option[DateTime]): NextRestart = {
+  def compute(optionalLastRestart: Option[DateTime], currentDate: DateTime): NextRestart = {
     val nextDate = optionalLastRestart match {
       case None =>
-        val dates = currentDate +: restartPeriod.optionalStartDate.toSeq
-        DateMath.maxOfDates(dates : _*).withTimeButNotBefore(restartPeriod.time)
+        nextAfterStarOrCurrent(currentDate)
       case Some(lastRestart) =>
-        restartPeriod match {
+        val next = restartPeriod match {
           case days: EveryNDays =>
-           ???
+            lastRestart.plusDays(days.n).withTime(restartPeriod.time)
           case weeks: EveryNWeeks =>
-            ???
+            lastRestart.plusWeeks(weeks.n).withDayOfWeek(weeks.dayOfWeek).withTime(restartPeriod.time)
           case months: EveryNMonths =>
-            ???
+            lastRestart.plusMonths(months.n).withDayOfMonth(months.dayOfMonth).withTime(restartPeriod.time)
         }
+        if (restartPeriod.optionalStartDate.exists(next.isBefore(_)))
+          nextAfterStarOrCurrent(currentDate)
+        else
+          next
     }
     NextRestart(nextDate, periodName(nextDate))
+  }
+
+  private def nextAfterStarOrCurrent(currentDate: DateTime): DateTime = {
+    val dates = restartPeriod.optionalStartDate.toSeq :+ currentDate
+    val maxOfStartDateAndCurrent = DateMath.maxOfDates(dates: _*)
+    restartPeriod match {
+      case days: EveryNDays =>
+        maxOfStartDateAndCurrent.withFieldsSettedUpButNotBefore(_.withTime(restartPeriod.time), _.plusDays(1))
+      case weeks: EveryNWeeks =>
+        maxOfStartDateAndCurrent.withFieldsSettedUpButNotBefore(_.withDayOfWeek(weeks.dayOfWeek).withTime(restartPeriod.time), _.plusWeeks(1))
+      case months: EveryNMonths =>
+        maxOfStartDateAndCurrent.withFieldsSettedUpButNotBefore(_.withDayOfMonth(months.dayOfMonth).withTime(restartPeriod.time), _.plusMonths(1))
+    }
   }
 
   private def periodName(date: DateTime): String = restartPeriod match {

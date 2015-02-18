@@ -36,16 +36,16 @@ class AutomaticScrumManagerActor(scrumSimulator: ScrumSimulatorActor,
 
   private val nextRestartComputer = new NextRestartComputer(restartPeriod)
 
-  private var scheduledRestart: NextRestart = nextRestartComputer.compute(repo.loadLastSprintRestart)
+  private var scheduledRestart: NextRestart = nextRestartComputer.compute(repo.loadLastSprintRestart, new DateTime())
 
   override protected def prepareFutureOfJob(timestamp: DateTime): LAFuture[_] = {
     if (timestamp.isBefore(scheduledRestart.date)) {
       LAFuture(() => Unit)
     } else {
-      repo.saveLastSprintRestart(timestamp)
-      val nextRestart = nextRestartComputer.compute(Some(timestamp))
+      val nextRestart = nextRestartComputer.compute(Some(scheduledRestart.date), timestamp)
       val start = StartSprint(s"Sprint ${scheduledRestart.periodName}", scheduledRestart.date.toDate, nextRestart.date.toDate)
       scheduledRestart = nextRestart
+      repo.saveLastSprintRestart(timestamp)
       for {
         _ <- scrumSimulator ?? FinishCurrentActiveSprint
         startResult <- scrumSimulator ?? start 

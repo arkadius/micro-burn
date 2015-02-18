@@ -16,27 +16,36 @@
 package org.github.microburn.integration.support.kanban
 
 import org.github.microburn.util.date.Time
-import org.joda.time.DateTime
+import org.joda.time.{DateTimeConstants, DateTime}
 import org.scalatest.{Matchers, FlatSpec}
 
 class NextRestartComputerTest extends FlatSpec with Matchers {
 
   it should "compute restart for every-n-days if no last repeat date specified and current before time" in {
     val nDays = EveryNDays(n = 3, Time(8, 10), None)
-    val computer = new NextRestartComputer(nDays, currentDate = new DateTime(2015, 1, 1, 0, 0))
+    val computer = new NextRestartComputer(nDays)
 
-    val result = computer.compute(None)
+    val result = computer.compute(None, new DateTime(2015, 1, 1, 0, 0))
 
     result shouldEqual NextRestart(new DateTime(2015, 1, 1, 8, 10), "2015.001")
   }
 
   it should "compute restart for every-n-days if no last repeat date specified and current after time" in {
     val nDays = EveryNDays(n = 3, Time(8, 10), None)
-    val computer = new NextRestartComputer(nDays, currentDate = new DateTime(2015, 1, 1, 9, 0))
+    val computer = new NextRestartComputer(nDays)
 
-    val result = computer.compute(None)
+    val result = computer.compute(None, new DateTime(2015, 1, 1, 9, 0))
 
     result shouldEqual NextRestart(new DateTime(2015, 1, 2, 8, 10), "2015.002")
+  }
+
+  it should "compute restart for every-n-days if some last repeat date specified" in {
+    val nDays = EveryNDays(n = 3, Time(8, 10), None)
+    val computer = new NextRestartComputer(nDays)
+
+    val result = computer.compute(Some(new DateTime(2015, 1, 1, 8, 10)), new DateTime(2015, 1, 1, 9, 0))
+
+    result shouldEqual NextRestart(new DateTime(2015, 1, 4, 8, 10), "2015.004")
   }
 
 }

@@ -20,14 +20,15 @@ import org.joda.time.DateTime
 object DateTimeEnrichments {
 
   implicit class EnrichedDateTime(dateTime: DateTime) {
-    def withTimeButNotBefore(time: Time): DateTime = {
-      val dateWithTime = dateTime.withTime(time)
+    def withFieldsSettedUpButNotBefore(setupFields: DateTime => DateTime,
+                                       addPeriod: DateTime => DateTime): DateTime = {
+      val dateWithTime = setupFields(dateTime)
       if (dateWithTime.isBefore(dateTime))
-        dateWithTime.plusDays(1)
+        setupFields(addPeriod(dateWithTime)) // repeated setupFields for correct time shift handling
       else
         dateWithTime
     }
-
+    
     def withTime(time: Time): DateTime = {
       dateTime.withTime(time.hour, time.minute, 0, 0)
     }
