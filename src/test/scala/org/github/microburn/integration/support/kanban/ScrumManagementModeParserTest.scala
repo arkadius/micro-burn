@@ -28,16 +28,7 @@ class ScrumManagementModeParserTest extends FlatSpec with Matchers {
       """management {
         |  mode = manual
         |}
-      """.stripMargin)) shouldBe ManualManagementMode(AutomaticOnSprintStartMode)
-  }
-
-  it should "parse manual mode with automaticScopeChange specified" in {
-    ScrumManagementModeParser.parse(ConfigFactory.parseString(
-      """management {
-        |  mode = manual
-        |  sprint-base = specified(10.1)
-        |}
-      """.stripMargin)) shouldBe ManualManagementMode(SpecifiedBaseMode(BigDecimal("10.1")))
+      """.stripMargin)) shouldBe ManualManagementMode
   }
 
   it should "parse automatic mode with every-n-days period" in {
@@ -46,7 +37,7 @@ class ScrumManagementModeParserTest extends FlatSpec with Matchers {
         |  mode = auto
         |  period = every-n-days
         |}
-      """.stripMargin)) shouldBe AutomaticManagementMode(EveryNDays(1, Time(0, 0), None), AutomaticOnScopeChangeMode)
+      """.stripMargin)) shouldBe AutomaticManagementMode(EveryNDays(1, Time(0, 0), None))
   }
 
   it should "parse automatic mode with every-n-weeks period" in {
@@ -58,7 +49,7 @@ class ScrumManagementModeParserTest extends FlatSpec with Matchers {
         |  day-of-week = tuesday
         |  time = "02:11"
         |}
-      """.stripMargin)) shouldBe AutomaticManagementMode(EveryNWeeks(2, DateTimeConstants.TUESDAY, Time(2, 11), None), AutomaticOnScopeChangeMode)
+      """.stripMargin)) shouldBe AutomaticManagementMode(EveryNWeeks(2, DateTimeConstants.TUESDAY, Time(2, 11), None))
   }
 
   it should "parse automatic mode with every-n-months period" in {
@@ -70,10 +61,7 @@ class ScrumManagementModeParserTest extends FlatSpec with Matchers {
         |  start-date = "2015-06-01"
         |}
       """.stripMargin)) shouldBe
-      AutomaticManagementMode(
-        EveryNMonths(1, 13, Time(0, 0), Some(new DateTime(2015, 6, 1, 0, 0))),
-        AutomaticOnScopeChangeMode
-      )
+      AutomaticManagementMode(EveryNMonths(1, 13, Time(0, 0), Some(new DateTime(2015, 6, 1, 0, 0))))
   }
 
 }

@@ -24,7 +24,8 @@ case class ProjectConfig(nonBacklogColumns: List[BoardColumn],
                          defaultStoryPointsForUserStories: Option[BigDecimal],
                          splitSpBetweenTechnicalTasks: Boolean,
                          dayOfWeekWeights: IndexedSeq[BigDecimal],
-                         scrumManagementMode: ScrumManagementMode) {
+                         scrumManagementMode: ScrumManagementMode,
+                         sprintBaseDetermineMode: SprintBaseDetermineMode) {
 
   private val statuses = (for {
     column <- nonBacklogColumns
@@ -53,13 +54,20 @@ object ProjectConfig {
     val defaultStoryPointsForUserStrories = config.optional(_.getBigDecimal, "defaultStoryPointsForUserStrories")
     val splitSpBetweenTechnicalTasks = config.getDefinedBoolean("splitSpBetweenTechnicalTasks")
     val dataRoot = new File(config.getString("dataRoot"))
+    val scrumManagementMode = ScrumManagementModeParser.parse(config)
+    val sprintBaseDetermineMode = SprintBaseDetermineModeParser.parse(config) getOrElse (scrumManagementMode match {
+      case ManualManagementMode => AutomaticOnSprintStartMode
+      case auto: AutomaticManagementMode => AutomaticOnScopeChangeMode
+    })
+
     ProjectConfig(
       nonBacklogColumns = nonBacklogColumnsWithAtLeastOneDone,
       dataRoot = dataRoot,
       defaultStoryPointsForUserStories = defaultStoryPointsForUserStrories,
       splitSpBetweenTechnicalTasks = splitSpBetweenTechnicalTasks,
       dayOfWeekWeights = parseDayOfWeekWeights(config),
-      scrumManagementMode = ScrumManagementModeParser.parse(config)
+      scrumManagementMode = scrumManagementMode,
+      sprintBaseDetermineMode = sprintBaseDetermineMode
     )
   }
 

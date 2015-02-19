@@ -21,13 +21,11 @@ import com.typesafe.config.Config
 import org.github.microburn.util.date.Time
 import org.joda.time.{DateTime, DateTimeConstants}
 
-sealed trait ScrumManagementMode {
-  def sprintBaseDetermineMode: SprintBaseDetermineMode
-}
+sealed trait ScrumManagementMode
 
-case class ManualManagementMode(sprintBaseDetermineMode: SprintBaseDetermineMode) extends ScrumManagementMode
+case object ManualManagementMode extends ScrumManagementMode
 
-case class AutomaticManagementMode(restartPeriod: RepeatPeriod, sprintBaseDetermineMode: SprintBaseDetermineMode) extends ScrumManagementMode
+case class AutomaticManagementMode(restartPeriod: RepeatPeriod) extends ScrumManagementMode
 
 sealed trait RepeatPeriod {
   def n: Int
@@ -47,15 +45,10 @@ object ScrumManagementModeParser {
   def parse(config: Config): ScrumManagementMode = {
     val managementConfig = config.getConfig("management")
     managementConfig.getString("mode") match {
-      case "manual" => parseManual(managementConfig)
+      case "manual" => ManualManagementMode
       case "auto" => parseAutomatic(managementConfig)
       case otherMode => throw new ParseException(s"Invalid mode: $otherMode. Valid are: auto and manual", -1)
     }
-  }
-
-  private def parseManual(config: Config): ScrumManagementMode = {
-    val sprintBaseMode = SprintBaseDetermineModeParser.parse(config).getOrElse(AutomaticOnSprintStartMode)
-    ManualManagementMode(sprintBaseMode)
   }
 
   private def parseAutomatic(config: Config): ScrumManagementMode = {
@@ -76,6 +69,6 @@ object ScrumManagementModeParser {
         throw new ParseException(s"Illegal period type: $otherPeriodType", -1)
     }
     val sprintBaseMode = SprintBaseDetermineModeParser.parse(config).getOrElse(AutomaticOnScopeChangeMode)
-    AutomaticManagementMode(period, sprintBaseMode)
+    AutomaticManagementMode(period)
   }
 }
