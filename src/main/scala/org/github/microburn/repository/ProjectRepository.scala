@@ -16,9 +16,10 @@
 package org.github.microburn.repository
 
 import java.io.File
+import scalaz.Scalaz._
 
 trait ProjectRepository {
-  def sprintRoots: Seq[File]
+  def sprintIds: Seq[Int]
 }
 
 object ProjectRepository {
@@ -28,7 +29,10 @@ object ProjectRepository {
 }
 
 class ProjectFSRepository(projectRoot: File) extends ProjectRepository {
-  override def sprintRoots: Seq[File] = {
-    Option(projectRoot.listFiles()).toSeq.flatten.filter(_.isDirectory)
+  override def sprintIds: Seq[Int] = {
+    Option(projectRoot.listFiles()).toSeq
+      .flatten
+      .filter(_.isDirectory)
+      .flatMap(_.getName.parseInt.toOption)
   }
 }

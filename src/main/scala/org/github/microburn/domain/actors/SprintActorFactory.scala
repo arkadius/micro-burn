@@ -28,18 +28,18 @@ import scala.concurrent.duration.FiniteDuration
 class SprintActorFactory(config: ProjectConfig, initialFetchToSprintStartAcceptableDelayMinutes: FiniteDuration, changeNotifyingActor: LiftActor) {
   private val baseDeterminer = new SprintBaseStateDeterminer(initialFetchToSprintStartAcceptableDelayMinutes, config.sprintBaseDetermineMode)
 
-  def fromRepo(sprintId: String): Option[SprintActor] = {
+  def fromRepo(sprintId: Int): Option[SprintActor] = {
     val repo = createRepo(sprintId)
     repo.loadSprint.map { sprint =>
       new SprintActor(sprint)(repo, baseDeterminer, config, changeNotifyingActor)
     }
   }
 
-  def migrateSprint(sprintId: String, majorDetails: MajorSprintDetails, userStories: Seq[UserStory]): Box[SprintActor] = {
+  def migrateSprint(sprintId: Int, majorDetails: MajorSprintDetails, userStories: Seq[UserStory]): Box[SprintActor] = {
     createSprint(sprintId, majorDetails, userStories, majorDetails.end)
   }
 
-  def createSprint(sprintId: String, majorDetails: MajorSprintDetails, userStories: Seq[UserStory], timestamp: Date): Box[SprintActor] = {
+  def createSprint(sprintId: Int, majorDetails: MajorSprintDetails, userStories: Seq[UserStory], timestamp: Date): Box[SprintActor] = {
     for {
       validatedDetails <- SprintDetails.create(majorDetails)
     } yield {
@@ -50,8 +50,8 @@ class SprintActorFactory(config: ProjectConfig, initialFetchToSprintStartAccepta
     }
   }
 
-  private def createRepo(sprintId: String): SprintRepository = {
-    val sprintRoot = new File(config.dataRoot, sprintId)
+  private def createRepo(sprintId: Int): SprintRepository = {
+    val sprintRoot = new File(config.dataRoot, sprintId.toString)
     SprintRepository(sprintRoot, sprintId)
   }
 }

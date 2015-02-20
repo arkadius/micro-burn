@@ -17,7 +17,7 @@ package org.github.microburn.domain
 
 import java.util.Date
 
-case class Sprint(id: String,
+case class Sprint(id: Int,
                   details: SprintDetails,
                   private val initialBoard: BoardState,
                   currentBoard: BoardState,
@@ -80,6 +80,6 @@ case class SprintUpdateResult(updatedSprint: Sprint,
 }
 
 object Sprint {
-  def withEmptyEvents(id: String, details: SprintDetails, state: BoardState): Sprint =
+  def withEmptyEvents(id: Int, details: SprintDetails, state: BoardState): Sprint =
     Sprint(id, details, initialBoard = state, currentBoard = state, IndexedSeq.empty)
 }

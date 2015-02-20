@@ -36,7 +36,7 @@ class ScrumIntegration(sprintsProvider: SprintsDataProvider, tasksProvider: Task
     } yield Unit
   }
 
-  private def parallelCurrentAndUpdatedSprints: LAFuture[(ProjectState, Seq[Long])] = {
+  private def parallelCurrentAndUpdatedSprints: LAFuture[(ProjectState, Seq[Int])] = {
     val currentStateFuture = (projectActor ?? GetProjectState).mapTo[ProjectState]
       .withLoggingFinished("current sprint ids: " + _.sprints.map(_.id).mkString(", "))
     val updatedIdsFuture = sprintsProvider.allSprintIds.withLoggingFinished("updated sprints ids: " + _.mkString(", "))
@@ -46,7 +46,7 @@ class ScrumIntegration(sprintsProvider: SprintsDataProvider, tasksProvider: Task
     } yield (currentState, updatedIds)
   }
 
-  private def parallelCreateAndUpdate(current: ProjectState, updatedSprintIds: Seq[Long])
+  private def parallelCreateAndUpdate(current: ProjectState, updatedSprintIds: Seq[Int])
                                      (implicit timestamp: Date): LAFuture[_] = {
     val createResultFuture = createNewSprints(current, updatedSprintIds).withLoggingFinished("created sprints: " + _.mkString(", "))
     val updateResultFuture = updateActiveSprints(current).withLoggingFinished("updated sprints: " + _.mkString(", "))
@@ -56,32 +56,32 @@ class ScrumIntegration(sprintsProvider: SprintsDataProvider, tasksProvider: Task
     } yield Unit
   }
 
-  private def createNewSprints(current: ProjectState, retrieved: Seq[Long])
-                              (implicit timestamp: Date): LAFuture[List[String]] = {
+  private def createNewSprints(current: ProjectState, retrieved: Seq[Int])
+                              (implicit timestamp: Date): LAFuture[List[Int]] = {
     val currentIds = current.sprintIds
-    val missing = retrieved.filterNot { l => currentIds.contains(l.toString) }
+    val missing = retrieved.filterNot(currentIds.contains)
     val createResults = missing.map { sprintId =>
       for {
-        (details, userStories) <- parallelSprintDetailsAndUserStories(sprintId.toString)
-        createResult <- (projectActor !< CreateNewSprint(sprintId.toString, details, userStories, timestamp)).mapTo[Box[String]].map(_.toOption)
+        (details, userStories) <- parallelSprintDetailsAndUserStories(sprintId)
+        createResult <- (projectActor !< CreateNewSprint(sprintId, details, userStories, timestamp)).mapTo[Box[Int]].map(_.toOption)
       } yield createResult
     }
     LAFuture.collect(createResults : _*).map(_.flatten)
   }
 
   private def updateActiveSprints(current: ProjectState)
-                                 (implicit timestamp: Date): LAFuture[List[String]] = {
+                                 (implicit timestamp: Date): LAFuture[List[Int]] = {
     val updateResults = current.sprints.collect {
       case withDetails if withDetails.isActive =>
         for {
           (details, userStories) <- parallelSprintDetailsAndUserStories(withDetails.id)
-          updateResult <- (projectActor ?? UpdateSprint(withDetails.id, userStories, details, timestamp)).mapTo[String]
+          updateResult <- (projectActor ?? UpdateSprint(withDetails.id, userStories, details, timestamp)).mapTo[Int]
         } yield updateResult
     }
     LAFuture.collect(updateResults : _*)
   }
 
-  private def parallelSprintDetailsAndUserStories(sprintId: String): LAFuture[(MajorSprintDetails, Seq[UserStory])] = {
+  private def parallelSprintDetailsAndUserStories(sprintId: Int): LAFuture[(MajorSprintDetails, Seq[UserStory])] = {
     val detailsFuture = sprintsProvider.sprintDetails(sprintId).withLoggingFinished(s"sprint details for sprint $sprintId: " + _)
     val tasksFuture = tasksProvider.userStories(sprintId).withLoggingFinished(s"user stories count for sprint $sprintId: " + _.size)
     for {

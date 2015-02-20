@@ -25,6 +25,7 @@ import org.github.microburn.domain._
 import org.github.microburn.repository.ProjectRepository
 import org.github.microburn.util.logging.Slf4jLogging
 
+import scala.collection.immutable.TreeMap
 import scala.concurrent.duration.FiniteDuration
 
 class ProjectActor(config: ProjectConfig, initialFetchToSprintStartAcceptableDelayMinutes: FiniteDuration)
@@ -35,13 +36,13 @@ class ProjectActor(config: ProjectConfig, initialFetchToSprintStartAcceptableDel
   private val sprintFactory = new SprintActorFactory(config, initialFetchToSprintStartAcceptableDelayMinutes, this)
   private val projectRepo = ProjectRepository(config.dataRoot)
 
-  private var sprintActors: Map[String, SprintActor] = (
-    for {
-      sprintRoot <- projectRepo.sprintRoots
-      sprintId = sprintRoot.getName
-      sprintActor <- sprintFactory.fromRepo(sprintId)
-    } yield (sprintId, sprintActor)
-  ).toMap
+  private var sprintActors: TreeMap[Int, SprintActor] =
+    TreeMap(
+      (for {
+        sprintId <- projectRepo.sprintIds
+        sprintActor <- sprintFactory.fromRepo(sprintId)
+      } yield sprintId -> sprintActor): _*
+    )
 
   override protected def lowPriority: PartialFunction[Any, Unit] = {
     case GetProjectState =>
@@ -114,19 +115,19 @@ case object GetProjectState
 case object GetFullProjectState
 
 case class ProjectState(sprints: Seq[SprintIdWithMajorDetails]) extends NgModel {
-  def sprintIds: Set[String] = sprints.map(_.id).toSet
+  def sprintIds: Set[Int] = sprints.map(_.id).toSet
 }
 
 case class FullProjectState(sprints: Seq[SprintIdWithDetails])
 
-case class SprintIdWithDetails(id: String, details: SprintDetails, baseStoryPoints: Double) {
+case class SprintIdWithDetails(id: Int, details: SprintDetails, baseStoryPoints: Double) {
   def isActive: Boolean = details.isActive
   def isRemoved: Boolean = details.isRemoved
   def toMajor: SprintIdWithMajorDetails = SprintIdWithMajorDetails(id, details.toMajor, baseStoryPoints)
 }
 
-case class SprintIdWithMajorDetails(id: String, details: MajorSprintDetails, baseStoryPoints: Double) {
+case class SprintIdWithMajorDetails(id: Int, details: MajorSprintDetails, baseStoryPoints: Double) {
   def isActive: Boolean = details.isActive
 }
 
-case class CreateNewSprint(sprintId: String, details: MajorSprintDetails, userStories: Seq[UserStory], timestamp: Date)
+case class CreateNewSprint(sprintId: Int, details: MajorSprintDetails, userStories: Seq[UserStory], timestamp: Date)

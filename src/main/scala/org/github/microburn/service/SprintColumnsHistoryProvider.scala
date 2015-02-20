@@ -17,6 +17,7 @@ package org.github.microburn.service
 
 import java.util.Date
 
+import net.liftmodules.ng.Angular.NgModel
 import net.liftweb.actor.LAFuture
 import net.liftweb.common.Box
 import org.github.microburn.domain.actors.{GetStoryPointsHistory, ProjectActor, SprintHistory}
@@ -32,7 +33,7 @@ class SprintColumnsHistoryProvider(projectActor: ProjectActor,
   import org.github.microburn.util.concurrent.FutureEnrichments._
   import org.github.microburn.util.concurrent.ActorEnrichments._
   
-  def columnsHistory(sprintId: String): LAFuture[Box[ColumnsHistory]] = {
+  def columnsHistory(sprintId: Int): LAFuture[Box[ColumnsHistory]] = {
     (projectActor ?? GetStoryPointsHistory(sprintId)).mapTo[Box[SprintHistory]].map { historyBox =>
       historyBox.map(extractColumnsHistory)
     }
@@ -85,6 +86,8 @@ class SprintColumnsHistoryProvider(projectActor: ProjectActor,
     ColumnHistory("Estimate", doneColumn = false, estimates)
   }
 }
+
+case class GetColumnsHistory(sprintId: Int) extends NgModel
 
 case class ColumnsHistory(startDate: Long, series: List[ColumnHistory])
 

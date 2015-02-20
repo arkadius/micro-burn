@@ -20,6 +20,6 @@ import org.github.microburn.domain.UserStory
 
 trait TasksDataProvider {
 
-  def userStories(sprintId: String): LAFuture[Seq[UserStory]]
+  def userStories(sprintId: Int): LAFuture[Seq[UserStory]]
 
 }

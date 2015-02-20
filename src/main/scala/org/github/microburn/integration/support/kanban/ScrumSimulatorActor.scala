@@ -21,18 +21,17 @@ import net.liftmodules.ng.Angular.NgModel
 import net.liftweb.actor.{LAFuture, LiftActor}
 import net.liftweb.common._
 import org.github.microburn.domain.actors._
-import org.github.microburn.domain.{SprintDetails, MajorSprintDetails, UserStory}
+import org.github.microburn.domain.{MajorSprintDetails, SprintDetails, UserStory}
 
 import scala.collection.immutable.TreeMap
 import scala.concurrent.duration.FiniteDuration
-import scalaz.Scalaz._
 
 class ScrumSimulatorActor(boardStateProvider: BoardStateProvider, projectActor: ProjectActor)
                          (initializationTimeout: FiniteDuration) extends LiftActor {
 
-  import org.github.microburn.util.concurrent.FutureEnrichments._
   import org.github.microburn.util.concurrent.ActorEnrichments._
   import org.github.microburn.util.concurrent.BoxEnrichments._
+  import org.github.microburn.util.concurrent.FutureEnrichments._
 
   private var currentSprints: TreeMap[Int, SprintDetails] = TreeMap.empty
   
@@ -43,11 +42,9 @@ class ScrumSimulatorActor(boardStateProvider: BoardStateProvider, projectActor: 
       val lastSprints = for {
         projectState <- (projectActor ?? GetFullProjectState).mapTo[FullProjectState]
       } yield {
-        val sprintsSeq = projectState.sprints.flatMap {
+        val sprintsSeq = projectState.sprints.map {
           case SprintIdWithDetails(sprintId, details, _) =>
-            sprintId.parseInt.toOption.map { numericalId =>
-              (numericalId, details)
-            }
+            (sprintId, details)
         }
         TreeMap(sprintsSeq: _*)
       }
@@ -71,8 +68,8 @@ class ScrumSimulatorActor(boardStateProvider: BoardStateProvider, projectActor: 
       val future = (for {
         validatedFullDetails <- SprintDetails.create(major)
       } yield {
-        val next = optionalLastNumericalSprint.map(_.next(validatedFullDetails)).getOrElse(NumericalSprintIdWithDetails.zero(validatedFullDetails))
-        currentSprints += next.numericalId -> next.details
+        val next = optionalLastNumericalSprint.map(_.next(validatedFullDetails)).getOrElse(AutoIncSprintDetails.zero(validatedFullDetails))
+        currentSprints += next.id -> next.details
         projectActor !< CreateNewSprint(next.id, major, userStories, new Date)
       }).toFutureOfBox
       reply(future)
@@ -93,12 +90,12 @@ class ScrumSimulatorActor(boardStateProvider: BoardStateProvider, projectActor: 
       reply(updateSprintDetails(sprintId, _.defineBaseStoryPoints(BigDecimal(base))))
   }
   
-  private def lastActive: Option[NumericalSprintIdWithDetails] = {
+  private def lastActive: Option[AutoIncSprintDetails] = {
     optionalLastNumericalSprint.filter(_.isActive)
   }
   
-  private def optionalLastNumericalSprint: Option[NumericalSprintIdWithDetails] = {
-    currentSprints.lastOption.map(NumericalSprintIdWithDetails.apply _ tupled)
+  private def optionalLastNumericalSprint: Option[AutoIncSprintDetails] = {
+    currentSprints.lastOption.map(AutoIncSprintDetails.apply _ tupled)
   }
 
   private def doStartSprint(name: String, start: Date, end: Date): LAFuture[Any] = {
@@ -110,15 +107,14 @@ class ScrumSimulatorActor(boardStateProvider: BoardStateProvider, projectActor: 
     } yield createResult
   }
 
-  private def updateSprintDetails(sprintId: String, f: SprintDetails => Box[SprintDetails]): LAFuture[Box[Any]] = {
+  private def updateSprintDetails(sprintId: Int, f: SprintDetails => Box[SprintDetails]): LAFuture[Box[Any]] = {
     (for {
-      numericalSprintId <- sprintId.parseInt.toBox
-      details <- currentSprints.get(numericalSprintId).toBox or
-        Failure(s"Cannot find sprint with given id $numericalSprintId")
+      details <- currentSprints.get(sprintId).toBox or
+        Failure(s"Cannot find sprint with given id $sprintId")
       updatedDetails <- f(details)
     } yield {
-      currentSprints = currentSprints.updated(numericalSprintId, updatedDetails)
-      projectActor ?? UpdateSprintDetails(numericalSprintId.toString, updatedDetails, new Date)
+      currentSprints = currentSprints.updated(sprintId, updatedDetails)
+      projectActor ?? UpdateSprintDetails(sprintId, updatedDetails, new Date)
     }).toFutureOfBox
   }
   
@@ -127,30 +123,26 @@ class ScrumSimulatorActor(boardStateProvider: BoardStateProvider, projectActor: 
   private case class NextSprint(details: MajorSprintDetails, userStories: Seq[UserStory])
 }
 
-case class NumericalSprintIdWithDetails(numericalId: Int, details: SprintDetails) {
-  def id: String = numericalId.toString
-  
+case class AutoIncSprintDetails(id: Int, details: SprintDetails) {
   def isActive: Boolean = details.isActive
   
-  def next(details: SprintDetails): NumericalSprintIdWithDetails = {
-    NumericalSprintIdWithDetails(numericalId + 1, details)
+  def next(details: SprintDetails): AutoIncSprintDetails = {
+    AutoIncSprintDetails(id + 1, details)
   }
 }
 
-object NumericalSprintIdWithDetails {
-  def zero(details: SprintDetails): NumericalSprintIdWithDetails = NumericalSprintIdWithDetails(0, details)
-
-  implicit val byIdOrdering: Ordering[NumericalSprintIdWithDetails] = Ordering.by(_.id)
+object AutoIncSprintDetails {
+  def zero(details: SprintDetails): AutoIncSprintDetails = AutoIncSprintDetails(0, details)
 }
 
 case object FetchCurrentSprintsBoardState
 
-case class FetchedBoardState(sprintId: String, details: MajorSprintDetails, userStories: Seq[UserStory]) {
+case class FetchedBoardState(sprintId: Int, details: MajorSprintDetails, userStories: Seq[UserStory]) {
   override def toString: String = s"id: $sprintId, details: $details, user stories count: ${userStories.size}"
 }
 
 object FetchedBoardState {
-  def apply(idWithDetails: NumericalSprintIdWithDetails, userStories: Seq[UserStory]): FetchedBoardState = {
+  def apply(idWithDetails: AutoIncSprintDetails, userStories: Seq[UserStory]): FetchedBoardState = {
     FetchedBoardState(idWithDetails.id, idWithDetails.details.toMajor, userStories)
   }
 }
@@ -159,12 +151,12 @@ case class StartSprint(name: String, start: Date, end: Date) extends NgModel
 
 case object FinishCurrentActiveSprint
 
-case class FinishSprint(id: String)
+case class FinishSprint(id: Int) extends NgModel
 
-case class RemoveSprint(id: String)
+case class RemoveSprint(id: Int) extends NgModel
 
-case class UpdateStartDate(id: String, startDate: Date) extends NgModel
+case class UpdateStartDate(id: Int, startDate: Date) extends NgModel
 
-case class UpdateEndDate(id: String, endDate: Date) extends NgModel
+case class UpdateEndDate(id: Int, endDate: Date) extends NgModel
 
-case class DefineBaseStoryPoints(id: String, baseStoryPoints: Double) extends NgModel
+case class DefineBaseStoryPoints(id: Int, baseStoryPoints: Double) extends NgModel

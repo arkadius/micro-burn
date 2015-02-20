@@ -39,7 +39,7 @@ class SprintActor(var sprint: Sprint)
     case UpdateSprint(sprintId, userStories, details, timestamp) =>
       require(sprintId == sprint.id)
       updateSprintAndReply(sprint.update(userStories, details)(timestamp))
-    case GetStoryPointsHistory(sprintId: String) =>
+    case GetStoryPointsHistory(sprintId: Int) =>
       require(sprintId == sprint.id)
       reply(SprintHistory(
         sprintBase = sprintBase,
@@ -70,19 +70,19 @@ class SprintActor(var sprint: Sprint)
 
 }
 
-case class BoardStateChanged(sprintId: String)
+case class BoardStateChanged(sprintId: Int)
 
-case class SprintDetailsChanged(sprintId: String)
+case class SprintDetailsChanged(sprintId: Int)
 
 case object GetDetails
 
 case class DetailsWithBaseStoryPoints(details: SprintDetails, baseStoryPointsSum: BigDecimal)
 
-case class UpdateSprintDetails(sprintId: String, details: SprintDetails, timestamp: Date)
+case class UpdateSprintDetails(sprintId: Int, details: SprintDetails, timestamp: Date)
 
-case class UpdateSprint(sprintId: String, userStories: Seq[UserStory], details: MajorSprintDetails, timestamp: Date)
+case class UpdateSprint(sprintId: Int, userStories: Seq[UserStory], details: MajorSprintDetails, timestamp: Date)
 
-case class GetStoryPointsHistory(sprintId: String)
+case class GetStoryPointsHistory(sprintId: Int)
 
 case class SprintHistory(sprintBase: SprintBase,
                          columnStates: Seq[DateWithColumnsState],

@@ -21,7 +21,7 @@ import org.scalacheck.Gen
 object SprintGenerator {
 
   def withEmptyEvents: Gen[Sprint] = {
-    val id = "foo"
+    val id = 123
     val details = SampleSprint.sampleDetails
     for {
       boardState <- BoardStateGenerator.generator(details.end)

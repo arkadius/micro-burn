@@ -44,7 +44,7 @@ class JiraSprintsDataProviderTest extends FlatSpec with RestIntegrationTest with
     val config = TestConfig.jiraConfigWithDefaultsFallback()
     val jiraConfig = JiraConfig(config.getConfig("jira"))
     val provider = new JiraSprintsDataProvider(jiraConfig, Locale.ENGLISH)
-    val result = provider.sprintDetails("21").await(5 seconds)
+    val result = provider.sprintDetails(21).await(5 seconds)
     println("result: " + result)
     result shouldEqual MajorSprintDetails(
       "Sprint 1",

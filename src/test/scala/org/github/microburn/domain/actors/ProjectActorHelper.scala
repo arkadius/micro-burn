@@ -41,7 +41,7 @@ trait ProjectActorHelper extends Matchers {
                                    (implicit config: ProjectConfig): ProjectActor = {
     val projectRoot = config.dataRoot
     Path(projectRoot).deleteRecursively()
-    SprintRepository(new File(projectRoot, sprint.id), sprint.id).saveSprint(sprint)
+    SprintRepository(new File(projectRoot, sprint.id.toString), sprint.id).saveSprint(sprint)
 
     new ProjectActor(config, initialFetchToSprintStartAcceptableDelayMinutes = 1.second)
   }
@@ -55,7 +55,7 @@ trait ProjectActorHelper extends Matchers {
     }
   }
 
-  def projectHasOnlyOneSprint(sprintId: String, projectActor: ProjectActor): LAFuture[Boolean] = {
+  def projectHasOnlyOneSprint(sprintId: Int, projectActor: ProjectActor): LAFuture[Boolean] = {
     for {
       projectState <- (projectActor ?? GetProjectState).mapTo[ProjectState]
       sprintWithStates = projectState.sprints
@@ -66,7 +66,7 @@ trait ProjectActorHelper extends Matchers {
     }
   }
 
-  def projectHasOnlyOneActiveSprint(sprintId: String, projectActor: ProjectActor): LAFuture[Unit] = {
+  def projectHasOnlyOneActiveSprint(sprintId: Int, projectActor: ProjectActor): LAFuture[Unit] = {
     for {
       projectState <- (projectActor ?? GetProjectState).mapTo[ProjectState]
       sprintWithStates = projectState.sprints

@@ -19,7 +19,7 @@ import java.io.File
 
 import org.github.microburn.domain.{Sprint, SprintUpdateResult}
 
-class SprintRepository(sprintRoot: File, sprintId: String) {
+class SprintRepository(sprintRoot: File, sprintId: Int) {
   private val detailsRepo: SprintDetailsRepository = SprintDetailsRepository(sprintRoot)
   private val storiesRepo = BoardStateRepository(sprintRoot)
   private val eventsRepo = TaskEventsRepository(sprintRoot)
@@ -64,5 +64,5 @@ class SprintRepository(sprintRoot: File, sprintId: String) {
 }
 
 object SprintRepository {
-  def apply(sprintRoot: File, sprintId: String) = new SprintRepository(sprintRoot, sprintId)
+  def apply(sprintRoot: File, sprintId: Int) = new SprintRepository(sprintRoot, sprintId)
 }

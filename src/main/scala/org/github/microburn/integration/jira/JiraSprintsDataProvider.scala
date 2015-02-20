@@ -29,19 +29,19 @@ class JiraSprintsDataProvider(config: JiraConfig, locale: java.util.Locale = Loc
 
   import scala.concurrent.ExecutionContext.Implicits.global
 
-  override def allSprintIds: LAFuture[Seq[Long]] = {
+  override def allSprintIds: LAFuture[Seq[Int]] = {
     val url = config.greenhopperUrl / "sprints" / config.rapidViewId
     Http(url OK as.json4s.Json).toLiftFuture.map { jv =>
       (jv \ "sprints" \\ "id").children.collect {
-        case JInt(value) => value.toLong
+        case JInt(value) => value.toInt
       }
     }
   }
 
-  override def sprintDetails(sprintId: String): LAFuture[MajorSprintDetails] = {
+  override def sprintDetails(sprintId: Int): LAFuture[MajorSprintDetails] = {
     val url = config.greenhopperUrl / "rapid" / "charts" / "sprintreport" <<? Map(
       "rapidViewId" -> config.rapidViewId.toString,
-      "sprintId" -> sprintId
+      "sprintId" -> sprintId.toString
     )
     Http(url OK as.json4s.Json).toLiftFuture.map { jv =>
       val JString(name) = jv \ "sprint" \ "name"

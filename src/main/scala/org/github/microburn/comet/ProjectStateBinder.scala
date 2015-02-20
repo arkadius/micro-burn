@@ -35,6 +35,6 @@ class ProjectStateBinder
       val projectStateFuture = f.asInstanceOf[LAFuture[ProjectState]]
       projectStateFuture.onSuccess(this ! _)
     case BoardStateChanged(sprintId) =>
-      scope.emit("boardStateChanged", sprintId)
+      scope.emit("boardStateChanged", sprintId.toString)
   }
 }

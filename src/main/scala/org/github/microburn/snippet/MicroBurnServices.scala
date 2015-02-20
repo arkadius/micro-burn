@@ -21,6 +21,7 @@ import net.liftweb.http.js.JsCmds.{JsCrVar, Script}
 import net.liftweb.http.js.JsExp
 import org.github.microburn.ApplicationContext
 import org.github.microburn.integration.support.kanban._
+import org.github.microburn.service.GetColumnsHistory
 import org.github.microburn.util.logging.Slf4jLogging
 import scalaz.Scalaz._
 
@@ -45,7 +46,11 @@ object MicroBurnServices extends Slf4jLogging {
     ) +: renderIfNotAlreadyDefined {
       val module = angular.module("MicroBurnServices")
         .factory("historySvc", jsObjFactory()
-        .future("getHistory", (sprintId: String) => measureFuture("history computation")(ApplicationContext().columnsHistoryProvider.columnsHistory(sprintId)))
+          .future("getHistory", (getHistory: GetColumnsHistory) =>
+            measureFuture("history computation"){
+              ApplicationContext().columnsHistoryProvider.columnsHistory(getHistory.sprintId)
+            }
+          )
         )
       optionalScrumManagement.map {
         case ScrumManagement(scrumSimulator, sprintsManagementEnabled) =>
@@ -54,8 +59,8 @@ object MicroBurnServices extends Slf4jLogging {
           val operations = sprintsManagementEnabled.option(
             baseManagement
               .future[StartSprint, Any]("startSprint", (start: StartSprint) => (scrumSimulator ?? start).mapToBox)
-              .future("finishSprint", (sprintId: String) => (scrumSimulator ?? FinishSprint(sprintId)).mapToBox)
-              .future("removeSprint", (sprintId: String) => (scrumSimulator ?? RemoveSprint(sprintId)).mapToBox)
+              .future("finishSprint", (finish: FinishSprint) => (scrumSimulator ?? finish).mapToBox)
+              .future("removeSprint", (remove: RemoveSprint) => (scrumSimulator ?? remove).mapToBox)
               .future("updateStartDate", (start: UpdateStartDate) => (scrumSimulator ?? start).mapToBox)
               .future("updateEndDate", (end: UpdateEndDate) => (scrumSimulator ?? end).mapToBox)
           ).getOrElse(baseManagement)

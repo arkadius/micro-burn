@@ -106,7 +106,7 @@ ctrlDeclaration.push(function ($scope, $timeout, historySvc, scrumSimulatorSvc) 
   function refreshChart() {
     $timeout.cancel(clientFetchPromise);
     if ($scope.selectedSprint) {
-      historySvc.getHistory($scope.selectedSprint.id).then(function (history) {
+      historySvc.getHistory({sprintId: $scope.selectedSprint.id}).then(function (history) {
         $scope.history = history;
       }).finally(function() {
         clientFetchPromise = $timeout(refreshChart, window.clientFetchIfNoChangesPeriod);
@@ -245,7 +245,7 @@ ctrlDeclaration.push(function ($scope, $timeout, historySvc, scrumSimulatorSvc) 
     $scope.cancelEditEnd();
     $scope.cancelEditBase();
     wrapServiceCall(function() {
-      return scrumSimulatorSvc.finishSprint($scope.selectedSprint.id);
+      return scrumSimulatorSvc.finishSprint({id: $scope.selectedSprint.id});
     });
   };
 
@@ -255,7 +255,7 @@ ctrlDeclaration.push(function ($scope, $timeout, historySvc, scrumSimulatorSvc) 
 
   $scope.removeSprint = function () {
     wrapServiceCall(function() {
-      return scrumSimulatorSvc.removeSprint($scope.selectedSprint.id);
+      return scrumSimulatorSvc.removeSprint({id: $scope.selectedSprint.id});
     });
   };
 

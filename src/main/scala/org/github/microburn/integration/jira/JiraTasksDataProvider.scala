@@ -25,7 +25,7 @@ class JiraTasksDataProvider(config: JiraConfig) extends TasksDataProvider {
   import org.github.microburn.util.concurrent.FutureEnrichments._
   import scala.concurrent.ExecutionContext.Implicits.global
 
-  override def userStories(sprintId: String): LAFuture[Seq[UserStory]] = {
+  override def userStories(sprintId: Int): LAFuture[Seq[UserStory]] = {
     val url = config.jiraUrl / "search" <<? Map(
       "jql" -> s"sprint=$sprintId",
       "fields" -> s"summary,type,status,${config.storyPointsField},parent"

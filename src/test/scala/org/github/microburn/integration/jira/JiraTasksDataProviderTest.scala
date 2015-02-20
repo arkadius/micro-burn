@@ -34,7 +34,7 @@ class JiraTasksDataProviderTest extends FlatSpec with RestIntegrationTest with M
     val config = TestConfig.jiraConfigWithDefaultsFallback()
     val jiraConfig = JiraConfig(config.getConfig("jira"))
     val provider = new JiraTasksDataProvider(jiraConfig)
-    val result = provider.userStories("fooSprintId").await(5.seconds)
+    val result = provider.userStories(123).await(5.seconds)
     println(result)
 
     result shouldEqual Seq(

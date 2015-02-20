@@ -33,7 +33,7 @@ class ScrumSimulatorActorTest extends FlatSpec with Matchers with ProjectActorHe
   implicit val config = ProjectConfigUtils.defaultConfig
 
   it should "initial fetch project state" in {
-    val givenSprint = SampleSprint.withEmptyEvents().copy(id = "1")
+    val givenSprint = SampleSprint.withEmptyEvents().copy(id = 1)
     val projectActor = projectActorWithInitialSprint(givenSprint)
     val boardStateProvider = new MockBoardStateProvider
     boardStateProvider.givenUserStories = Seq(SampleTasks.openedUserStory(123))
@@ -41,18 +41,18 @@ class ScrumSimulatorActorTest extends FlatSpec with Matchers with ProjectActorHe
 
     val state = (simulator ?? FetchCurrentSprintsBoardState).mapTo[Option[FetchedBoardState]].await(5.seconds)
 
-    state.value shouldBe FetchedBoardState("1", givenSprint.details.toMajor, boardStateProvider.givenUserStories)
+    state.value shouldBe FetchedBoardState(1, givenSprint.details.toMajor, boardStateProvider.givenUserStories)
   }
 
   it should "finish sprint" in {
-    val givenId = "1"
+    val givenId = 1
     val givenSprint = SampleSprint.withEmptyEvents().copy(id = givenId)
     val projectActor = projectActorWithInitialSprint(givenSprint)
     val boardStateProvider = new MockBoardStateProvider
     val simulator = new ScrumSimulatorActor(boardStateProvider, projectActor)(5.seconds)
     def sprintIsActive = projectHasOnlyOneSprint(givenId, projectActor)
 
-    simulator ! FinishSprint("1")
+    simulator ! FinishSprint(1)
 
     (for {
       state <- (simulator ?? FetchCurrentSprintsBoardState).mapTo[Option[FetchedBoardState]]
@@ -67,28 +67,28 @@ class ScrumSimulatorActorTest extends FlatSpec with Matchers with ProjectActorHe
 
   it should "create next sprint when none created before" in {
     val projectActor = projectActorWithoutSprints
-    checkSprintStart(projectActor, expectedSprintId = "0")
+    checkSprintStart(projectActor, expectedSprintId = 0)
   }
 
   it should "fail to create next sprint when some created before" in {
-    val givenId = "12"
+    val givenId = 12
     val givenSprint = SampleSprint.withEmptyEvents().copy(id = givenId)
     val projectActor = projectActorWithInitialSprint(givenSprint)
     an[Exception] should be thrownBy {
-      checkSprintStart(projectActor, expectedSprintId = "13")
+      checkSprintStart(projectActor, expectedSprintId = 13)
     }
   }
 
   it should "remove finished sprint" in {
-    val givenId = "1"
+    val givenId = 1
     val givenSprint = SampleSprint.withEmptyEvents().copy(id = givenId)
     val projectActor = projectActorWithInitialSprint(givenSprint)
     val boardStateProvider = new MockBoardStateProvider
     val simulator = new ScrumSimulatorActor(boardStateProvider, projectActor)(5.seconds)
     def noSprints = projectHasNoSprint(projectActor)
 
-    simulator ! FinishSprint("1")
-    simulator ! RemoveSprint("1")
+    simulator ! FinishSprint(1)
+    simulator ! RemoveSprint(1)
 
     (for {
       state <- (simulator ?? FetchCurrentSprintsBoardState).mapTo[Option[FetchedBoardState]]
@@ -100,7 +100,7 @@ class ScrumSimulatorActorTest extends FlatSpec with Matchers with ProjectActorHe
     } yield Unit).await(5.seconds)
   }
 
-  private def checkSprintStart(projectActor: ProjectActor, expectedSprintId: String): Unit = {
+  private def checkSprintStart(projectActor: ProjectActor, expectedSprintId: Int): Unit = {
     val boardStateProvider = new MockBoardStateProvider
     val simulator = new ScrumSimulatorActor(boardStateProvider, projectActor)(5.seconds)
     val givenName = "Foo Name"

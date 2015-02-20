@@ -19,6 +19,6 @@ import net.liftweb.actor.LAFuture
 import org.github.microburn.domain.MajorSprintDetails
 
 trait SprintsDataProvider {
-  def allSprintIds: LAFuture[Seq[Long]]
-  def sprintDetails(sprintId: String): LAFuture[MajorSprintDetails]
+  def allSprintIds: LAFuture[Seq[Int]]
+  def sprintDetails(sprintId: Int): LAFuture[MajorSprintDetails]
 }
