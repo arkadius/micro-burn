@@ -23,6 +23,7 @@ case class ProjectConfig(nonBacklogColumns: List[BoardColumn],
                          dataRoot: File,
                          defaultStoryPointsForUserStories: Option[BigDecimal],
                          splitSpBetweenTechnicalTasks: Boolean,
+                         initiallyDoneNotVisibleForBoardState: Boolean,
                          dayOfWeekWeights: IndexedSeq[BigDecimal],
                          scrumManagementMode: ScrumManagementMode,
                          sprintBaseDetermineMode: SprintBaseDetermineMode) {
@@ -52,7 +53,8 @@ object ProjectConfig {
     require(nonBacklogColumns.size >= 2, "You must define at least two column")
     val nonBacklogColumnsWithAtLeastOneDone = makeAtLeastOneColumnDone(nonBacklogColumns)
     val defaultStoryPointsForUserStrories = config.optional(_.getBigDecimal, "defaultStoryPointsForUserStrories")
-    val splitSpBetweenTechnicalTasks = config.getDefinedBoolean("splitSpBetweenTechnicalTasks")
+    val splitSpBetweenTechnicalTasks = config.getBoolean("splitSpBetweenTechnicalTasks")
+    val initiallyDoneNotVisibleForBoardState = config.getBoolean("initiallyDoneNotVisibleForBoardState")
     val dataRoot = new File(config.getString("dataRoot"))
     val scrumManagementMode = ScrumManagementModeParser.parse(config)
     val sprintBaseDetermineMode = SprintBaseDetermineModeParser.parse(config) getOrElse (scrumManagementMode match {
@@ -65,6 +67,7 @@ object ProjectConfig {
       dataRoot = dataRoot,
       defaultStoryPointsForUserStories = defaultStoryPointsForUserStrories,
       splitSpBetweenTechnicalTasks = splitSpBetweenTechnicalTasks,
+      initiallyDoneNotVisibleForBoardState = initiallyDoneNotVisibleForBoardState,
       dayOfWeekWeights = parseDayOfWeekWeights(config),
       scrumManagementMode = scrumManagementMode,
       sprintBaseDetermineMode = sprintBaseDetermineMode

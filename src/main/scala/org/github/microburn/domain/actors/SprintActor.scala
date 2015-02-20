@@ -41,6 +41,8 @@ class SprintActor(var sprint: Sprint)
       updateSprintAndReply(sprint.update(userStories, details)(timestamp))
     case GetStoryPointsHistory(sprintId: Int) =>
       require(sprintId == sprint.id)
+      // TODO: Obsłużyć initiallyDoneNotVisibleForBoardState - zebrać id tasków initial done i przekazywać jako kontekst
+      // obliczeń do innych metod (historia/bazowe sp) - tylko jeśli jest spełniony warunek initialNotAfterStartPlusAcceptableDelay
       reply(SprintHistory(
         sprintBase = sprintBase,
         columnStates = measure("history computation")(sprint.columnStatesHistory),

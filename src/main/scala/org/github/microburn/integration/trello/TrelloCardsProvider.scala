@@ -15,11 +15,8 @@
  */
 package org.github.microburn.integration.trello
 
-import java.util.Date
-
 import dispatch.{Http, Req}
 import net.liftweb.actor.LAFuture
-import org.github.microburn.util.date._
 import org.github.microburn.util.dispatch._
 import org.json4s.JsonAST._
 
@@ -29,13 +26,13 @@ class TrelloCardsProvider(config: TrelloConfig) {
   import scala.concurrent.ExecutionContext.Implicits.global
 
   def cards: LAFuture[Seq[Card]] = {
-    fetchCardsWithChecklistItems(_ / "board" / config.boardId / "cards" / "all")
+    fetchCardsWithChecklistItems(_ / "board" / config.boardId / "cards")
   }
 
   private def fetchCardsWithChecklistItems(urlFromApi: Req => Req): LAFuture[Seq[Card]] = {
     val url = config.prepareUrl { apiUrl =>
       urlFromApi(apiUrl) <<? Map(
-        "fields" -> "id,name,idList,closed,dateLastActivity",
+        "fields" -> "id,name,idList",
         "checklists" -> "all"
       )
     }
@@ -48,17 +45,12 @@ class TrelloCardsProvider(config: TrelloConfig) {
         val JString(id) = item \ "id"
         val JString(name) = item \ "name"
         val JString(columnId) = item \ "idList"
-        val JBool(closed) = item \ "closed"
-        val JString(dateStr) = item \ "dateLastActivity"
-        val dateLastActivity = DateTimeFormats.utcDateTimeFormat.parse(dateStr)
         val checkListItems = ChecklistExtractor.extract(item \ "checklists")
         Card(
           id = id,
           name = name,
           columnId = columnId,
-          closed = closed,
-          checklistItems = checkListItems,
-          dateLastActivity = dateLastActivity
+          checklistItems = checkListItems
         )
       }
     }
@@ -68,6 +60,4 @@ class TrelloCardsProvider(config: TrelloConfig) {
 case class Card(id: String,
                 protected val name: String,
                 columnId: String,
-                closed: Boolean,
-                checklistItems: Seq[ChecklistItem],
-                dateLastActivity: Date) extends TrelloTask
+                checklistItems: Seq[ChecklistItem]) extends TrelloTask

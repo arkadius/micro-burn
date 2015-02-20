@@ -1,8 +1,6 @@
 [
   {
     "id": "closedCardId",
-    "closed": true,
-    "dateLastActivity": "2014-12-14T00:00:00.000Z",
     "name": "Closed card name",
     "idList": "doneId",
     "checklists": [
@@ -19,8 +17,6 @@
   },
   {
     "id": "openedCardWithMultipleChecklistsId",
-    "closed": false,
-    "dateLastActivity": "2014-12-15T00:00:00.000Z",
     "name": "(1.5) Opened card with multiple checklists name",
     "idList": "todoId",
     "checklists": [
@@ -51,8 +47,6 @@
   },
   {
     "id": "openedCardWithoutChecklists",
-    "closed": false,
-    "dateLastActivity": "2014-12-16T00:00:00.000Z",
     "name": "Opened card with checklist name",
     "idList": "backlogId",
     "checklists": []

@@ -24,34 +24,20 @@ import scalaz._
 import Scalaz._
 
 class TrelloBoardStateProvider(config: TrelloConfig) extends BoardStateProvider {
-  private final val SP_SPLITTED_BETWEEN_TECHICAL_SCALE: Int = 1
-
   private val cardsProvider = new TrelloCardsProvider(config)
 
   override def currentUserStories: LAFuture[Seq[UserStory]] = cardsProvider.cards.map { cards =>
-    cards
-      // TODO: powinniśmy też uwzględniać zamknięte - gdy ktoś zarchiwizuje zadanie przed zakończeniem sprintu
-      // (będzie przydatne zwłaszcza po wprowadzeniu automatycznego rozpoczycznania/zakańczania sprintów).
-      // Należy przy tym pamiętać o problemach:
-      // - ktoś może zamknąć zadanie, bo przypadkowo utworzył => możemy brać pod uwagę zamknięte tylko w kolumnie DONE
-      // - w jaki sposób zweryfikować, że zadanie zostało zamknięte w tym sprincie, a nie w poprzednich?
-      // + możemy patrzeć na dateLastActivity - mogą być rozjechane zegary, a ktoś może zamknąć zadania chwilę po/przed
-      // zakończeniem sprintu
-      // + możemy odrzucać zadania zamknięte w poprzednich sprintach - mogło być ponownie otwarte a potem jeszcze raz zamknięte?
-      // - czy musimy się martwić, gdy automatczynie zakończy się sprint, a zadania nie będę przesunięte? => raczej nie
-      .filter(c => !c.closed)
-      .map(toUserStory)
+    cards.map(toUserStory)
   }
 
   def toUserStory(card: Card): UserStory = {
-    val statusForTask = statusForTaskInColumn(card.columnId) _
     val technicalTasks = card.checklistItems.map { item =>
-      TechnicalTask(item.id, item.extractedName, item.optionalSp, statusForTask(item))
+      TechnicalTask(item.id, item.extractedName, item.optionalSp, statusForTaskInColumn(card.columnId, item))
     }.toIndexedSeq
-    UserStory(card.id, card.extractedName, card.optionalSp, technicalTasks, statusForTask(card))
+    UserStory(card.id, card.extractedName, card.optionalSp, technicalTasks, SpecifiedStatus(card.columnId))
   }
 
-  private def statusForTaskInColumn(columnId: String)(task: TrelloTask) = {
+  private def statusForTaskInColumn(columnId: String, task: ChecklistItem) = {
     if (task.closed) {
       TaskCompletedStatus
     } else {
