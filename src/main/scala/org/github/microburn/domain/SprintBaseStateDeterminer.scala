@@ -15,17 +15,44 @@
  */
 package org.github.microburn.domain
 
+import java.text.ParseException
+
+import com.typesafe.config.Config
+
 class SprintBaseStateDeterminer(baseDetermineMode: SprintBaseDetermineMode) {
 
   def baseForSprint(details: SprintDetails,
-                    storyPointsSumOnStart: BigDecimal): BigDecimal = {
+                    storyPointsSumOnStart: => BigDecimal,
+                    lastStoryPointsSum: => BigDecimal): BigDecimal = {
     details.overriddenBaseStoryPointsSum getOrElse (baseDetermineMode match {
       case SpecifiedBaseMode(storyPoints) =>
         storyPoints
       case AutomaticOnSprintStartMode =>
         storyPointsSumOnStart
       case AutomaticOnScopeChangeMode =>
-        ??? // FIXME
+        lastStoryPointsSum
     })
+  }
+}
+
+sealed trait SprintBaseDetermineMode
+
+case object AutomaticOnSprintStartMode extends SprintBaseDetermineMode
+
+case class SpecifiedBaseMode(storyPoints: BigDecimal) extends SprintBaseDetermineMode
+
+case object AutomaticOnScopeChangeMode extends SprintBaseDetermineMode
+
+object SprintBaseDetermineModeParser {
+  import org.github.microburn.util.config.ConfigEnrichments._
+
+  def parse(config: Config): Option[SprintBaseDetermineMode] = {
+    val Specified = "specified\\((.*)\\)".r("number")
+    config.optional(_.getString, "sprint-base").map {
+      case "auto-on-sprint-start" => AutomaticOnSprintStartMode
+      case "auto-on-scope-change" => AutomaticOnScopeChangeMode
+      case Specified(number) => SpecifiedBaseMode(BigDecimal(number))
+      case otherMode => throw new ParseException(s"Illegal sprint base determine mode: $otherMode", -1)
+    }
   }
 }

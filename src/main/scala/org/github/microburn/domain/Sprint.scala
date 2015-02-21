@@ -55,13 +55,14 @@ case class Sprint(id: Int,
     sprintHistory.sprintBase
 
   def sprintHistory(implicit config: ProjectConfig): SprintHistory = measure("sprint history computation") {
-    val boardStatesCumulative = cumulativeBoardStatesWithKnowledges
+    val boardStatesCumulative = cumulativeBoardStatesWithKnowledge
 
     val baseDeterminer = new SprintBaseStateDeterminer(config.sprintBaseDetermineMode)
-    val BoardStateWithHistoricalKnowledge(headBoardState, headKnowledge) = boardStatesCumulative.head
-    implicit val implicitKnowledge = headKnowledge
-    val storyPointsSumOnStart = headBoardState.userStoriesStoryPointsSum
-    val base = baseDeterminer.baseForSprint(details, storyPointsSumOnStart)
+    val base = baseDeterminer.baseForSprint(
+      details,
+      boardStatesCumulative.head.userStoriesStoryPointsSum,
+      boardStatesCumulative.last.userStoriesStoryPointsSum
+    )
 
     val columnStatesHistory = boardStatesCumulative.map {
       case BoardStateWithHistoricalKnowledge(boardState, knowledge) =>
@@ -76,7 +77,7 @@ case class Sprint(id: Int,
     )
   }
 
-  private def cumulativeBoardStatesWithKnowledges(implicit config: ProjectConfig): List[BoardStateWithHistoricalKnowledge] = {
+  private def cumulativeBoardStatesWithKnowledge(implicit config: ProjectConfig): List[BoardStateWithHistoricalKnowledge] = {
     val eventsSortedAndGrouped = events
       .groupBy(_.date)
       .toSeq
@@ -110,7 +111,12 @@ case class Sprint(id: Int,
     initialDate.isAfter(startDatePlusAcceptableDelay)
   }
 
-  case class BoardStateWithHistoricalKnowledge(board: BoardState, knowledge: SprintHistoricalKnowledge)
+  case class BoardStateWithHistoricalKnowledge(board: BoardState, knowledge: SprintHistoricalKnowledge) {
+    def userStoriesStoryPointsSum(implicit config: ProjectConfig) = {
+      implicit val implicitKnowledge = knowledge
+      board.userStoriesStoryPointsSum
+    }
+  }
 }
 
 case class SprintUpdateResult(updatedSprint: Sprint,
