@@ -15,13 +15,6 @@
  */
 package org.github.microburn.domain
 
-import java.util.Date
-
-import com.typesafe.config.Config
-import org.joda.time.DateTime
-
-import scala.concurrent.duration.FiniteDuration
-
 class SprintBaseStateDeterminer(baseDetermineMode: SprintBaseDetermineMode) {
 
   def baseForSprint(details: SprintDetails,

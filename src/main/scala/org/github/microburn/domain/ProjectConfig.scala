@@ -27,7 +27,6 @@ case class ProjectConfig(nonBacklogColumns: List[BoardColumn],
                          defaultStoryPointsForUserStories: Option[BigDecimal],
                          splitSpBetweenTechnicalTasks: Boolean,
                          initialFetchAfterSprintStartAcceptableDelay: FiniteDuration,
-                         tasksDoneOnStartVisibleForHistory: Boolean,
                          dayOfWeekWeights: IndexedSeq[BigDecimal],
                          scrumManagementMode: ScrumManagementMode,
                          sprintBaseDetermineMode: SprintBaseDetermineMode) {
@@ -56,10 +55,9 @@ object ProjectConfig {
     val nonBacklogColumns = parseNonBacklogColumns(config)
     require(nonBacklogColumns.size >= 2, "You must define at least two column")
     val nonBacklogColumnsWithAtLeastOneDone = makeAtLeastOneColumnDone(nonBacklogColumns)
-    val defaultStoryPointsForUserStrories = config.optional(_.getBigDecimal, "defaultStoryPointsForUserStrories")
+    val defaultStoryPointsForUserStories = config.optional(_.getBigDecimal, "defaultStoryPointsForUserStories")
     val splitSpBetweenTechnicalTasks = config.getBoolean("splitSpBetweenTechnicalTasks")
     val initialFetchAfterSprintStartAcceptableDelay = config.getDuration("initialFetchAfterSprintStartAcceptableDelay", TimeUnit.MILLISECONDS).millis
-    val tasksDoneOnStartVisibleForHistory = config.getBoolean("tasksDoneOnStartVisibleForHistory")
     val dataRoot = new File(config.getString("dataRoot"))
     val scrumManagementMode = ScrumManagementModeParser.parse(config)
     val sprintBaseDetermineMode = SprintBaseDetermineModeParser.parse(config) getOrElse (scrumManagementMode match {
@@ -70,10 +68,9 @@ object ProjectConfig {
     ProjectConfig(
       nonBacklogColumns = nonBacklogColumnsWithAtLeastOneDone,
       dataRoot = dataRoot,
-      defaultStoryPointsForUserStories = defaultStoryPointsForUserStrories,
+      defaultStoryPointsForUserStories = defaultStoryPointsForUserStories,
       splitSpBetweenTechnicalTasks = splitSpBetweenTechnicalTasks,
       initialFetchAfterSprintStartAcceptableDelay = initialFetchAfterSprintStartAcceptableDelay,
-      tasksDoneOnStartVisibleForHistory = tasksDoneOnStartVisibleForHistory,
       dayOfWeekWeights = parseDayOfWeekWeights(config),
       scrumManagementMode = scrumManagementMode,
       sprintBaseDetermineMode = sprintBaseDetermineMode

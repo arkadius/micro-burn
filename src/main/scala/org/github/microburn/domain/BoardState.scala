@@ -16,27 +16,29 @@
 package org.github.microburn.domain
 
 import java.util.Date
+import ComputationContextConversions._
 
 case class BoardState(userStories: Seq[UserStory], date: Date) extends HavingNestedTasks[UserStory] {
   override type Self = BoardState
 
   override protected def nestedTasks: Seq[UserStory] = userStories
 
-  def userStoriesStoryPointsSum(implicit context: ComputationContext): BigDecimal = {
-    implicit val config = context.config
-    notBacklogUserStories
-      .map(userStory => userStory.storyPointsOfSelf)
-      .sum
-  }
+  def doneTasksIds(implicit config: ProjectConfig): Set[String] =
+    (for {
+      userStory <- notBacklogUserStories
+      task <- userStory.flattenTasks
+      configuredTasksBoardColumn <- task.boardColumn
+      if configuredTasksBoardColumn.isDoneColumn
+    } yield task.taskId).toSet
 
-  def doneTasksIds(implicit config: ProjectConfig): Set[String] = {
-    tasksForColumnsMatching(_.isDoneColumn).map(_.taskId).toSet
-  }
+  def userStoriesStoryPointsSum(implicit context: ComputationContext): BigDecimal =
+    (for {
+      userStory <- notBacklogUserStories
+      if context.isVisible(userStory)
+    } yield userStory.storyPointsSum).sum
 
-  def doneTasksStoryPointsSum(implicit context: ComputationContext): BigDecimal = {
-    implicit val config = context.config
+  def doneTasksStoryPointsSum(implicit context: ComputationContext): BigDecimal =
     tasksForColumnsMatching(_.isDoneColumn).map(_.storyPointsWithoutSubTasks).sum
-  }
 
   def diff(other: BoardState): Seq[TaskEvent] = nestedDiff(other)(other.date)
 
@@ -88,23 +90,23 @@ case class BoardState(userStories: Seq[UserStory], date: Date) extends HavingNes
 
   override protected def updateNestedTasks(newNestedTasks: Seq[UserStory]): Self = copy(userStories = newNestedTasks)
 
-  def columnsState(implicit config: ProjectConfig): DateWithColumnsState = {
-    val indexOnSum = config.nonBacklogColumns.map(_.index).map { boardColumnIndex =>
+  def columnsState(implicit context: ComputationContext): DateWithColumnsState = {
+    val indexOnSum = context.config.nonBacklogColumns.map(_.index).map { boardColumnIndex =>
       boardColumnIndex -> storyPointsOnRightFromColumn(boardColumnIndex)
     }.toMap
     DateWithColumnsState(date, indexOnSum)
   }
 
   private def storyPointsOnRightFromColumn(columnIndex: Int)
-                                          (implicit config: ProjectConfig) = {
+                                          (implicit context: ComputationContext) =
     tasksForColumnsMatching(_.index >= columnIndex).map(_.storyPointsWithoutSubTasks).sum
-  }
 
   private def tasksForColumnsMatching(matchColumn: BoardColumn => Boolean)
-                                     (implicit config: ProjectConfig): Seq[Task] = {
+                                     (implicit context: ComputationContext): Seq[Task] = {
     for {
       userStory <- notBacklogUserStories
       task <- userStory.flattenTasks
+      if context.isVisible(task)
       configuredTasksBoardColumn <- task.boardColumn
       if matchColumn(configuredTasksBoardColumn)
     } yield task

@@ -19,6 +19,7 @@ import java.util.Date
 
 import org.github.microburn.util.logging.Slf4jLogging
 import org.joda.time.DateTime
+import ComputationContextConversions._
 
 case class Sprint(id: Int,
                   details: SprintDetails,
@@ -65,8 +66,7 @@ case class Sprint(id: Int,
   }
 
   private def prepareComputationContext(implicit config: ProjectConfig): ComputationContext = {
-    val tasksVisibilityDeterminer = TaskVisibilityDeterminer(initialAfterStartPlusAcceptableDelay, initiallyDoneTaskIds)
-    new ComputationContext(tasksVisibilityDeterminer, config)
+    ComputationContext(initialAfterStartPlusAcceptableDelay, initiallyDoneTaskIds)
   }
 
   private def initiallyDoneTaskIds(implicit config: ProjectConfig): Set[String] = {
@@ -77,7 +77,7 @@ case class Sprint(id: Int,
     val baseDeterminer = new SprintBaseStateDeterminer(context.config.sprintBaseDetermineMode)
     baseDeterminer.baseForSprint(
       details,
-      initialAfterStartPlusAcceptableDelay(context.config),
+      initialAfterStartPlusAcceptableDelay,
       initialBoard.userStoriesStoryPointsSum,
       initialBoard.doneTasksStoryPointsSum
     )
@@ -90,7 +90,7 @@ case class Sprint(id: Int,
     initialDate.isAfter(startDatePlusAcceptableDelay)
   }
   
-  private def columnStatesHistory(implicit config: ProjectConfig): Seq[DateWithColumnsState] = {
+  private def columnStatesHistory(implicit context: ComputationContext): Seq[DateWithColumnsState] = {
     val eventsSortedAndGrouped = events
       .groupBy(_.date)
       .toSeq
@@ -117,10 +117,6 @@ case class SprintUpdateResult(updatedSprint: Sprint,
 object Sprint {
   def withEmptyEvents(id: Int, details: SprintDetails, state: BoardState): Sprint =
     Sprint(id, details, initialBoard = state, currentBoard = state, IndexedSeq.empty)
-}
-
-class ComputationContext(tasksVisibilityDeterminer: TaskVisibilityDeterminer, val config: ProjectConfig) {
-  def isVisible(task: Task) = tasksVisibilityDeterminer.isVisible(task)
 }
 
 case class SprintHistory(sprintBase: SprintBase,

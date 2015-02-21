@@ -15,7 +15,7 @@
  */
 package org.github.microburn.domain
 
-import org.scalatest.{Matchers, FlatSpec, FunSuite}
+import org.scalatest.{FlatSpec, Matchers}
 
 class UserStoryTest extends FlatSpec with Matchers {
 
@@ -28,7 +28,7 @@ class UserStoryTest extends FlatSpec with Matchers {
   }
 
   it should "split sp if split flag is on" in {
-    implicit val config = ProjectConfigUtils.defaultConfig.copy(splitSpBetweenTechnicalTasks = true)
+    implicit val context = ProjectConfigUtils.defaultConfig.copy(splitSpBetweenTechnicalTasks = true)
     val technicalWithSp = SampleTasks.openedTechnicalTask(Some(BigDecimal("1.9")))
     val technicalWithoutSp1 = SampleTasks.openedTechnicalTask(None)
     val technicalWithoutSp2 = SampleTasks.openedTechnicalTask(None)
@@ -39,4 +39,19 @@ class UserStoryTest extends FlatSpec with Matchers {
     story.flattenTasks.find(_.taskId == technicalWithoutSp1.taskId).get.storyPointsWithoutSubTasks shouldEqual BigDecimal("0.5")
     story.flattenTasks.find(_.taskId == technicalWithoutSp2.taskId).get.storyPointsWithoutSubTasks shouldEqual BigDecimal("0.5")
   }
+
+  it should "omit story points of not visible technical tasks in story points of self computation" in {
+    implicit val config = ProjectConfigUtils.defaultConfig.copy(splitSpBetweenTechnicalTasks = true)
+    val technicalWithSp = SampleTasks.openedTechnicalTask(Some(BigDecimal("1.9")))
+    val closedTechnicalWithoutSp = SampleTasks.closedTechnicalTask(None)
+    val openedTechnicalWithoutSp = SampleTasks.openedTechnicalTask(None)
+    val story = SampleTasks.openedUserStory(3, Seq(technicalWithSp, closedTechnicalWithoutSp, openedTechnicalWithoutSp))
+
+    implicit val context = ComputationContextUtils.contextWithTasksDoneOnStartNotVisible(config, closedTechnicalWithoutSp)
+    story.storyPointsSum shouldEqual BigDecimal("2.5")
+
+    story.storyPointsWithoutSubTasks shouldEqual BigDecimal("0.1")
+  }
+
+
 }

@@ -15,7 +15,7 @@
  */
 package org.github.microburn.domain.generator
 
-import org.github.microburn.domain.{ProjectConfig, BoardState, TechnicalTask, UserStory}
+import org.github.microburn.domain._
 import org.scalacheck.Gen
 
 object BoardChangesGenerator {

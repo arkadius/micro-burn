@@ -20,6 +20,7 @@ import java.util.Date
 import scala.math.BigDecimal.RoundingMode
 import scalaz._
 import Scalaz._
+import ComputationContextConversions._
 
 sealed trait Task { self =>
   def taskId: String
@@ -31,8 +32,8 @@ sealed trait Task { self =>
   def status: TaskStatus
 
   def taskAdded(implicit timestamp: Date): Seq[TaskAdded]
-  def storyPointsWithoutSubTasks(implicit config: ProjectConfig): BigDecimal
 
+  def storyPointsWithoutSubTasks(implicit config: ProjectConfig): BigDecimal
   def storyPointsOfSelf(implicit config: ProjectConfig): BigDecimal
 
   def boardColumn(implicit config: ProjectConfig): Option[BoardColumn] = status match {
@@ -82,21 +83,20 @@ case class UserStory(taskId: String,
 
   def flattenTasks: List[Task] = this :: nestedTasks.toList
 
+  def storyPointsSum(implicit context: ComputationContext): BigDecimal = {
+    val diff = storyPointsOfSelf - nestedTasks.filterNot(context.isVisible).map(_.storyPointsOfSelf).sum
+    diff.max(BigDecimal(0))
+  }
+
+  override def storyPointsWithoutSubTasks(implicit config: ProjectConfig): BigDecimal = {
+    val diff = storyPointsOfSelf - nestedTasks.map(_.storyPointsOfSelf).sum
+    diff.max(BigDecimal(0))
+  }
+
   override def storyPointsOfSelf(implicit config: ProjectConfig): BigDecimal  = {
     optionalStoryPoints orElse
       config.defaultStoryPointsForUserStories getOrElse
       BigDecimal(0)
-  }
-
-  override def storyPointsWithoutSubTasks(implicit config: ProjectConfig): BigDecimal = {
-    val diff = storyPointsOfSelf - technicalTasksStoryPointsSum
-    diff.max(BigDecimal(0))
-  }
-
-  private def technicalTasksStoryPointsSum(implicit projectConfig: ProjectConfig): BigDecimal = {
-    nestedTasks.map { task =>
-      task.storyPointsOfSelf
-    }.sum
   }
 
   def storyPointsToSplitPerTechnical(implicit config: ProjectConfig): BigDecimal = {
@@ -132,11 +132,11 @@ case class TechnicalTaskWithParent(technical: TechnicalTask,
 
   override def isTechnicalTask: Boolean = true
 
-  override def storyPointsOfSelf(implicit config: ProjectConfig): BigDecimal  = {
+  override def storyPointsOfSelf(implicit config: ProjectConfig): BigDecimal =
     optionalStoryPoints getOrElse parent.storyPointsToSplitPerTechnical
-  }
 
-  override def storyPointsWithoutSubTasks(implicit config: ProjectConfig): BigDecimal = storyPointsOfSelf
+  override def storyPointsWithoutSubTasks(implicit config: ProjectConfig): BigDecimal =
+    storyPointsOfSelf
 
   override def taskAdded(implicit timestamp: Date): Seq[TaskAdded] = Seq(TaskAdded(this))
 

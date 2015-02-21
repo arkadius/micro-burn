@@ -30,12 +30,14 @@ class SprintTest extends FlatSpec with Matchers with Inside {
     val taskInitiallyCompleted = SampleTasks.closedUserStory(2)
 
     val sprintBeforeUpdate = SampleSprint.withEmptyEvents(taskInitiallyOpened, taskInitiallyCompleted)
+    sprintBeforeUpdate.baseStoryPointsForStart shouldEqual BigDecimal(1)
 
     val sprintAfterFirstFinish = sprintBeforeUpdate.updateTasks(taskInitiallyOpened.close, taskInitiallyCompleted)
-    sprintAfterFirstFinish.storyPointsChangesValues shouldEqual Seq(2, 3)
+    sprintAfterFirstFinish.doneStoryPoints shouldEqual Seq(0, 1) // baza 0 bo pomijamy bo tasksDoneOnStartVisibleForHistory
 
     val sprintAfterSecReopen = sprintAfterFirstFinish.updateTasks(taskInitiallyOpened.close, taskInitiallyCompleted.reopen)
-    sprintAfterSecReopen.storyPointsChangesValues shouldEqual Seq(2, 3, 1)
+    sprintAfterSecReopen.doneStoryPoints shouldEqual Seq(0, 1, 1)
+    sprintAfterSecReopen.openedStoryPoints shouldEqual Seq(1, 1, 3)
   }
 
   it should "generate empty events for not estimated technical tasks and non empty for parent user stories" in {
@@ -47,7 +49,7 @@ class SprintTest extends FlatSpec with Matchers with Inside {
 
     val afterUpdate = sprint.updateTasks(completedUserStory)
 
-    afterUpdate.storyPointsChangesValues shouldEqual Seq(0, 1)
+    afterUpdate.doneStoryPoints shouldEqual Seq(0, 1)
   }
 
   it should "generate non empty events for estimated technical tasks and empty for parent user stories" in {
@@ -58,11 +60,11 @@ class SprintTest extends FlatSpec with Matchers with Inside {
 
     val completedFirstUserStory = userStory.copy(technicalTasksWithoutParentId = IndexedSeq(firstTechnical.close, secTechnical))
     val afterFirstFinish = sprint.updateTasks(completedFirstUserStory)
-    afterFirstFinish.storyPointsChangesValues shouldEqual Seq(0, 1)
+    afterFirstFinish.doneStoryPoints shouldEqual Seq(0, 1)
 
     val completedAllUserStory = completedFirstUserStory.copy(technicalTasksWithoutParentId = IndexedSeq(firstTechnical.close, secTechnical.close)).close
     val afterAllFinish = afterFirstFinish.updateTasks(completedAllUserStory)
-    afterAllFinish.storyPointsChangesValues shouldEqual Seq(0, 1, 3)
+    afterAllFinish.doneStoryPoints shouldEqual Seq(0, 1, 3)
   }
 
   it should "generate correct events for scope change" in {
@@ -74,18 +76,18 @@ class SprintTest extends FlatSpec with Matchers with Inside {
     val secTechnicalClosed = secTechnical.close
     val withSecClosed = userStory.copy(technicalTasksWithoutParentId = IndexedSeq(firstTechnical, secTechnicalClosed))
     val afterSecClose = sprint.updateTasks(withSecClosed)
-    afterSecClose.storyPointsChangesValues shouldEqual Seq(0, 1)
+    afterSecClose.doneStoryPoints shouldEqual Seq(0, 1)
 
     val secTechnicalWithChangedScope = secTechnicalClosed.copy(optionalStoryPoints = Some(2))
     val changedScope = withSecClosed.copy(technicalTasksWithoutParentId = IndexedSeq(firstTechnical, secTechnicalWithChangedScope))
     val afterScopeChange = afterSecClose.updateTasks(changedScope)
     inside(afterScopeChange) {
-      case _ => afterScopeChange.storyPointsChangesValues shouldEqual Seq(0, 1, 2)
+      case _ => afterScopeChange.doneStoryPoints shouldEqual Seq(0, 1, 2)
     }
 
     val completedAllUserStory = changedScope.copy(technicalTasksWithoutParentId = IndexedSeq(firstTechnical.close, secTechnicalWithChangedScope)).close
     val afterAllFinish = afterScopeChange.updateTasks(completedAllUserStory)
-    afterAllFinish.storyPointsChangesValues shouldEqual Seq(0, 1, 2, 3)
+    afterAllFinish.doneStoryPoints shouldEqual Seq(0, 1, 2, 3)
   }
 
   private val dateIterator = Stream.from(100, 100).map { i => new Date(i.toLong) }.toIterable.iterator
@@ -95,8 +97,12 @@ class SprintTest extends FlatSpec with Matchers with Inside {
   implicit class EnhancedSprint(sprint: Sprint) {
     def updateTasks(updatedTasks: UserStory*) = sprint.update(updatedTasks, sprint.details.toMajor)(nextDate).updatedSprint
 
-    def storyPointsChangesValues(implicit config: ProjectConfig): Seq[BigDecimal] = sprint.sprintHistory.columnStates.map { dateWithStoryPoints =>
+    def doneStoryPoints(implicit config: ProjectConfig): Seq[BigDecimal] = sprint.sprintHistory.columnStates.map { dateWithStoryPoints =>
       dateWithStoryPoints.storyPointsForColumn(config.lastDoneColumn.index)
+    }
+
+    def openedStoryPoints(implicit config: ProjectConfig): Seq[BigDecimal] = sprint.sprintHistory.columnStates.map { dateWithStoryPoints =>
+      dateWithStoryPoints.storyPointsForColumn(0)
     }
   }
 

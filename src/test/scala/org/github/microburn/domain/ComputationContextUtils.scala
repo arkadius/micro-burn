@@ -15,10 +15,13 @@
  */
 package org.github.microburn.domain
 
-import org.github.microburn.TestConfig
+object ComputationContextUtils {
 
-object ProjectConfigUtils {
-  def firstNotCompletedStatus(implicit config: ProjectConfig): String = config.nonBacklogColumns.head.statusIds.head
+  def defaultContext = new ComputationContext(AllTasksVisible, ProjectConfigUtils.defaultConfig)
 
-  def defaultConfig = ProjectConfig(TestConfig.withDefaultsFallback().getConfig("project"))
+  def contextWithTasksDoneOnStartNotVisible(config: ProjectConfig, doneTasks: TechnicalTask*) = {
+    val doneTaskIds = doneTasks.map(_.taskId).toSet
+    new ComputationContext(TasksDoneOnStartVisibleOnlyIfReopened(doneTaskIds), config)
+  }
+
 }
