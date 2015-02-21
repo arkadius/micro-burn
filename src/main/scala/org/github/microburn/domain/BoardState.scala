@@ -22,13 +22,21 @@ case class BoardState(userStories: Seq[UserStory], date: Date) extends HavingNes
 
   override protected def nestedTasks: Seq[UserStory] = userStories
 
-  def userStoriesStoryPointsSum(implicit config: ProjectConfig): BigDecimal =
+  def userStoriesStoryPointsSum(implicit context: ComputationContext): BigDecimal = {
+    implicit val config = context.config
     notBacklogUserStories
       .map(userStory => userStory.storyPointsOfSelf)
       .sum
+  }
 
-  def doneTasksStoryPointsSum(implicit config: ProjectConfig): BigDecimal =
-    storyPointsForColumnsMatching(_.isDoneColumn)
+  def doneTasksIds(implicit config: ProjectConfig): Set[String] = {
+    tasksForColumnsMatching(_.isDoneColumn).map(_.taskId).toSet
+  }
+
+  def doneTasksStoryPointsSum(implicit context: ComputationContext): BigDecimal = {
+    implicit val config = context.config
+    tasksForColumnsMatching(_.isDoneColumn).map(_.storyPointsWithoutSubTasks).sum
+  }
 
   def diff(other: BoardState): Seq[TaskEvent] = nestedDiff(other)(other.date)
 
@@ -89,17 +97,17 @@ case class BoardState(userStories: Seq[UserStory], date: Date) extends HavingNes
 
   private def storyPointsOnRightFromColumn(columnIndex: Int)
                                           (implicit config: ProjectConfig) = {
-    storyPointsForColumnsMatching(_.index >= columnIndex)
+    tasksForColumnsMatching(_.index >= columnIndex).map(_.storyPointsWithoutSubTasks).sum
   }
 
-  private def storyPointsForColumnsMatching(matchColumn: BoardColumn => Boolean)
-                                           (implicit config: ProjectConfig) = {
-    (for {
+  private def tasksForColumnsMatching(matchColumn: BoardColumn => Boolean)
+                                     (implicit config: ProjectConfig): Seq[Task] = {
+    for {
       userStory <- notBacklogUserStories
       task <- userStory.flattenTasks
       configuredTasksBoardColumn <- task.boardColumn
       if matchColumn(configuredTasksBoardColumn)
-    } yield task.storyPointsWithoutSubTasks).sum
+    } yield task
   }
 
   private def notBacklogUserStories(implicit config: ProjectConfig): Seq[UserStory] =

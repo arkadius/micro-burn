@@ -51,26 +51,39 @@ case class Sprint(id: Int,
   }
   
   def sprintHistory(implicit config: ProjectConfig): SprintHistory = measure("sprint history computation") {
+    implicit val context = prepareComputationContext
     SprintHistory(
       sprintBase = sprintBase,
       columnStates = columnStatesHistory,
       sprintDetails = details
     )
   }
+  
+  def baseStoryPointsForStart(implicit config: ProjectConfig): BigDecimal = {
+    implicit val context = prepareComputationContext
+    sprintBase.baseStoryPointsForStart
+  }
 
-  def baseStoryPointsForStart(implicit config: ProjectConfig): BigDecimal = sprintBase.baseStoryPointsForStart
+  private def prepareComputationContext(implicit config: ProjectConfig): ComputationContext = {
+    val tasksVisibilityDeterminer = TaskVisibilityDeterminer(initialAfterStartPlusAcceptableDelay, initiallyDoneTaskIds)
+    new ComputationContext(tasksVisibilityDeterminer, config)
+  }
 
-  private def sprintBase(implicit config: ProjectConfig): SprintBase = {
-    val baseDeterminer = new SprintBaseStateDeterminer(config.sprintBaseDetermineMode)
+  private def initiallyDoneTaskIds(implicit config: ProjectConfig): Set[String] = {
+    initialBoard.doneTasksIds
+  }
+
+  private def sprintBase(implicit context: ComputationContext): SprintBase = {
+    val baseDeterminer = new SprintBaseStateDeterminer(context.config.sprintBaseDetermineMode)
     baseDeterminer.baseForSprint(
       details,
-      initialAfterStartPlusAcceptableDelay,
+      initialAfterStartPlusAcceptableDelay(context.config),
       initialBoard.userStoriesStoryPointsSum,
       initialBoard.doneTasksStoryPointsSum
     )
   }
 
-  private def initialAfterStartPlusAcceptableDelay(implicit config: ProjectConfig): Boolean = {
+  def initialAfterStartPlusAcceptableDelay(implicit config: ProjectConfig): Boolean = {
     val initialDate = new DateTime(initialBoard.date)
     val startDatePlusAcceptableDelay =
       new DateTime(details.start).plusMillis(config.initialFetchAfterSprintStartAcceptableDelay.toMillis.toInt)
@@ -104,6 +117,10 @@ case class SprintUpdateResult(updatedSprint: Sprint,
 object Sprint {
   def withEmptyEvents(id: Int, details: SprintDetails, state: BoardState): Sprint =
     Sprint(id, details, initialBoard = state, currentBoard = state, IndexedSeq.empty)
+}
+
+class ComputationContext(tasksVisibilityDeterminer: TaskVisibilityDeterminer, val config: ProjectConfig) {
+  def isVisible(task: Task) = tasksVisibilityDeterminer.isVisible(task)
 }
 
 case class SprintHistory(sprintBase: SprintBase,

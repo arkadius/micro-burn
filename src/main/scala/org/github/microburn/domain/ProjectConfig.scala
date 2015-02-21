@@ -27,7 +27,7 @@ case class ProjectConfig(nonBacklogColumns: List[BoardColumn],
                          defaultStoryPointsForUserStories: Option[BigDecimal],
                          splitSpBetweenTechnicalTasks: Boolean,
                          initialFetchAfterSprintStartAcceptableDelay: FiniteDuration,
-                         initiallyDoneNotVisibleForBoardState: Boolean,
+                         tasksDoneOnStartVisibleForHistory: Boolean,
                          dayOfWeekWeights: IndexedSeq[BigDecimal],
                          scrumManagementMode: ScrumManagementMode,
                          sprintBaseDetermineMode: SprintBaseDetermineMode) {
@@ -59,7 +59,7 @@ object ProjectConfig {
     val defaultStoryPointsForUserStrories = config.optional(_.getBigDecimal, "defaultStoryPointsForUserStrories")
     val splitSpBetweenTechnicalTasks = config.getBoolean("splitSpBetweenTechnicalTasks")
     val initialFetchAfterSprintStartAcceptableDelay = config.getDuration("initialFetchAfterSprintStartAcceptableDelay", TimeUnit.MILLISECONDS).millis
-    val initiallyDoneNotVisibleForBoardState = config.getBoolean("initiallyDoneNotVisibleForBoardState")
+    val tasksDoneOnStartVisibleForHistory = config.getBoolean("tasksDoneOnStartVisibleForHistory")
     val dataRoot = new File(config.getString("dataRoot"))
     val scrumManagementMode = ScrumManagementModeParser.parse(config)
     val sprintBaseDetermineMode = SprintBaseDetermineModeParser.parse(config) getOrElse (scrumManagementMode match {
@@ -73,7 +73,7 @@ object ProjectConfig {
       defaultStoryPointsForUserStories = defaultStoryPointsForUserStrories,
       splitSpBetweenTechnicalTasks = splitSpBetweenTechnicalTasks,
       initialFetchAfterSprintStartAcceptableDelay = initialFetchAfterSprintStartAcceptableDelay,
-      initiallyDoneNotVisibleForBoardState = initiallyDoneNotVisibleForBoardState,
+      tasksDoneOnStartVisibleForHistory = tasksDoneOnStartVisibleForHistory,
       dayOfWeekWeights = parseDayOfWeekWeights(config),
       scrumManagementMode = scrumManagementMode,
       sprintBaseDetermineMode = sprintBaseDetermineMode
