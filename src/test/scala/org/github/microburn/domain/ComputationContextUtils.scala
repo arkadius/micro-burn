@@ -17,11 +17,11 @@ package org.github.microburn.domain
 
 object ComputationContextUtils {
 
-  def defaultContext = new ComputationContext(AllTasksVisible, ProjectConfigUtils.defaultConfig)
+  def defaultContext = SprintHistoricalKnowledge(Set.empty)
 
-  def contextWithTasksDoneOnStartNotVisible(config: ProjectConfig, doneTasks: TechnicalTask*) = {
+  def contextWithTasksDoneOnStartNotVisible(doneTasks: TechnicalTask*) = {
     val doneTaskIds = doneTasks.map(_.taskId).toSet
-    new ComputationContext(TasksDoneInPreviousStatesNotVisible(doneTaskIds), config)
+    SprintHistoricalKnowledge(doneTaskIds)
   }
 
 }

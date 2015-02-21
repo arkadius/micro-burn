@@ -20,7 +20,6 @@ import java.util.Date
 import scala.math.BigDecimal.RoundingMode
 import scalaz._
 import Scalaz._
-import ComputationContextConversions._
 
 sealed trait Task { self =>
   def taskId: String
@@ -83,8 +82,8 @@ case class UserStory(taskId: String,
 
   def flattenTasks: List[Task] = this :: nestedTasks.toList
 
-  def storyPointsSum(implicit context: ComputationContext): BigDecimal = {
-    val diff = storyPointsOfSelf - nestedTasks.filterNot(context.isVisible).map(_.storyPointsOfSelf).sum
+  def storyPointsSum(implicit config: ProjectConfig, knowledge: SprintHistoricalKnowledge): BigDecimal = {
+    val diff = storyPointsOfSelf - nestedTasks.filterNot(knowledge.shouldBeUsedInCalculations).map(_.storyPointsOfSelf).sum
     diff.max(BigDecimal(0))
   }
 

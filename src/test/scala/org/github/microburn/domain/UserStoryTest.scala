@@ -47,7 +47,7 @@ class UserStoryTest extends FlatSpec with Matchers {
     val openedTechnicalWithoutSp = SampleTasks.openedTechnicalTask(None)
     val story = SampleTasks.openedUserStory(3, Seq(technicalWithSp, closedTechnicalWithoutSp, openedTechnicalWithoutSp))
 
-    implicit val context = ComputationContextUtils.contextWithTasksDoneOnStartNotVisible(config, closedTechnicalWithoutSp)
+    implicit val context = ComputationContextUtils.contextWithTasksDoneOnStartNotVisible( closedTechnicalWithoutSp)
     story.storyPointsSum shouldEqual BigDecimal("2.5")
 
     story.storyPointsWithoutSubTasks shouldEqual BigDecimal("0.1")

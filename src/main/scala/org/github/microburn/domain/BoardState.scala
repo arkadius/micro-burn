@@ -16,7 +16,6 @@
 package org.github.microburn.domain
 
 import java.util.Date
-import ComputationContextConversions._
 
 case class BoardState(userStories: Seq[UserStory], date: Date) extends HavingNestedTasks[UserStory] {
   override type Self = BoardState
@@ -31,13 +30,13 @@ case class BoardState(userStories: Seq[UserStory], date: Date) extends HavingNes
       if configuredTasksBoardColumn.isDoneColumn
     } yield task.taskId).toSet
 
-  def userStoriesStoryPointsSum(implicit context: ComputationContext): BigDecimal =
+  def userStoriesStoryPointsSum(implicit config: ProjectConfig, knowledge: SprintHistoricalKnowledge): BigDecimal =
     (for {
       userStory <- notBacklogUserStories
-      if context.isVisible(userStory)
+      if knowledge.shouldBeUsedInCalculations(userStory)
     } yield userStory.storyPointsSum).sum
 
-  def doneTasksStoryPointsSum(implicit context: ComputationContext): BigDecimal =
+  def doneTasksStoryPointsSum(implicit config: ProjectConfig, knowledge: SprintHistoricalKnowledge): BigDecimal =
     tasksForColumnsMatching(_.isDoneColumn).map(_.storyPointsWithoutSubTasks).sum
 
   def diff(other: BoardState): Seq[TaskEvent] = nestedDiff(other)(other.date)
@@ -90,23 +89,23 @@ case class BoardState(userStories: Seq[UserStory], date: Date) extends HavingNes
 
   override protected def updateNestedTasks(newNestedTasks: Seq[UserStory]): Self = copy(userStories = newNestedTasks)
 
-  def columnsState(implicit context: ComputationContext): DateWithColumnsState = {
-    val indexOnSum = context.config.nonBacklogColumns.map(_.index).map { boardColumnIndex =>
+  def columnsState(implicit config: ProjectConfig, knowledge: SprintHistoricalKnowledge): DateWithColumnsState = {
+    val indexOnSum = config.nonBacklogColumns.map(_.index).map { boardColumnIndex =>
       boardColumnIndex -> storyPointsOnRightFromColumn(boardColumnIndex)
     }.toMap
     DateWithColumnsState(date, indexOnSum)
   }
 
   private def storyPointsOnRightFromColumn(columnIndex: Int)
-                                          (implicit context: ComputationContext) =
+                                          (implicit config: ProjectConfig, knowledge: SprintHistoricalKnowledge) =
     tasksForColumnsMatching(_.index >= columnIndex).map(_.storyPointsWithoutSubTasks).sum
 
   private def tasksForColumnsMatching(matchColumn: BoardColumn => Boolean)
-                                     (implicit context: ComputationContext): Seq[Task] = {
+                                     (implicit config: ProjectConfig, knowledge: SprintHistoricalKnowledge): Seq[Task] = {
     for {
       userStory <- notBacklogUserStories
       task <- userStory.flattenTasks
-      if context.isVisible(task)
+      if knowledge.shouldBeUsedInCalculations(task)
       configuredTasksBoardColumn <- task.boardColumn
       if matchColumn(configuredTasksBoardColumn)
     } yield task

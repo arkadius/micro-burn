@@ -19,7 +19,6 @@ import java.util.Date
 
 import org.github.microburn.util.logging.Slf4jLogging
 import org.joda.time.DateTime
-import ComputationContextConversions._
 
 case class Sprint(id: Int,
                   details: SprintDetails,
@@ -52,7 +51,7 @@ case class Sprint(id: Int,
   }
   
   def sprintHistory(implicit config: ProjectConfig): SprintHistory = measure("sprint history computation") {
-    implicit val context = prepareComputationContext
+    implicit val context = prepareHistoricalKnowledge
     SprintHistory(
       sprintBase = sprintBase,
       columnStates = columnStatesHistory(context),
@@ -61,16 +60,16 @@ case class Sprint(id: Int,
   }
   
   def baseStoryPointsForStart(implicit config: ProjectConfig): BigDecimal = {
-    implicit val context = prepareComputationContext
+    implicit val context = prepareHistoricalKnowledge
     sprintBase.baseStoryPointsForStart
   }
 
-  private def prepareComputationContext(implicit config: ProjectConfig): ComputationContext = {
-    ComputationContext(initialAfterStartPlusAcceptableDelay, initialBoard.doneTasksIds)
+  private def prepareHistoricalKnowledge(implicit config: ProjectConfig): SprintHistoricalKnowledge = {
+    SprintHistoricalKnowledge(initialAfterStartPlusAcceptableDelay, initialBoard.doneTasksIds)
   }
 
-  private def sprintBase(implicit context: ComputationContext): SprintBase = {
-    val baseDeterminer = new SprintBaseStateDeterminer(context.config.sprintBaseDetermineMode)
+  private def sprintBase(implicit config: ProjectConfig, knowledge: SprintHistoricalKnowledge): SprintBase = {
+    val baseDeterminer = new SprintBaseStateDeterminer(config.sprintBaseDetermineMode)
     baseDeterminer.baseForSprint(
       details,
       initialAfterStartPlusAcceptableDelay,
@@ -86,31 +85,37 @@ case class Sprint(id: Int,
     initialDate.isAfter(startDatePlusAcceptableDelay)
   }
   
-  private def columnStatesHistory(initialContext: ComputationContext): Seq[DateWithColumnsState] = {
-    val eventsSortedAndGrouped = events
-      .groupBy(_.date)
-      .toSeq
-      .sortBy { case (date, group) => date }
-      .map { case (date, group) => group }
-
-    implicit val config = initialContext.config
-    val initial = BoardWithContext(initialBoard, initialContext)
-    val boardStatesCumulative = eventsSortedAndGrouped.scanLeft(initial) { (accBoardWithContext, currEventsGroup) =>
-      currEventsGroup.foldLeft(accBoardWithContext) {
-        case (BoardWithContext(prevBoard, prevContext), event) =>
-          val accBoard = prevBoard.plus(event)
-          val accContext = prevContext.withUpdatedDoneTaskIds(accBoard.doneTasksIds)
-          BoardWithContext(accBoard, accContext)
-      }
-    }
+  private def columnStatesHistory(initialKnowledge: SprintHistoricalKnowledge)
+                                 (implicit config: ProjectConfig): Seq[DateWithColumnsState] = {
+    val boardStatesCumulative: Seq[BoardStateWithHistoricalKnowledge] = cumulativeBoardStatesHistory(initialKnowledge)
 
     boardStatesCumulative.map {
-      case BoardWithContext(boardState, context) =>
-        boardState.columnsState(context)
+      case BoardStateWithHistoricalKnowledge(boardState, knowledge) =>
+        implicit val implicitKnowledge = knowledge
+        boardState.columnsState
     }
   }
 
-  case class BoardWithContext(board: BoardState, context: ComputationContext)
+  private def cumulativeBoardStatesHistory(initialKnowledge: SprintHistoricalKnowledge)
+                                          (implicit config: ProjectConfig): Seq[BoardStateWithHistoricalKnowledge] = {
+    val eventsSortedAndGrouped = events
+      .groupBy(_.date)
+      .toSeq
+      .sortBy { case (date, group) => date}
+      .map { case (date, group) => group}
+
+    val initial = BoardStateWithHistoricalKnowledge(initialBoard, initialKnowledge)
+    eventsSortedAndGrouped.scanLeft(initial) { (accBoardWithContext, currEventsGroup) =>
+      currEventsGroup.foldLeft(accBoardWithContext) {
+        case (BoardStateWithHistoricalKnowledge(prevBoard, prevContext), event) =>
+          val accBoard = prevBoard.plus(event)
+          val accKnowledge = prevContext.withNextStateDoneTaskIds(accBoard.doneTasksIds)
+          BoardStateWithHistoricalKnowledge(accBoard, accKnowledge)
+      }
+    }
+  }
+
+  case class BoardStateWithHistoricalKnowledge(board: BoardState, knowledge: SprintHistoricalKnowledge)
 }
 
 case class SprintUpdateResult(updatedSprint: Sprint,
