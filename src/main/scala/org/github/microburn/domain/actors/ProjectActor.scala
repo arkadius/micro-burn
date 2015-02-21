@@ -101,7 +101,7 @@ class ProjectActor(config: ProjectConfig)
     val sprintWithStateFutures = sprintActors.map {
       case (sprintId, sprintActor) =>
         (sprintActor !< GetDetails).mapTo[DetailsWithBaseStoryPoints] map { details =>
-          SprintIdWithDetails(sprintId, details.details, details.baseStoryPointsSum.toDouble)
+          SprintIdWithDetails(sprintId, details.details, details.baseStoryPoints.toDouble)
         }
     }.toSeq
     LAFuture.collect(sprintWithStateFutures : _*).map { sprints =>

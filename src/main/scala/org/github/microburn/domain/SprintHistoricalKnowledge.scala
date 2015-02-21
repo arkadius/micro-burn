@@ -22,6 +22,6 @@ case class SprintHistoricalKnowledge(private val tasksDoneAndNotReopenedInPrevSt
 
   private def isReopened(task: Task)(implicit config: ProjectConfig): Boolean = !task.boardColumn.exists(_.isDoneColumn)
 
-  def withNextStateDoneTaskIds(updatedDoneTaskIds: Set[String]): SprintHistoricalKnowledge =
-    copy(tasksDoneAndNotReopenedInPrevStatesIds = tasksDoneAndNotReopenedInPrevStatesIds intersect updatedDoneTaskIds)
+  def withNextStateDoneTaskIds(nextStateDoneTaskIds: Set[String]): SprintHistoricalKnowledge =
+    copy(tasksDoneAndNotReopenedInPrevStatesIds = tasksDoneAndNotReopenedInPrevStatesIds intersect nextStateDoneTaskIds)
 }

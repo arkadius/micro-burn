@@ -51,33 +51,15 @@ case class Sprint(id: Int,
     SprintUpdateResult(updatedSprint, newAddedEvents, changedDetails.isDefined, timestamp)
   }
   
-  def baseStoryPointsForStart(implicit config: ProjectConfig): BigDecimal =
-    sprintHistory.sprintBase
-
-  def sprintHistory(implicit config: ProjectConfig): SprintHistory = measure("sprint history computation") {
-    val boardStatesCumulative = cumulativeBoardStatesWithKnowledge
-
-    val baseDeterminer = new SprintBaseStateDeterminer(config.sprintBaseDetermineMode)
-    val base = baseDeterminer.baseForSprint(
-      details,
-      boardStatesCumulative.head.userStoriesStoryPointsSum,
-      boardStatesCumulative.last.userStoriesStoryPointsSum
-    )
-
-    val columnStatesHistory = boardStatesCumulative.map {
-      case BoardStateWithHistoricalKnowledge(boardState, knowledge) =>
-        implicit val implicitKnowledge = knowledge
-        boardState.columnsState
-    }
-
-    SprintHistory(
-      sprintBase = base,
-      columnStates = columnStatesHistory,
-      sprintDetails = details
-    )
+  def baseStoryPoints(implicit config: ProjectConfig): BigDecimal = measure("sprint base computation") {
+    cumulativeBoardStatesWithKnowledge.sprintBase
   }
 
-  private def cumulativeBoardStatesWithKnowledge(implicit config: ProjectConfig): List[BoardStateWithHistoricalKnowledge] = {
+  def sprintHistory(implicit config: ProjectConfig): SprintHistory = measure("sprint history computation") {
+    cumulativeBoardStatesWithKnowledge.sprintHistory
+  }
+
+  private def cumulativeBoardStatesWithKnowledge(implicit config: ProjectConfig): BoardStatesWithKnowledgeCumulative = {
     val eventsSortedAndGrouped = events
       .groupBy(_.date)
       .toSeq
@@ -88,20 +70,21 @@ case class Sprint(id: Int,
       initialBoard.openNested.copy(date = details.start)
     }
 
-    val boardStates = optionalSimulatedBoardStateOnStart.toList ::: eventsSortedAndGrouped.toList.scanLeft(initialBoard) { (cumulativeBoard, currEventsGroup) =>
+    val boardStates = optionalSimulatedBoardStateOnStart.toList ::: eventsSortedAndGrouped.scanLeft(initialBoard) { (cumulativeBoard, currEventsGroup) =>
       currEventsGroup.foldLeft(cumulativeBoard) { (accBoard, event) =>
         accBoard.plus(event)
       }
-    }
+    }.toList
 
     val (startBoardState :: tailBoardStates) = boardStates
     val startStateWithKnowledge = BoardStateWithHistoricalKnowledge(startBoardState, SprintHistoricalKnowledge(startBoardState.doneTasksIds))
 
-    tailBoardStates.scanLeft(startStateWithKnowledge) {
+    val boardStatesCumulative = tailBoardStates.scanLeft(startStateWithKnowledge) {
       case (BoardStateWithHistoricalKnowledge(_, prevKnowledge), nextState) =>
         val cumulativeKnowledge = prevKnowledge.withNextStateDoneTaskIds(nextState.doneTasksIds)
         BoardStateWithHistoricalKnowledge(nextState, cumulativeKnowledge)
     }
+    BoardStatesWithKnowledgeCumulative(boardStatesCumulative)
   }
 
   private def initialAfterStartPlusAcceptableDelay(implicit config: ProjectConfig): Boolean = {
@@ -111,10 +94,34 @@ case class Sprint(id: Int,
     initialDate.isAfter(startDatePlusAcceptableDelay)
   }
 
+  case class BoardStatesWithKnowledgeCumulative(boardStatesCumulative: List[BoardStateWithHistoricalKnowledge]) {
+    def sprintHistory(implicit config: ProjectConfig) = {
+      SprintHistory(
+        sprintBase = sprintBase,
+        columnStates = boardStatesCumulative.map(_.columnsState),
+        sprintDetails = details
+      )  
+    }
+
+    def sprintBase(implicit config: ProjectConfig) = {
+      val baseDeterminer = new SprintBaseStateDeterminer(config.sprintBaseDetermineMode)
+      baseDeterminer.baseForSprint(
+        details,
+        boardStatesCumulative.head.userStoriesStoryPointsSum,
+        boardStatesCumulative.last.userStoriesStoryPointsSum
+      )
+    }
+  }
+  
   case class BoardStateWithHistoricalKnowledge(board: BoardState, knowledge: SprintHistoricalKnowledge) {
-    def userStoriesStoryPointsSum(implicit config: ProjectConfig) = {
+    def userStoriesStoryPointsSum(implicit config: ProjectConfig): BigDecimal = {
       implicit val implicitKnowledge = knowledge
       board.userStoriesStoryPointsSum
+    }
+    
+    def columnsState(implicit config: ProjectConfig): DateWithColumnsState = {
+      implicit val implicitKnowledge = knowledge
+      board.columnsState
     }
   }
 }

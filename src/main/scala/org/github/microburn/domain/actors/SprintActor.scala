@@ -30,7 +30,7 @@ class SprintActor(var sprint: Sprint)
 
   override protected def messageHandler: PartialFunction[Any, Unit] = {
     case GetDetails =>
-      reply(DetailsWithBaseStoryPoints(sprint.details, sprint.baseStoryPointsForStart))
+      reply(DetailsWithBaseStoryPoints(sprint.details, sprint.baseStoryPoints))
     case UpdateSprintDetails(sprintId, details, timestamp) =>
       require(sprintId == sprint.id)
       updateSprintAndReply(sprint.updateDetails(details)(timestamp))
@@ -62,7 +62,7 @@ case class SprintDetailsChanged(sprintId: Int)
 
 case object GetDetails
 
-case class DetailsWithBaseStoryPoints(details: SprintDetails, baseStoryPointsSum: BigDecimal)
+case class DetailsWithBaseStoryPoints(details: SprintDetails, baseStoryPoints: BigDecimal)
 
 case class UpdateSprintDetails(sprintId: Int, details: SprintDetails, timestamp: Date)
 
