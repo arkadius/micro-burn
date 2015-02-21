@@ -89,11 +89,13 @@ class TaskEventsCsvRepository(taskEventsFile: File) extends TaskEventsRepository
   private def t(status: TaskStatus): String = status match {
     case SpecifiedStatus(_)  => SPECIFIED_STATUS
     case TaskCompletedStatus => COMPLETED_STATUS
+    case TaskOpenedStatus    => throw new IllegalStateException("Opened status should be used only internal")
   }
 
   private def v(status: TaskStatus): String = status match {
     case SpecifiedStatus(value) => value
-    case TaskCompletedStatus          => ""
+    case TaskCompletedStatus    => ""
+    case TaskOpenedStatus       => throw new IllegalStateException("Opened status should be used only internal")
   }
 
   private def parseStatus(typ: String, value: String): TaskStatus = typ match {
