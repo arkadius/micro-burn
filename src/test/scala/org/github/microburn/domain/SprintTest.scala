@@ -38,6 +38,10 @@ class SprintTest extends FlatSpec with Matchers with Inside {
     val sprintAfterSecReopen = sprintAfterFirstFinish.updateTasks(taskInitiallyOpened.close, taskInitiallyCompleted.reopen)
     sprintAfterSecReopen.doneStoryPoints shouldEqual Seq(0, 1, 1)
     sprintAfterSecReopen.openedStoryPoints shouldEqual Seq(1, 1, 3)
+
+    val sprintAfterSecFinishOneMoreTime = sprintAfterSecReopen.updateTasks(taskInitiallyOpened.close, taskInitiallyCompleted.close)
+    sprintAfterSecFinishOneMoreTime.doneStoryPoints shouldEqual Seq(0, 1, 1, 3)
+    sprintAfterSecFinishOneMoreTime.openedStoryPoints shouldEqual Seq(1, 1, 3, 3)
   }
 
   it should "generate empty events for not estimated technical tasks and non empty for parent user stories" in {

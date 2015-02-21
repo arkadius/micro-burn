@@ -21,7 +21,7 @@ object ComputationContextUtils {
 
   def contextWithTasksDoneOnStartNotVisible(config: ProjectConfig, doneTasks: TechnicalTask*) = {
     val doneTaskIds = doneTasks.map(_.taskId).toSet
-    new ComputationContext(TasksDoneOnStartVisibleOnlyIfReopened(doneTaskIds), config)
+    new ComputationContext(TasksDoneInPreviousStatesNotVisible(doneTaskIds), config)
   }
 
 }

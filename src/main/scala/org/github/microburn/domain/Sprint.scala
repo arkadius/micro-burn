@@ -55,7 +55,7 @@ case class Sprint(id: Int,
     implicit val context = prepareComputationContext
     SprintHistory(
       sprintBase = sprintBase,
-      columnStates = columnStatesHistory,
+      columnStates = columnStatesHistory(context),
       sprintDetails = details
     )
   }
@@ -66,11 +66,7 @@ case class Sprint(id: Int,
   }
 
   private def prepareComputationContext(implicit config: ProjectConfig): ComputationContext = {
-    ComputationContext(initialAfterStartPlusAcceptableDelay, initiallyDoneTaskIds)
-  }
-
-  private def initiallyDoneTaskIds(implicit config: ProjectConfig): Set[String] = {
-    initialBoard.doneTasksIds
+    ComputationContext(initialAfterStartPlusAcceptableDelay, initialBoard.doneTasksIds)
   }
 
   private def sprintBase(implicit context: ComputationContext): SprintBase = {
@@ -90,21 +86,31 @@ case class Sprint(id: Int,
     initialDate.isAfter(startDatePlusAcceptableDelay)
   }
   
-  private def columnStatesHistory(implicit context: ComputationContext): Seq[DateWithColumnsState] = {
+  private def columnStatesHistory(initialContext: ComputationContext): Seq[DateWithColumnsState] = {
     val eventsSortedAndGrouped = events
       .groupBy(_.date)
       .toSeq
       .sortBy { case (date, group) => date }
       .map { case (date, group) => group }
 
-    val boardStatesCumulative = eventsSortedAndGrouped.scanLeft(initialBoard) { (prevBoard, currEventsGroup) =>
-      currEventsGroup.foldLeft(prevBoard) { (boardAcc, event) =>
-        boardAcc.plus(event)
+    implicit val config = initialContext.config
+    val initial = BoardWithContext(initialBoard, initialContext)
+    val boardStatesCumulative = eventsSortedAndGrouped.scanLeft(initial) { (accBoardWithContext, currEventsGroup) =>
+      currEventsGroup.foldLeft(accBoardWithContext) {
+        case (BoardWithContext(prevBoard, prevContext), event) =>
+          val accBoard = prevBoard.plus(event)
+          val accContext = prevContext.withUpdatedDoneTaskIds(accBoard.doneTasksIds)
+          BoardWithContext(accBoard, accContext)
       }
     }
 
-    boardStatesCumulative.map(_.columnsState)
+    boardStatesCumulative.map {
+      case BoardWithContext(boardState, context) =>
+        boardState.columnsState(context)
+    }
   }
+
+  case class BoardWithContext(board: BoardState, context: ComputationContext)
 }
 
 case class SprintUpdateResult(updatedSprint: Sprint,

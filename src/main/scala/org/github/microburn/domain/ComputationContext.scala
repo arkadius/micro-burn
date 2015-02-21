@@ -19,6 +19,10 @@ import scala.language.implicitConversions
 
 case class ComputationContext(private val tasksVisibilityDeterminer: TaskVisibilityDeterminer, config: ProjectConfig) {
   def isVisible(task: Task) = tasksVisibilityDeterminer.isVisible(task)(config)
+  
+  def withUpdatedDoneTaskIds(updatedDoneTaskIds: Set[String]): ComputationContext = {
+    copy(tasksVisibilityDeterminer = tasksVisibilityDeterminer.withUpdatedDoneTaskIds(updatedDoneTaskIds))
+  }
 }
 
 object ComputationContext {
@@ -35,19 +39,25 @@ object ComputationContextConversions {
 sealed trait TaskVisibilityDeterminer {
   def isVisible(task: Task)
                (implicit config: ProjectConfig): Boolean
+  
+  def withUpdatedDoneTaskIds(updatedDoneTaskIds: Set[String]): TaskVisibilityDeterminer
 }
 
 case object AllTasksVisible extends TaskVisibilityDeterminer {
   override def isVisible(task: Task)
                         (implicit config: ProjectConfig): Boolean = true
+  override def withUpdatedDoneTaskIds(updatedDoneTaskIds: Set[String]): TaskVisibilityDeterminer = this
 }
 
-case class TasksDoneOnStartVisibleOnlyIfReopened(tasksDoneOnStartIds: Set[String]) extends TaskVisibilityDeterminer {
+case class TasksDoneInPreviousStatesNotVisible(tasksDoneInPrevStatesIds: Set[String]) extends TaskVisibilityDeterminer {
   override def isVisible(task: Task)(implicit config: ProjectConfig): Boolean = {
-    !tasksDoneOnStartIds.contains(task.taskId) || isReopened(task)
+    !tasksDoneInPrevStatesIds.contains(task.taskId) || isReopened(task)
   }
 
   private def isReopened(task: Task)(implicit config: ProjectConfig): Boolean = !task.boardColumn.exists(_.isDoneColumn)
+
+  override def withUpdatedDoneTaskIds(updatedDoneTaskIds: Set[String]): TaskVisibilityDeterminer = 
+    copy(tasksDoneInPrevStatesIds = tasksDoneInPrevStatesIds intersect updatedDoneTaskIds)
 }
 
 object TaskVisibilityDeterminer {
@@ -55,6 +65,6 @@ object TaskVisibilityDeterminer {
     if (initialAfterStartPlusAcceptableDelay)
       AllTasksVisible
     else
-      TasksDoneOnStartVisibleOnlyIfReopened(initiallyDoneTaskIds)
+      TasksDoneInPreviousStatesNotVisible(initiallyDoneTaskIds)
   }
 }
