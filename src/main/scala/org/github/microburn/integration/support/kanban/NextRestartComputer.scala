@@ -61,9 +61,9 @@ class NextRestartComputer(restartPeriod: RepeatPeriod) {
     case days: EveryNDays =>
       date.getYear + "." + date.getDayOfYear.formatted("%03d")
     case weeks: EveryNWeeks =>
-      date.getWeekyear + "." + date.getWeekOfWeekyear.formatted("%2d")
+      date.getWeekyear + "." + date.getWeekOfWeekyear.formatted("%02d")
     case months: EveryNMonths =>
-      date.getYear + "." + date.getMonthOfYear.formatted("%2d")
+      date.getYear + "." + date.getMonthOfYear.formatted("%02d")
   }
 
 }

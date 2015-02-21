@@ -68,7 +68,6 @@ object ScrumManagementModeParser {
       case otherPeriodType =>
         throw new ParseException(s"Illegal period type: $otherPeriodType", -1)
     }
-    val sprintBaseMode = SprintBaseDetermineModeParser.parse(config).getOrElse(AutomaticOnScopeChangeMode)
     AutomaticManagementMode(period)
   }
 }
