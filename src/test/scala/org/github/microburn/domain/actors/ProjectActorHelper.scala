@@ -34,7 +34,7 @@ trait ProjectActorHelper extends Matchers {
     val projectRoot = config.dataRoot
     Path(projectRoot).deleteRecursively()
 
-    new ProjectActor(config, initialFetchToSprintStartAcceptableDelayMinutes = 1.second)
+    new ProjectActor(config)
   }
   
   def projectActorWithInitialSprint(sprint: Sprint)
@@ -43,7 +43,7 @@ trait ProjectActorHelper extends Matchers {
     Path(projectRoot).deleteRecursively()
     SprintRepository(new File(projectRoot, sprint.id.toString), sprint.id).saveSprint(sprint)
 
-    new ProjectActor(config, initialFetchToSprintStartAcceptableDelayMinutes = 1.second)
+    new ProjectActor(config)
   }
 
   def projectHasNoSprint(projectActor: ProjectActor): LAFuture[Unit] = {

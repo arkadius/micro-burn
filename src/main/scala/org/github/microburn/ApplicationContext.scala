@@ -51,7 +51,7 @@ object ApplicationContext {
         .withFallback(ConfigFactory.parseResources("defaults.conf"))
         .resolveWith(ConfigFactory.parseResources("predefined.conf"))
     val appConfig = ApplicationConfig(config)
-    val projectActor = new ProjectActor(appConfig.projectConfig, appConfig.durations.initialFetchToSprintStartAcceptableDelayMinutes)
+    val projectActor = new ProjectActor(appConfig.projectConfig)
     val integration = appConfig.integrationFactory(projectActor)
     val optionalAutomaticScrumManager =
       AutomaticScrumManagerActor.optionallyPrepareAutomaticScrumManager(
@@ -62,10 +62,7 @@ object ApplicationContext {
       )
 
     val updater = new ProjectUpdaterActor(integration, appConfig.durations.fetchPeriod)
-    val columnsHistoryProvider = new SprintColumnsHistoryProvider(
-      projectActor,
-      appConfig.durations.initialFetchToSprintStartAcceptableDelayMinutes
-    )(appConfig.projectConfig)
+    val columnsHistoryProvider = new SprintColumnsHistoryProvider(projectActor)(appConfig.projectConfig)
 
     new ApplicationContext(
       projectActor                  = projectActor,

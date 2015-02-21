@@ -28,12 +28,12 @@ import org.github.microburn.util.logging.Slf4jLogging
 import scala.collection.immutable.TreeMap
 import scala.concurrent.duration.FiniteDuration
 
-class ProjectActor(config: ProjectConfig, initialFetchToSprintStartAcceptableDelayMinutes: FiniteDuration)
+class ProjectActor(config: ProjectConfig)
   extends LiftActor with ListenerManager with Slf4jLogging {
 
   import org.github.microburn.util.concurrent.FutureEnrichments._
 
-  private val sprintFactory = new SprintActorFactory(config, initialFetchToSprintStartAcceptableDelayMinutes, this)
+  private val sprintFactory = new SprintActorFactory(config, this)
   private val projectRepo = ProjectRepository(config.dataRoot)
 
   private var sprintActors: TreeMap[Int, SprintActor] =

@@ -20,18 +20,16 @@ import java.util.Date
 import net.liftmodules.ng.Angular.NgModel
 import net.liftweb.actor.LAFuture
 import net.liftweb.common.Box
-import org.github.microburn.domain.actors.{GetStoryPointsHistory, ProjectActor, SprintHistory}
-import org.github.microburn.domain.{DateWithColumnsState, ProjectConfig}
+import org.github.microburn.domain.actors.{GetStoryPointsHistory, ProjectActor}
+import org.github.microburn.domain.{DateWithColumnsState, ProjectConfig, SprintHistory}
 import org.joda.time.DateTime
 
-import scala.concurrent.duration.FiniteDuration
 import scalaz.Scalaz._
 
-class SprintColumnsHistoryProvider(projectActor: ProjectActor,
-                                   initialFetchToSprintStartAcceptableDelayMinutes: FiniteDuration)
+class SprintColumnsHistoryProvider(projectActor: ProjectActor)
                                   (implicit config: ProjectConfig) {
-  import org.github.microburn.util.concurrent.FutureEnrichments._
   import org.github.microburn.util.concurrent.ActorEnrichments._
+  import org.github.microburn.util.concurrent.FutureEnrichments._
   
   def columnsHistory(sprintId: Int): LAFuture[Box[ColumnsHistory]] = {
     (projectActor ?? GetStoryPointsHistory(sprintId)).mapTo[Box[SprintHistory]].map { historyBox =>

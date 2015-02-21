@@ -22,13 +22,12 @@ import org.joda.time.DateTime
 
 import scala.concurrent.duration.FiniteDuration
 
-class SprintBaseStateDeterminer(initialFetchToSprintStartAcceptableDelayMinutes: FiniteDuration, baseDetermineMode: SprintBaseDetermineMode) {
+class SprintBaseStateDeterminer(baseDetermineMode: SprintBaseDetermineMode) {
 
   def baseForSprint(details: SprintDetails,
-                    initialDate: Date,
+                    initialAfterStartPlusAcceptableDelay: Boolean,
                     initialStoryPointsSum: BigDecimal,
                     initialDoneTasksStoryPointsSum: BigDecimal) = {
-    val initialAfterStartPlusAcceptableDelay = initialAfterStartPlusDelay(initialDate, details.start)
     val baseForStart = details.overriddenBaseStoryPointsSum getOrElse (baseDetermineMode match {
       case SpecifiedBaseMode(storyPoints) =>
         storyPoints
@@ -37,7 +36,6 @@ class SprintBaseStateDeterminer(initialFetchToSprintStartAcceptableDelayMinutes:
       case AutomaticOnScopeChangeMode =>
         ??? // FIXME
     })
-
     val baseForColumnChanges = computeBaseForColumnChanges(initialDoneTasksStoryPointsSum, initialAfterStartPlusAcceptableDelay, baseForStart)
     SprintBase(initialAfterStartPlusAcceptableDelay, baseForStart, baseForColumnChanges)
   }
@@ -56,13 +54,6 @@ class SprintBaseStateDeterminer(initialFetchToSprintStartAcceptableDelayMinutes:
     } else {
       baseForStart + initialDoneTasksStoryPointsSum
     }
-  }
-
-  private def initialAfterStartPlusDelay(initial: Date, startDate: Date): Boolean = {
-    val initialDate = new DateTime(initial)
-    val startDatePlusAcceptableDelay =
-      new DateTime(startDate).plusMillis(initialFetchToSprintStartAcceptableDelayMinutes.toMillis.toInt)
-    initialDate.isAfter(startDatePlusAcceptableDelay)
   }
 }
 

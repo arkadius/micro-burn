@@ -16,13 +16,17 @@
 package org.github.microburn.domain
 
 import java.io.File
+import java.util.concurrent.TimeUnit
 
 import com.typesafe.config.Config
+
+import scala.concurrent.duration._
 
 case class ProjectConfig(nonBacklogColumns: List[BoardColumn],
                          dataRoot: File,
                          defaultStoryPointsForUserStories: Option[BigDecimal],
                          splitSpBetweenTechnicalTasks: Boolean,
+                         initialFetchAfterSprintStartAcceptableDelay: FiniteDuration,
                          initiallyDoneNotVisibleForBoardState: Boolean,
                          dayOfWeekWeights: IndexedSeq[BigDecimal],
                          scrumManagementMode: ScrumManagementMode,
@@ -54,6 +58,7 @@ object ProjectConfig {
     val nonBacklogColumnsWithAtLeastOneDone = makeAtLeastOneColumnDone(nonBacklogColumns)
     val defaultStoryPointsForUserStrories = config.optional(_.getBigDecimal, "defaultStoryPointsForUserStrories")
     val splitSpBetweenTechnicalTasks = config.getBoolean("splitSpBetweenTechnicalTasks")
+    val initialFetchAfterSprintStartAcceptableDelay = config.getDuration("initialFetchAfterSprintStartAcceptableDelay", TimeUnit.MILLISECONDS).millis
     val initiallyDoneNotVisibleForBoardState = config.getBoolean("initiallyDoneNotVisibleForBoardState")
     val dataRoot = new File(config.getString("dataRoot"))
     val scrumManagementMode = ScrumManagementModeParser.parse(config)
@@ -67,6 +72,7 @@ object ProjectConfig {
       dataRoot = dataRoot,
       defaultStoryPointsForUserStories = defaultStoryPointsForUserStrories,
       splitSpBetweenTechnicalTasks = splitSpBetweenTechnicalTasks,
+      initialFetchAfterSprintStartAcceptableDelay = initialFetchAfterSprintStartAcceptableDelay,
       initiallyDoneNotVisibleForBoardState = initiallyDoneNotVisibleForBoardState,
       dayOfWeekWeights = parseDayOfWeekWeights(config),
       scrumManagementMode = scrumManagementMode,

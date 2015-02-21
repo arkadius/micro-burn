@@ -17,19 +17,14 @@ package org.github.microburn.domain
 
 import java.util.Date
 
+import org.github.microburn.util.logging.Slf4jLogging
+import org.joda.time.DateTime
+
 case class Sprint(id: Int,
                   details: SprintDetails,
                   private val initialBoard: BoardState,
                   currentBoard: BoardState,
-                  private val events: Seq[TaskEvent]) {
-
-  private def isActive = details.isActive
-
-  def initialDate: Date = initialBoard.date
-
-  def initialStoryPointsSum(implicit projectConfig: ProjectConfig): BigDecimal = initialBoard.userStoriesStoryPointsSum
-
-  def initialDoneTasksStoryPointsSum(implicit projectConfig: ProjectConfig): BigDecimal = initialBoard.doneTasksStoryPointsSum
+                  private val events: Seq[TaskEvent]) extends Slf4jLogging {
 
   def updateDetails(newDetails: SprintDetails)
                    (timestamp: Date): SprintUpdateResult = {
@@ -55,7 +50,34 @@ case class Sprint(id: Int,
     SprintUpdateResult(updatedSprint, newAddedEvents, changedDetails.isDefined, timestamp)
   }
   
-  def columnStatesHistory(implicit config: ProjectConfig): Seq[DateWithColumnsState] = {
+  def sprintHistory(implicit config: ProjectConfig): SprintHistory = measure("sprint history computation") {
+    SprintHistory(
+      sprintBase = sprintBase,
+      columnStates = columnStatesHistory,
+      sprintDetails = details
+    )
+  }
+
+  def baseStoryPointsForStart(implicit config: ProjectConfig): BigDecimal = sprintBase.baseStoryPointsForStart
+
+  private def sprintBase(implicit config: ProjectConfig): SprintBase = {
+    val baseDeterminer = new SprintBaseStateDeterminer(config.sprintBaseDetermineMode)
+    baseDeterminer.baseForSprint(
+      details,
+      initialAfterStartPlusAcceptableDelay,
+      initialBoard.userStoriesStoryPointsSum,
+      initialBoard.doneTasksStoryPointsSum
+    )
+  }
+
+  private def initialAfterStartPlusAcceptableDelay(implicit config: ProjectConfig): Boolean = {
+    val initialDate = new DateTime(initialBoard.date)
+    val startDatePlusAcceptableDelay =
+      new DateTime(details.start).plusMillis(config.initialFetchAfterSprintStartAcceptableDelay.toMillis.toInt)
+    initialDate.isAfter(startDatePlusAcceptableDelay)
+  }
+  
+  private def columnStatesHistory(implicit config: ProjectConfig): Seq[DateWithColumnsState] = {
     val eventsSortedAndGrouped = events
       .groupBy(_.date)
       .toSeq
@@ -83,3 +105,7 @@ object Sprint {
   def withEmptyEvents(id: Int, details: SprintDetails, state: BoardState): Sprint =
     Sprint(id, details, initialBoard = state, currentBoard = state, IndexedSeq.empty)
 }
+
+case class SprintHistory(sprintBase: SprintBase,
+                         columnStates: Seq[DateWithColumnsState],
+                         sprintDetails: SprintDetails)

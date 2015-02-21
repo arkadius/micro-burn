@@ -25,13 +25,11 @@ import org.github.microburn.repository.SprintRepository
 
 import scala.concurrent.duration.FiniteDuration
 
-class SprintActorFactory(config: ProjectConfig, initialFetchToSprintStartAcceptableDelayMinutes: FiniteDuration, changeNotifyingActor: LiftActor) {
-  private val baseDeterminer = new SprintBaseStateDeterminer(initialFetchToSprintStartAcceptableDelayMinutes, config.sprintBaseDetermineMode)
-
+class SprintActorFactory(config: ProjectConfig, changeNotifyingActor: LiftActor) {
   def fromRepo(sprintId: Int): Option[SprintActor] = {
     val repo = createRepo(sprintId)
     repo.loadSprint.map { sprint =>
-      new SprintActor(sprint)(repo, baseDeterminer, config, changeNotifyingActor)
+      new SprintActor(sprint)(repo, config, changeNotifyingActor)
     }
   }
 
@@ -46,7 +44,7 @@ class SprintActorFactory(config: ProjectConfig, initialFetchToSprintStartAccepta
       val sprint = Sprint.withEmptyEvents(sprintId, validatedDetails, BoardState(userStories.toIndexedSeq, timestamp))
       val repo = createRepo(sprintId)
       repo.saveSprint(sprint)
-      new SprintActor(sprint)(repo, baseDeterminer, config, changeNotifyingActor)
+      new SprintActor(sprint)(repo, config, changeNotifyingActor)
     }
   }
 

@@ -25,15 +25,6 @@ class SprintTest extends FlatSpec with Matchers with Inside {
 
   implicit val config = ProjectConfigUtils.defaultConfig
 
-  it should "give correct story points sum" in {
-    val sprint = SampleSprint.withEmptyEvents(
-      SampleTasks.openedUserStory(1),
-      SampleTasks.closedUserStory(2)
-    )
-
-    sprint.initialStoryPointsSum shouldBe 3
-  }
-
   it should "produce correct events for update" in {
     val taskInitiallyOpened = SampleTasks.openedUserStory(1)
     val taskInitiallyCompleted = SampleTasks.closedUserStory(2)
@@ -41,11 +32,9 @@ class SprintTest extends FlatSpec with Matchers with Inside {
     val sprintBeforeUpdate = SampleSprint.withEmptyEvents(taskInitiallyOpened, taskInitiallyCompleted)
 
     val sprintAfterFirstFinish = sprintBeforeUpdate.updateTasks(taskInitiallyOpened.close, taskInitiallyCompleted)
-    sprintAfterFirstFinish.initialStoryPointsSum shouldBe 3
     sprintAfterFirstFinish.storyPointsChangesValues shouldEqual Seq(2, 3)
 
     val sprintAfterSecReopen = sprintAfterFirstFinish.updateTasks(taskInitiallyOpened.close, taskInitiallyCompleted.reopen)
-    sprintAfterSecReopen.initialStoryPointsSum shouldBe 3
     sprintAfterSecReopen.storyPointsChangesValues shouldEqual Seq(2, 3, 1)
   }
 
@@ -99,8 +88,6 @@ class SprintTest extends FlatSpec with Matchers with Inside {
     afterAllFinish.storyPointsChangesValues shouldEqual Seq(0, 1, 2, 3)
   }
 
-  // TODO: test na pojawianie się / znikanie tasków technicznych
-
   private val dateIterator = Stream.from(100, 100).map { i => new Date(i.toLong) }.toIterable.iterator
 
   private def nextDate = dateIterator.next()
@@ -108,7 +95,7 @@ class SprintTest extends FlatSpec with Matchers with Inside {
   implicit class EnhancedSprint(sprint: Sprint) {
     def updateTasks(updatedTasks: UserStory*) = sprint.update(updatedTasks, sprint.details.toMajor)(nextDate).updatedSprint
 
-    def storyPointsChangesValues(implicit config: ProjectConfig): Seq[BigDecimal] = sprint.columnStatesHistory.map { dateWithStoryPoints =>
+    def storyPointsChangesValues(implicit config: ProjectConfig): Seq[BigDecimal] = sprint.sprintHistory.columnStates.map { dateWithStoryPoints =>
       dateWithStoryPoints.storyPointsForColumn(config.lastDoneColumn.index)
     }
   }

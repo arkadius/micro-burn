@@ -20,19 +20,17 @@ import java.util.Date
 import net.liftweb.actor.LiftActor
 import org.github.microburn.domain._
 import org.github.microburn.repository.SprintRepository
-import org.github.microburn.util.logging.Slf4jLogging
 
 class SprintActor(var sprint: Sprint)
                  (repo: SprintRepository,
-                  baseDeterminer: SprintBaseStateDeterminer,
                   config: ProjectConfig,
-                  changeNotifyingActor: LiftActor) extends LiftActor with Slf4jLogging {
+                  changeNotifyingActor: LiftActor) extends LiftActor {
 
   implicit val configImplicit = config
 
   override protected def messageHandler: PartialFunction[Any, Unit] = {
     case GetDetails =>
-      reply(DetailsWithBaseStoryPoints(sprint.details, sprintBase.baseStoryPointsForStart))
+      reply(DetailsWithBaseStoryPoints(sprint.details, sprint.baseStoryPointsForStart))
     case UpdateSprintDetails(sprintId, details, timestamp) =>
       require(sprintId == sprint.id)
       updateSprintAndReply(sprint.updateDetails(details)(timestamp))
@@ -41,23 +39,9 @@ class SprintActor(var sprint: Sprint)
       updateSprintAndReply(sprint.update(userStories, details)(timestamp))
     case GetStoryPointsHistory(sprintId: Int) =>
       require(sprintId == sprint.id)
-      // TODO: Obsłużyć initiallyDoneNotVisibleForBoardState - zebrać id tasków initial done i przekazywać jako kontekst
-      // obliczeń do innych metod (historia/bazowe sp) - tylko jeśli jest spełniony warunek initialNotAfterStartPlusAcceptableDelay
-      reply(SprintHistory(
-        sprintBase = sprintBase,
-        columnStates = measure("history computation")(sprint.columnStatesHistory),
-        sprintDetails = sprint.details
-      ))
+      reply(sprint.sprintHistory)
   }
 
-  private def sprintBase: SprintBase = {
-    baseDeterminer.baseForSprint(
-      sprint.details,
-      sprint.initialDate,
-      sprint.initialStoryPointsSum,
-      sprint.initialDoneTasksStoryPointsSum
-    )
-  }
 
   private def updateSprintAndReply(f: => SprintUpdateResult) = {
     val result = f
@@ -85,7 +69,3 @@ case class UpdateSprintDetails(sprintId: Int, details: SprintDetails, timestamp:
 case class UpdateSprint(sprintId: Int, userStories: Seq[UserStory], details: MajorSprintDetails, timestamp: Date)
 
 case class GetStoryPointsHistory(sprintId: Int)
-
-case class SprintHistory(sprintBase: SprintBase,
-                         columnStates: Seq[DateWithColumnsState],
-                         sprintDetails: SprintDetails)
