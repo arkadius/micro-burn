@@ -46,11 +46,7 @@ object ApplicationContext {
 
   private lazy val context = {
     val configFile = System.getProperty("config", "application.conf")
-    val config =
-      ConfigFactory.parseFile(new File(configFile))
-        .withFallback(ConfigFactory.parseResources("defaults.conf"))
-        .resolveWith(ConfigFactory.parseResources("predefined.conf"))
-    val appConfig = ApplicationConfig(config)
+    val appConfig = ApplicationConfig(new File(configFile))
     val projectActor = new ProjectActor(appConfig.projectConfig)
     val integration = appConfig.integrationFactory(projectActor)
     val optionalAutomaticScrumManager =

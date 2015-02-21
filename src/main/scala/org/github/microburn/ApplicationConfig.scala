@@ -15,9 +15,10 @@
  */
 package org.github.microburn
 
+import java.io.File
 import java.util.concurrent.TimeUnit
 
-import com.typesafe.config.Config
+import com.typesafe.config.{ConfigFactory, Config}
 import org.github.microburn.domain.{ScrumManagementMode, ProjectConfig}
 import org.github.microburn.domain.actors.ProjectActor
 import org.github.microburn.integration.{Integration, IntegrationConfigurer}
@@ -32,7 +33,14 @@ case class ApplicationConfig(connectorConfig: ConnectorConfig,
                              integrationFactory: ProjectActor => Integration)
 
 object ApplicationConfig {
-  
+  def apply(configFile: File): ApplicationConfig = {
+    val config =
+      ConfigFactory.parseFile(configFile)
+        .withFallback(ConfigFactory.parseResources("defaults.conf"))
+        .resolveWith(ConfigFactory.parseResources("predefined.conf"))
+    ApplicationConfig(config)
+  }
+
   def apply(config: Config): ApplicationConfig = {
     val durations = DurationsConfig(config.getConfig("durations"))
     val projectConfig = ProjectConfig(config.getConfig("project"))
@@ -49,7 +57,6 @@ object ApplicationConfig {
       authorizationConfig = AuthorizationConfig(config.getConfig("authorization")),
       integrationFactory = integrationFactory)
   }
-
 }
 
 case class ConnectorConfig(port: Int, contextPath: String)
