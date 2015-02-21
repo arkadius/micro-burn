@@ -19,6 +19,7 @@ import java.util.Date
 
 import org.github.microburn.util.logging.Slf4jLogging
 import org.joda.time.DateTime
+import scalaz.Scalaz._
 
 case class Sprint(id: Int,
                   details: SprintDetails,
@@ -50,69 +51,63 @@ case class Sprint(id: Int,
     SprintUpdateResult(updatedSprint, newAddedEvents, changedDetails.isDefined, timestamp)
   }
   
+  def baseStoryPointsForStart(implicit config: ProjectConfig): BigDecimal =
+    sprintHistory.sprintBase
+
   def sprintHistory(implicit config: ProjectConfig): SprintHistory = measure("sprint history computation") {
-    implicit val context = prepareHistoricalKnowledge
-    SprintHistory(
-      sprintBase = sprintBase,
-      columnStates = columnStatesHistory(context),
-      sprintDetails = details
-    )
-  }
-  
-  def baseStoryPointsForStart(implicit config: ProjectConfig): BigDecimal = {
-    implicit val context = prepareHistoricalKnowledge
-    sprintBase.baseStoryPointsForStart
-  }
+    val boardStatesCumulative = cumulativeBoardStatesWithKnowledges
 
-  private def prepareHistoricalKnowledge(implicit config: ProjectConfig): SprintHistoricalKnowledge = {
-    SprintHistoricalKnowledge(initialAfterStartPlusAcceptableDelay, initialBoard.doneTasksIds)
-  }
-
-  private def sprintBase(implicit config: ProjectConfig, knowledge: SprintHistoricalKnowledge): SprintBase = {
     val baseDeterminer = new SprintBaseStateDeterminer(config.sprintBaseDetermineMode)
-    baseDeterminer.baseForSprint(
-      details,
-      initialAfterStartPlusAcceptableDelay,
-      initialBoard.userStoriesStoryPointsSum,
-      initialBoard.doneTasksStoryPointsSum
-    )
-  }
+    val BoardStateWithHistoricalKnowledge(headBoardState, headKnowledge) = boardStatesCumulative.head
+    implicit val implicitKnowledge = headKnowledge
+    val storyPointsSumOnStart = headBoardState.userStoriesStoryPointsSum
+    val base = baseDeterminer.baseForSprint(details, storyPointsSumOnStart)
 
-  def initialAfterStartPlusAcceptableDelay(implicit config: ProjectConfig): Boolean = {
-    val initialDate = new DateTime(initialBoard.date)
-    val startDatePlusAcceptableDelay =
-      new DateTime(details.start).plusMillis(config.initialFetchAfterSprintStartAcceptableDelay.toMillis.toInt)
-    initialDate.isAfter(startDatePlusAcceptableDelay)
-  }
-  
-  private def columnStatesHistory(initialKnowledge: SprintHistoricalKnowledge)
-                                 (implicit config: ProjectConfig): Seq[DateWithColumnsState] = {
-    val boardStatesCumulative: Seq[BoardStateWithHistoricalKnowledge] = cumulativeBoardStatesHistory(initialKnowledge)
-
-    boardStatesCumulative.map {
+    val columnStatesHistory = boardStatesCumulative.map {
       case BoardStateWithHistoricalKnowledge(boardState, knowledge) =>
         implicit val implicitKnowledge = knowledge
         boardState.columnsState
     }
+
+    SprintHistory(
+      sprintBase = base,
+      columnStates = columnStatesHistory,
+      sprintDetails = details
+    )
   }
 
-  private def cumulativeBoardStatesHistory(initialKnowledge: SprintHistoricalKnowledge)
-                                          (implicit config: ProjectConfig): Seq[BoardStateWithHistoricalKnowledge] = {
+  private def cumulativeBoardStatesWithKnowledges(implicit config: ProjectConfig): List[BoardStateWithHistoricalKnowledge] = {
     val eventsSortedAndGrouped = events
       .groupBy(_.date)
       .toSeq
       .sortBy { case (date, group) => date}
       .map { case (date, group) => group}
 
-    val initial = BoardStateWithHistoricalKnowledge(initialBoard, initialKnowledge)
-    eventsSortedAndGrouped.scanLeft(initial) { (accBoardWithContext, currEventsGroup) =>
-      currEventsGroup.foldLeft(accBoardWithContext) {
-        case (BoardStateWithHistoricalKnowledge(prevBoard, prevContext), event) =>
-          val accBoard = prevBoard.plus(event)
-          val accKnowledge = prevContext.withNextStateDoneTaskIds(accBoard.doneTasksIds)
-          BoardStateWithHistoricalKnowledge(accBoard, accKnowledge)
+    val optionalSimulatedBoardStateOnStart = initialAfterStartPlusAcceptableDelay.option {
+      initialBoard.openNested.copy(date = details.start)
+    }
+
+    val boardStates = optionalSimulatedBoardStateOnStart.toList ::: eventsSortedAndGrouped.toList.scanLeft(initialBoard) { (cumulativeBoard, currEventsGroup) =>
+      currEventsGroup.foldLeft(cumulativeBoard) { (accBoard, event) =>
+        accBoard.plus(event)
       }
     }
+
+    val (startBoardState :: tailBoardStates) = boardStates
+    val startStateWithKnowledge = BoardStateWithHistoricalKnowledge(startBoardState, SprintHistoricalKnowledge(startBoardState.doneTasksIds))
+
+    tailBoardStates.scanLeft(startStateWithKnowledge) {
+      case (BoardStateWithHistoricalKnowledge(_, prevKnowledge), nextState) =>
+        val cumulativeKnowledge = prevKnowledge.withNextStateDoneTaskIds(nextState.doneTasksIds)
+        BoardStateWithHistoricalKnowledge(nextState, cumulativeKnowledge)
+    }
+  }
+
+  private def initialAfterStartPlusAcceptableDelay(implicit config: ProjectConfig): Boolean = {
+    val initialDate = new DateTime(initialBoard.date)
+    val startDatePlusAcceptableDelay =
+      new DateTime(details.start).plusMillis(config.initialFetchAfterSprintStartAcceptableDelay.toMillis.toInt)
+    initialDate.isAfter(startDatePlusAcceptableDelay)
   }
 
   case class BoardStateWithHistoricalKnowledge(board: BoardState, knowledge: SprintHistoricalKnowledge)
@@ -130,6 +125,6 @@ object Sprint {
     Sprint(id, details, initialBoard = state, currentBoard = state, IndexedSeq.empty)
 }
 
-case class SprintHistory(sprintBase: SprintBase,
+case class SprintHistory(sprintBase: BigDecimal,
                          columnStates: Seq[DateWithColumnsState],
                          sprintDetails: SprintDetails)

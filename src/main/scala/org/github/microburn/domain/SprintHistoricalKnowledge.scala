@@ -25,12 +25,3 @@ case class SprintHistoricalKnowledge(private val tasksDoneAndNotReopenedInPrevSt
   def withNextStateDoneTaskIds(updatedDoneTaskIds: Set[String]): SprintHistoricalKnowledge =
     copy(tasksDoneAndNotReopenedInPrevStatesIds = tasksDoneAndNotReopenedInPrevStatesIds intersect updatedDoneTaskIds)
 }
-
-object SprintHistoricalKnowledge {
-  def apply(initialAfterStartPlusAcceptableDelay: Boolean, initiallyDoneTaskIds: Set[String])(implicit config: ProjectConfig): SprintHistoricalKnowledge = {
-    if (initialAfterStartPlusAcceptableDelay)
-      SprintHistoricalKnowledge(Set.empty)
-    else
-      SprintHistoricalKnowledge(initiallyDoneTaskIds)
-  }
-}

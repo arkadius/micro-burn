@@ -36,9 +36,6 @@ case class BoardState(userStories: Seq[UserStory], date: Date) extends HavingNes
       if knowledge.shouldBeUsedInCalculations(userStory)
     } yield userStory.storyPointsSum).sum
 
-  def doneTasksStoryPointsSum(implicit config: ProjectConfig, knowledge: SprintHistoricalKnowledge): BigDecimal =
-    tasksForColumnsMatching(_.isDoneColumn).map(_.storyPointsWithoutSubTasks).sum
-
   def diff(other: BoardState): Seq[TaskEvent] = nestedDiff(other)(other.date)
 
   def plus(event: TaskEvent): BoardState = event match {
@@ -98,18 +95,13 @@ case class BoardState(userStories: Seq[UserStory], date: Date) extends HavingNes
 
   private def storyPointsOnRightFromColumn(columnIndex: Int)
                                           (implicit config: ProjectConfig, knowledge: SprintHistoricalKnowledge) =
-    tasksForColumnsMatching(_.index >= columnIndex).map(_.storyPointsWithoutSubTasks).sum
-
-  private def tasksForColumnsMatching(matchColumn: BoardColumn => Boolean)
-                                     (implicit config: ProjectConfig, knowledge: SprintHistoricalKnowledge): Seq[Task] = {
-    for {
+    (for {
       userStory <- notBacklogUserStories
       task <- userStory.flattenTasks
       if knowledge.shouldBeUsedInCalculations(task)
       configuredTasksBoardColumn <- task.boardColumn
-      if matchColumn(configuredTasksBoardColumn)
-    } yield task
-  }
+      if configuredTasksBoardColumn.index >= columnIndex
+    } yield task.storyPointsWithoutSubTasks).sum
 
   private def notBacklogUserStories(implicit config: ProjectConfig): Seq[UserStory] =
     userStories.filter(userStory => userStory.boardColumn.isDefined)
@@ -117,5 +109,4 @@ case class BoardState(userStories: Seq[UserStory], date: Date) extends HavingNes
   override def toString: String = {
     userStories.toSeq.sortBy(_.taskId).map(_.toString).mkString(",\n")
   }
-
 }

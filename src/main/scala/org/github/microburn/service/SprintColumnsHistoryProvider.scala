@@ -38,20 +38,17 @@ class SprintColumnsHistoryProvider(projectActor: ProjectActor)
   }
 
   private def extractColumnsHistory(history: SprintHistory): ColumnsHistory = {
-    val toPrepend = history.sprintBase.initialAfterStartPlusAcceptableDelay.option {
-      DateWithColumnsState.zero(history.sprintDetails.start)
-    }.toSeq
     val toAppend = computeToAppend(history).toSeq
-    val fullHistory = toPrepend ++ history.columnStates ++ toAppend
+    val fullHistory = history.columnStates ++ toAppend
 
-    val baseIndexOnSum = DateWithColumnsState.constIndexOnSum(history.sprintBase.baseStoryPointsForColumnChanges)
+    val baseIndexOnSum = DateWithColumnsState.constIndexOnSum(history.sprintBase)
     val withBaseAdded = fullHistory.map(_.multiply(-1).plus(baseIndexOnSum))
 
     val columnsHistory = unzipByColumn(withBaseAdded)
     val startDate = new DateTime(history.sprintDetails.start)
     val endDate = new DateTime(history.sprintDetails.end)
 
-    val estimate = computeEstimate(startDate, endDate, history.sprintBase.baseStoryPointsForStart)
+    val estimate = computeEstimate(startDate, endDate, history.sprintBase)
 
     val columns = estimate :: columnsHistory
     ColumnsHistory(startDate.getMillis, columns)

@@ -17,7 +17,7 @@ package org.github.microburn.domain
 
 import java.util.Date
 
-trait HavingNestedTasks[NestedTaskType <: Task with ComparableWith[NestedTaskType]] { self =>
+trait HavingNestedTasks[NestedTaskType <: Task with ComparableWith[NestedTaskType] with Openable[NestedTaskType]] { self =>
   type Self >: self.type <: HavingNestedTasks[NestedTaskType]
 
   protected def nestedTasks: Seq[NestedTaskType]
@@ -56,5 +56,12 @@ trait HavingNestedTasks[NestedTaskType <: Task with ComparableWith[NestedTaskTyp
       case (Some(definedThisTask), None)  => Seq(TaskRemoved(definedThisTask))
       case (Some(definedThisTask), Some(definedOtherTask)) => definedThisTask.diff(definedOtherTask)
     }
+  }
+
+  def openNested: Self = {
+    val openedNested = nestedTasks.map { nested =>
+      nested.open
+    }
+    updateNestedTasks(openedNested)
   }
 }

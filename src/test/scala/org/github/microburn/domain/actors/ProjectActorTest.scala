@@ -54,7 +54,7 @@ class ProjectActorTest extends FlatSpec with Matchers with ProjectActorHelper {
 
     val sprintHistoryBox = (projectActor ?? GetStoryPointsHistory(sprint.id)).mapTo[Box[SprintHistory]].await(5.seconds)
     val sprintHistory = sprintHistoryBox.openOrThrowException("")
-    sprintHistory.sprintBase.baseStoryPointsForColumnChanges shouldEqual 1
+    sprintHistory.sprintBase shouldEqual 1
     val completedColumnHistory = sprintHistory.columnStates.map(_.storyPointsForColumn(config.lastDoneColumn.index))
     completedColumnHistory shouldEqual Seq(0, 1)
   }

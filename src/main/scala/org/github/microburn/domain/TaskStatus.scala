@@ -19,3 +19,6 @@ sealed trait TaskStatus
 
 case class SpecifiedStatus(status: String) extends TaskStatus
 case object TaskCompletedStatus extends TaskStatus
+
+// used only for purpose of simulating of board start state
+case object TaskOpenedStatus extends TaskStatus

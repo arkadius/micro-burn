@@ -118,13 +118,13 @@ class SprintTest extends FlatSpec with Matchers with Inside {
 
     def reopen(implicit config: ProjectConfig): UserStory = {
       val reopenedTechnicalTasks = userStory.technicalTasksWithoutParentId.map(_.reopen)
-      userStory.copy(status = SpecifiedStatus(ProjectConfigUtils.firstNotCompletedStatus), technicalTasksWithoutParentId = reopenedTechnicalTasks)
+      userStory.copy(status = SpecifiedStatus(ProjectConfigUtils.firstNotDoneStatus), technicalTasksWithoutParentId = reopenedTechnicalTasks)
     }
   }
 
   implicit class EnhancedTechnicalTask(technical: TechnicalTask) {
     def close(implicit config: ProjectConfig): TechnicalTask = technical.copy(status = TaskCompletedStatus)
 
-    def reopen(implicit config: ProjectConfig): TechnicalTask = technical.copy(status = SpecifiedStatus(ProjectConfigUtils.firstNotCompletedStatus))
+    def reopen(implicit config: ProjectConfig): TechnicalTask = technical.copy(status = SpecifiedStatus(ProjectConfigUtils.firstNotDoneStatus))
   }
 }

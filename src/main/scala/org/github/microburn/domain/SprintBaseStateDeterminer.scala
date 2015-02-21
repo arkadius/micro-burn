@@ -18,38 +18,14 @@ package org.github.microburn.domain
 class SprintBaseStateDeterminer(baseDetermineMode: SprintBaseDetermineMode) {
 
   def baseForSprint(details: SprintDetails,
-                    initialAfterStartPlusAcceptableDelay: Boolean,
-                    initialStoryPointsSum: BigDecimal,
-                    initialDoneTasksStoryPointsSum: BigDecimal) = {
-    val baseForStart = details.overriddenBaseStoryPointsSum getOrElse (baseDetermineMode match {
+                    storyPointsSumOnStart: BigDecimal): BigDecimal = {
+    details.overriddenBaseStoryPointsSum getOrElse (baseDetermineMode match {
       case SpecifiedBaseMode(storyPoints) =>
         storyPoints
       case AutomaticOnSprintStartMode =>
-        computeBaseForStart(initialStoryPointsSum, initialDoneTasksStoryPointsSum, initialAfterStartPlusAcceptableDelay)
+        storyPointsSumOnStart
       case AutomaticOnScopeChangeMode =>
         ??? // FIXME
     })
-    val baseForColumnChanges = computeBaseForColumnChanges(initialDoneTasksStoryPointsSum, initialAfterStartPlusAcceptableDelay, baseForStart)
-    SprintBase(initialAfterStartPlusAcceptableDelay, baseForStart, baseForColumnChanges)
-  }
-
-  private def computeBaseForStart(initialStoryPointsSum: BigDecimal, initialDoneTasksStoryPointsSum: BigDecimal, initialAfterStartPlusAcceptableDelay: Boolean): BigDecimal = {
-    if (initialAfterStartPlusAcceptableDelay) {
-      initialStoryPointsSum
-    } else {
-      initialStoryPointsSum - initialDoneTasksStoryPointsSum
-    }
-  }
-
-  private def computeBaseForColumnChanges(initialDoneTasksStoryPointsSum: BigDecimal, initialAfterStartPlusAcceptableDelay: Boolean, baseForStart: BigDecimal): BigDecimal = {
-    if (initialAfterStartPlusAcceptableDelay) {
-      baseForStart
-    } else {
-      baseForStart + initialDoneTasksStoryPointsSum
-    }
   }
 }
-
-case class SprintBase(initialAfterStartPlusAcceptableDelay: Boolean,
-                      baseStoryPointsForStart: BigDecimal,
-                      baseStoryPointsForColumnChanges: BigDecimal)

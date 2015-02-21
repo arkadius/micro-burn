@@ -38,6 +38,7 @@ sealed trait Task { self =>
   def boardColumn(implicit config: ProjectConfig): Option[BoardColumn] = status match {
     case SpecifiedStatus(status) => config.boardColumn(status)
     case TaskCompletedStatus => Some(config.lastDoneColumn)
+    case TaskOpenedStatus => Some(config.firstNotDoneColumn)
   }
 }
 
@@ -45,7 +46,9 @@ case class UserStory(taskId: String,
                      taskName: String,
                      optionalStoryPoints: Option[BigDecimal],
                      technicalTasksWithoutParentId: IndexedSeq[TechnicalTask],
-                     status: TaskStatus) extends Task with ComparableWith[UserStory] with HavingNestedTasks[TechnicalTaskWithParent] {
+                     status: TaskStatus)
+  extends Task with ComparableWith[UserStory] with Openable[UserStory] with HavingNestedTasks[TechnicalTaskWithParent] {
+
   private final val SP_SPLITTED_BETWEEN_TECHICAL_SCALE: Int = 1
 
   override type Self = UserStory
@@ -112,6 +115,10 @@ case class UserStory(taskId: String,
     }
   }
 
+  override def open: Self = openSelf.openNested
+
+  override protected def updateStatus(status: TaskStatus): UserStory = copy(status = status)
+
   override def toString: String = {
     s"""UserStory(id = ${taskId.take(5)}
        |${technicalTasksWithoutParentId.map(_.toString).mkString(",\n")}
@@ -121,7 +128,9 @@ case class UserStory(taskId: String,
 }
 
 case class TechnicalTaskWithParent(technical: TechnicalTask,
-                                   parent: UserStory) extends Task with ComparableWith[TechnicalTaskWithParent] {
+                                   parent: UserStory)
+  extends Task with ComparableWith[TechnicalTaskWithParent] with Openable[TechnicalTaskWithParent] {
+  
   override def parentUserStoryId = parent.taskId
 
   override def taskId: String = technical.taskId
@@ -142,9 +151,13 @@ case class TechnicalTaskWithParent(technical: TechnicalTask,
   override def diff(other: TechnicalTaskWithParent)(implicit timestamp: Date): Seq[TaskEvent] = {
     selfDiff(other)
   }
+
+  override def open: TechnicalTaskWithParent = openSelf
+
+  override protected def updateStatus(status: TaskStatus): TechnicalTaskWithParent = copy(technical = technical.copy(status = status))
 }
 
-trait ComparableWith[OtherTaskType <: Task with ComparableWith[_]] { self: Task =>
+trait ComparableWith[OtherTaskType <: Task with ComparableWith[OtherTaskType]] { self: Task =>
   def diff(other: OtherTaskType)(implicit timestamp: Date): Seq[TaskEvent]
 
   protected def selfDiff(other: OtherTaskType)(implicit timestamp: Date): Seq[TaskEvent] = {
@@ -152,6 +165,14 @@ trait ComparableWith[OtherTaskType <: Task with ComparableWith[_]] { self: Task 
       other.optionalStoryPoints != this.optionalStoryPoints ||
       other.status != this.status).option(TaskUpdated(other)).toSeq
   }
+}
+
+trait Openable[Self <: Task with Openable[Self]] { self: Task =>
+  def open: Self
+
+  protected def openSelf: Self = updateStatus(TaskOpenedStatus)
+
+  protected def updateStatus(status: TaskStatus): Self
 }
 
 case class TechnicalTask(taskId: String,

@@ -38,6 +38,11 @@ case class ProjectConfig(nonBacklogColumns: List[BoardColumn],
 
   def boardColumn(status: String): Option[BoardColumn] = statuses.get(status)
 
+  def firstNotDoneColumn: BoardColumn = {
+    val notDoneColumns = nonBacklogColumns.filterNot(_.isDoneColumn)
+    notDoneColumns.head
+  }
+
   def lastDoneColumn: BoardColumn = {
     val doneColumns = nonBacklogColumns.filter(_.isDoneColumn)
     doneColumns.last
