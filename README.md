@@ -5,7 +5,7 @@ micro-burn
 
 # Overview
 
-**micro-burn** is a simple microservice providing burndownchart. At this moment it has **[Trello](http:/trello.com)** and **Jira Agile** integration. If you want to contribute and add new provider, take a look at [Example provider implementation](https://github.com/arkadius/micro-burn/tree/master/src/main/scala/org/github/microburn/integration/trello) and send me a PR.
+**micro-burn** is a simple microservice providing burndown chart. At this moment it has **[Trello](http:/trello.com)** and **Jira Agile** integration. If you want to contribute and add new provider, take a look at [Example provider implementation](https://github.com/arkadius/micro-burn/tree/master/src/main/scala/org/github/microburn/integration/trello) and send me a PR.
 
 # Run
 
