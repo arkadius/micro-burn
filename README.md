@@ -5,7 +5,7 @@ micro-burn
 
 # Overview
 
-micro-burn is a simple microservice providing burndownchart. At this moment it has **Trello** and **Jira Agile** integration. If you want to contribute and add new provider, take a look at [Example provider implementation](https://github.com/arkadius/micro-burn/tree/master/src/main/scala/org/github/microburn/integration/trello) and send me a PR.
+**micro-burn** is a simple microservice providing burndownchart. At this moment it has **Trello** and **Jira Agile** integration. If you want to contribute and add new provider, take a look at [Example provider implementation](https://github.com/arkadius/micro-burn/tree/master/src/main/scala/org/github/microburn/integration/trello) and send me a PR.
 
 # Run
 
@@ -20,9 +20,9 @@ To run application you must provide at least integration service: trello/jira co
 
 ## Trello configuration
 
-By default, card without story points will have zero story points. If you want to define some, you can add them in curly braces before task name e.g. "(5) Task".
+By default, card without story points will have zero story points. If you want to define some, you can add them in curly braces before task name e.g. *"(5) Task"*.
 You can also use [Scrum for trello](http://scrumfortrello.com/) extension for your browser. Also you can specify *project.defaultStoryPointsForUserStories*.
-Checklist items are treated as technical tasks, you can also specify story points for them, but also you can turn on splitSpBetweenTechnicalTasks and
+Checklist items are treated as technical tasks, you can also specify story points for them, but also you can turn on *splitSpBetweenTechnicalTasks* and
 story points from cards will be splitted between checklist items.
 
 ### Sample configuration
@@ -72,16 +72,16 @@ A: From *https://trello.com/1/members/me?key=8b5ab0f2d93cb4717d15876fda44813c&to
 Q: How can I get boardColumns<br>
 A: From *https://trello.com/1/boards/${trello.boardId}/lists?key=8b5ab0f2d93cb4717d15876fda44813c&token=${trello.token}*
 
-Q: What is it backlogColumn/doneColumn?<br>
+Q: What is *backlogColumn*/*doneColumn*?<br>
 A: You need to mark column as backlogColumn if you keep there long-term planned cards (those cards will be not shown in burndown). Done column will be drawn in black color on chart.
 
 ## Jira configuration
 
-[CONFIGURATION.md](https://github.com/arkadius/micro-burn/blob/master/JIRA.md)
+[Read more](https://github.com/arkadius/micro-burn/blob/master/JIRA.md)
 
 ## Additional settings
 
-[CONFIGURATION.md](https://github.com/arkadius/micro-burn/blob/master/SETTINGS.md)
+[Read more](https://github.com/arkadius/micro-burn/blob/master/SETTINGS.md)
 
 # Implementation notice
 
@@ -89,7 +89,7 @@ As a web framework was used great scala framework [lift](https://github.com/lift
 For a bridge with Angular was used [lift-ng](https://github.com/joescii/lift-ng).<br>
 Charts where drawed in [rickshaw](https://github.com/shutterstock/rickshaw).<br>
 
-micro-burn is a microservice. It integrates with 3rd-part tools by REST API. Application uses event souring – in the date folder there are kept: initially fetched board state, last (snapshot state) and task events in CSV format. Application will show only changes which were collected during its run. All other changes will be unavailable.
+**micro-burn** integrates with 3rd-part tools by REST API. Application uses *event souring* – in the date folder there are kept: initially fetched board state, last (snapshot state) and task events in CSV format. Application will show only changes which were collected during its run. All other changes will be unavailable.
 
 # License
 
