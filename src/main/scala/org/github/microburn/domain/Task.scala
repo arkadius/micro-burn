@@ -33,7 +33,6 @@ sealed trait Task { self =>
   def taskAdded(implicit timestamp: Date): Seq[TaskAdded]
 
   def storyPointsWithoutSubTasks(implicit config: ProjectConfig): BigDecimal
-  def storyPointsOfSelf(implicit config: ProjectConfig): BigDecimal
 
   def boardColumn(implicit config: ProjectConfig): Option[BoardColumn] = status match {
     case SpecifiedStatus(status) => config.boardColumn(status)
@@ -86,16 +85,16 @@ case class UserStory(taskId: String,
   def flattenTasks: List[Task] = this :: nestedTasks.toList
 
   def storyPointsSum(implicit config: ProjectConfig, knowledge: SprintHistoricalKnowledge): BigDecimal = {
-    val diff = storyPointsOfSelf - nestedTasks.filterNot(knowledge.shouldBeUsedInCalculations).map(_.storyPointsOfSelf).sum
+    val diff = storyPointsOfSelf - nestedTasks.filterNot(knowledge.shouldBeUsedInCalculations).map(_.storyPointsWithoutSubTasks).sum
     diff.max(BigDecimal(0))
   }
 
   override def storyPointsWithoutSubTasks(implicit config: ProjectConfig): BigDecimal = {
-    val diff = storyPointsOfSelf - nestedTasks.map(_.storyPointsOfSelf).sum
+    val diff = storyPointsOfSelf - nestedTasks.map(_.storyPointsWithoutSubTasks).sum
     diff.max(BigDecimal(0))
   }
 
-  override def storyPointsOfSelf(implicit config: ProjectConfig): BigDecimal  = {
+  def storyPointsOfSelf(implicit config: ProjectConfig): BigDecimal  = {
     optionalStoryPoints orElse
       config.defaultStoryPointsForUserStories getOrElse
       BigDecimal(0)
@@ -140,11 +139,8 @@ case class TechnicalTaskWithParent(technical: TechnicalTask,
 
   override def isTechnicalTask: Boolean = true
 
-  override def storyPointsOfSelf(implicit config: ProjectConfig): BigDecimal =
-    optionalStoryPoints getOrElse parent.storyPointsToSplitPerTechnical
-
   override def storyPointsWithoutSubTasks(implicit config: ProjectConfig): BigDecimal =
-    storyPointsOfSelf
+    optionalStoryPoints getOrElse parent.storyPointsToSplitPerTechnical
 
   override def taskAdded(implicit timestamp: Date): Seq[TaskAdded] = Seq(TaskAdded(this))
 
