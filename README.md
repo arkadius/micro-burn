@@ -97,4 +97,4 @@ The micro-burn is released under version 2.0 of the [Apache License](http://www.
 
 # Screenshot
 
-![screenshot](https://raw.githubusercontent.com/arkadius/micro-burn/screenshots/micro-burn.png)
+![screenshot](https://raw.githubusercontent.com/arkadius/micro-burn/screenshots/sprint-management.png)
