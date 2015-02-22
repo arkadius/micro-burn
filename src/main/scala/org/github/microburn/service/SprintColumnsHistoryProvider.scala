@@ -64,8 +64,7 @@ class SprintColumnsHistoryProvider(projectActor: ProjectActor)
   }
 
   private def unzipByColumn(zipped: Seq[DateWithColumnsState]): List[ColumnHistory] = {
-    val boardColumnsWithDroppedBacklog = config.nonBacklogColumns.drop(1)
-    boardColumnsWithDroppedBacklog.map { column =>
+    config.nonBacklogColumns.map { column =>
       val storyPointsForColumn = zipped.map { allColumnsInfo =>
         val storyPoints = allColumnsInfo.storyPointsForColumn(column.index)
         HistoryProbe(allColumnsInfo.date, storyPoints)

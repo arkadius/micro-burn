@@ -357,7 +357,8 @@ app.directive('sprintChart', ['$cookies', function ($cookies) {
             } else {
               column.color = "rgba(0, 0, 255, 0." + i + ")";
             }
-            if ($cookies["disabled_" + i]) {
+            var storedEnabled = $cookies["enabled_" + i];
+            if (storedEnabled == "0" || !storedEnabled && i == 1) { // pierwsza kolumna bez zmiany scope'a będzie pokazywała 0
               column.disabled = true;
             }
             column.data.forEach(function (probe) {
@@ -386,13 +387,13 @@ app.directive('sprintChart', ['$cookies', function ($cookies) {
             }
             s.disabled = true;
             scope.$apply(function () {
-              $cookies["disabled_" + index] = '1';
+              $cookies["enabled_" + index] = '0';
             });
           };
           s.enable = function () {
             s.disabled = false;
             scope.$apply(function () {
-              delete $cookies["disabled_" + index];
+              $cookies["enabled_" + index] = '1';
             });
           };
         });
