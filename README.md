@@ -5,72 +5,83 @@ micro-burn
 
 # Overview
 
-micro-burn is simple microservice providing burndownchart. At this moment it has **Jira Agile** integration. If you want to contribute and add new provider, take a look at [Example provider implementation](https://github.com/arkadius/micro-burn/tree/master/src/main/scala/org/github/microburn/integration/jira) and send me a PR.
-
-Q: Why to write another burdownchart if Jira Agile already have it?<br>
-A: Because Jira Agile's burdownchart has some drawbacks:
-* it doesn't report points for completion of subtasks
-* it treats new added to sprint tasks as a sprint regress
-* it shows only last column changes
+micro-burn is a simple microservice providing burndownchart. At this moment it has **Trello** and **Jira Agile** integration. If you want to contribute and add new provider, take a look at [Example provider implementation](https://github.com/arkadius/micro-burn/tree/master/src/main/scala/org/github/microburn/integration/trello) and send me a PR.
 
 # Run
 
 * Download the [latest](https://github.com/arkadius/micro-burn/releases/latest) release
-* create *application.conf* configuration file, example:
-```conf
-board.columns = [
-  {
-    name: "To Do"
-    statusIds: [1, 4]
-  }
-  {
-    name: "In Progress"
-    statusIds: [3]
-  }
-  {
-    name: "To review"
-    statusIds: [10067]
-  }
-  {
-    name: "Ready to test"
-    statusIds: [10064]
-  }
-  {
-    name: "Tested",
-    statusIds: [10065, 10045, 10048, 10010, 5]
-  }
-]
-
-jira {
-  url = "https://localhost:8088/jira/rest/api/latest"
-  user = "test"
-  password = "test"
-  greenhopper {
-    url = "https://localhost:8088/jira/rest/greenhopper/1.0"
-    storyPointsField = "customfield_10192"
-    rapidViewId = 56
-  }
-}
-```
+* create *application.conf* configuration file
 * run `java -jar micro-burn-${version}.jar`
 * open in browser: [http://localhost:8080](http://localhost:8080)
 
-# Configuration Q&A
+# Configuration
 
-Q: How to configure board columns?<br>
-A: The simplest way is to copy-paste them from result of *${greenhopper.url}/xboard/work/allData.json?rapidViewId=${greenhopper.rapidViewId}* (is available at path: */columnsData/columns*)
+To run application you must provide at least integration service: trello/jira configuration and board columns. All other settings are optional.
 
-Q: Hot to get *rapidViewId*?<br>
-A: Is available in board's url
+## Trello configuration
 
-Q: Hot to get *storyPointsField*?<br>
-A: From the same place where board columns – (at path */issuesData/issues[1]/estimateStatistic/statFieldId*)
+By default, card without story points will have zero story points. If you want to define some, you can add them in curly braces before task name e.g. "(5) Task".
+You can also use [Scrum for trello](http://scrumfortrello.com/) extension for your browser. Also you can specify *project.defaultStoryPointsForUserStories*.
+Checklist items are treated as technical tasks, you can also specify story points for them, but also you can turn on splitSpBetweenTechnicalTasks and
+story points from cards will be splitted between checklist items.
 
-Q: How to change port?<br>
-A: Override the value of *jetty.port*
+### Sample configuration
 
-Q: Where are other settings?<br>
-A: All defaults are available at [defaults.conf](https://github.com/arkadius/micro-burn/blob/master/src/main/resources/defaults.conf)
+```conf
+project {
+  defaultStoryPointsForUserStories = 1
+  splitSpBetweenTechnicalTasks = true
+  dayOfWeekWeights = ${predefined.afterWork}
+}
+
+project.boardColumns = [
+  {
+    "id": "example backlog column id",
+    "name": "Backlog",
+    "backlogColumn": true
+  },
+  {
+    "id": "example todo column id",
+    "name": "TODO",
+  },
+  {
+    "id":"example in progress column id",
+    "name":"In Progress"
+  },
+  {
+    "id": "example done column id",
+    "name": "Done",
+    "doneColumn": true
+  }
+]
+
+trello {
+  token = "example token"
+  boardId = "example board id"
+}
+```
+
+### Configuration Q&A
+
+Q: How can I get token?<br>
+A: You must [authorize micro-burn](https://trello.com/1/authorize?key=8b5ab0f2d93cb4717d15876fda44813c&name=micro-burn&expiration=never&response_type=token)
+
+Q: How can I get boardId?<br>
+A: From *https://trello.com/1/members/me?key=8b5ab0f2d93cb4717d15876fda44813c&token=${trello.token}*
+
+Q: How can I get boardColumns<br>
+A: From *https://trello.com/1/boards/${trello.boardId}/lists?key=8b5ab0f2d93cb4717d15876fda44813c&token=${trello.token}*
+
+Q: What is it backlogColumn/doneColumn?<br>
+A: You need to mark column as backlogColumn if you keep there long-term planned cards (those cards will be not shown in burndown). Done column will be drawn in black color on chart.
+
+## Jira configuration
+
+[CONFIGURATION.md](https://github.com/arkadius/micro-burn/blob/master/JIRA.md)
+
+## Additional settings
+
+[CONFIGURATION.md](https://github.com/arkadius/micro-burn/blob/master/SETTINGS.md)
 
 # Implementation notice
 
@@ -78,7 +89,7 @@ As a web framework was used great scala framework [lift](https://github.com/lift
 For a bridge with Angular was used [lift-ng](https://github.com/joescii/lift-ng).<br>
 Charts where drawed in [rickshaw](https://github.com/shutterstock/rickshaw).<br>
 
-micro-burn is a microservice. It does mean, that it integrates with 3rd-part tools by REST API. Application uses event souring – in the date folder there are kept: initially fetched board state, last (snapshot state) and task events in CSV format. It does mean, that application will show only changes which were collected during its run. All archive changes will be unavailable.
+micro-burn is a microservice. It integrates with 3rd-part tools by REST API. Application uses event souring – in the date folder there are kept: initially fetched board state, last (snapshot state) and task events in CSV format. Application will show only changes which were collected during its run. All other changes will be unavailable.
 
 # License
 
