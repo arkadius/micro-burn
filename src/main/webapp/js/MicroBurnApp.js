@@ -301,7 +301,7 @@ app.directive('sprintChart', ['$cookies', function ($cookies) {
       window.graph = graph;
 
       function toDays(millis) {
-        return Math.floor((millis - startDate) / (1000 * 60 * 60 * 24))
+        return Math.round((millis - startDate) / (1000 * 60 * 60 * 24))
       }
 
       function ticksBetween(minX, maxX) {
