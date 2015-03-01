@@ -39,8 +39,8 @@ trait JobRepeatingActor extends LiftActor { self: Slf4jLogging =>
       try {
         prepareFutureOfJob(timestamp).onComplete { result =>
           result match {
-            case Failure(msg, Full(ex), _) => error(s"Error while $jobDescription: msg", ex)
-            case Failure(msg, _, _) => error(s"Error while $jobDescription: msg")
+            case Failure(msg, Full(ex), _) => error(s"Error while $jobDescription: $msg", ex)
+            case Failure(msg, _, _) => error(s"Error while $jobDescription: $msg")
             case _ =>
           }
           Schedule.schedule(this, Repeat, tickPeriod.toTimeSpan)
