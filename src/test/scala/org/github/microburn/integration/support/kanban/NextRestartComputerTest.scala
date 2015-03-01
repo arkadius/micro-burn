@@ -28,7 +28,7 @@ class NextRestartComputerTest extends FlatSpec with Matchers {
 
     val result = computer.compute(None, new DateTime(2015, 1, 1, 0, 0))
 
-    result shouldEqual NextRestart(new DateTime(2015, 1, 1, 8, 10), "2015.001")
+    result shouldEqual NextRestart(new DateTime(2015, 1, 1, 8, 10), "2015 001 day")
   }
 
   it should "compute restart for every-n-days if no last repeat date specified and current after time" in {
@@ -37,7 +37,7 @@ class NextRestartComputerTest extends FlatSpec with Matchers {
 
     val result = computer.compute(None, new DateTime(2015, 1, 1, 9, 0))
 
-    result shouldEqual NextRestart(new DateTime(2015, 1, 2, 8, 10), "2015.002")
+    result shouldEqual NextRestart(new DateTime(2015, 1, 2, 8, 10), "2015 002 day")
   }
 
   it should "compute restart for every-n-days if some last repeat date specified" in {
@@ -46,7 +46,7 @@ class NextRestartComputerTest extends FlatSpec with Matchers {
 
     val result = computer.compute(Some(new DateTime(2015, 1, 1, 8, 10)), new DateTime(2015, 1, 1, 9, 0))
 
-    result shouldEqual NextRestart(new DateTime(2015, 1, 4, 8, 10), "2015.004")
+    result shouldEqual NextRestart(new DateTime(2015, 1, 4, 8, 10), "2015 004 day")
   }
 
 }

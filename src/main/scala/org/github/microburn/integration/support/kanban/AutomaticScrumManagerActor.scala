@@ -45,7 +45,7 @@ class AutomaticScrumManagerActor(scrumSimulator: ScrumSimulatorActor,
       LAFuture(() => Unit)
     } else {
       val nextRestart = computeNext(Some(scheduledRestart.date), timestamp)
-      val start = StartSprint(s"Sprint ${scheduledRestart.periodName}", scheduledRestart.date.toDate, nextRestart.date.toDate)
+      val start = StartSprint(scheduledRestart.periodName, scheduledRestart.date.toDate, nextRestart.date.toDate)
       scheduledRestart = nextRestart
       repo.saveLastSprintRestart(timestamp)
       for {

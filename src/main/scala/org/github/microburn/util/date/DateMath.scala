@@ -27,4 +27,17 @@ object DateMath {
     dates.sortWith(_.compareTo(_) < 0).last
   }
 
+  def roundDate(date: DateTime): DateTime = {
+    val base = if (date.isAfter(halfOfDay(date))) {
+      date.plusDays(1)
+    } else {
+      date
+    }
+    base.withTime(0, 0, 0, 0)
+  }
+
+  private def halfOfDay(date: DateTime): DateTime = {
+    date.withTime(12, 0, 0, 0)
+  }
+
 }

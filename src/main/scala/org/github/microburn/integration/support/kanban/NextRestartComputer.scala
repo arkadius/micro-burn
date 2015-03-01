@@ -15,7 +15,7 @@
  */
 package org.github.microburn.integration.support.kanban
 
-import org.github.microburn.domain.{EveryNMonths, EveryNWeeks, EveryNDays, RepeatPeriod}
+import org.github.microburn.domain.{EveryNDays, EveryNMonths, EveryNWeeks, RepeatPeriod}
 import org.github.microburn.util.date.DateMath
 import org.joda.time.DateTime
 
@@ -25,7 +25,7 @@ class NextRestartComputer(restartPeriod: RepeatPeriod) {
   def compute(optionalLastRestart: Option[DateTime], currentDate: DateTime): NextRestart = {
     val nextDate = optionalLastRestart match {
       case None =>
-        nextAfterStarOrCurrent(currentDate)
+        nextAfterStartOrCurrent(currentDate)
       case Some(lastRestart) =>
         val next = restartPeriod match {
           case days: EveryNDays =>
@@ -37,14 +37,14 @@ class NextRestartComputer(restartPeriod: RepeatPeriod) {
         }
         val maxOfNextAndCurrent = DateMath.maxOfDates(next, currentDate)
         if (restartPeriod.optionalStartDate.exists(maxOfNextAndCurrent.isBefore(_)))
-          nextAfterStarOrCurrent(currentDate)
+          nextAfterStartOrCurrent(currentDate)
         else
           maxOfNextAndCurrent
     }
     NextRestart(nextDate, periodName(nextDate))
   }
 
-  private def nextAfterStarOrCurrent(currentDate: DateTime): DateTime = {
+  private def nextAfterStartOrCurrent(currentDate: DateTime): DateTime = {
     val dates = restartPeriod.optionalStartDate.toSeq :+ currentDate
     val maxOfStartDateAndCurrent = DateMath.maxOfDates(dates: _*)
     restartPeriod match {
@@ -57,13 +57,16 @@ class NextRestartComputer(restartPeriod: RepeatPeriod) {
     }
   }
 
-  private def periodName(date: DateTime): String = restartPeriod match {
-    case days: EveryNDays =>
-      date.getYear + "." + date.getDayOfYear.formatted("%03d")
-    case weeks: EveryNWeeks =>
-      date.getWeekyear + "." + date.getWeekOfWeekyear.formatted("%02d")
-    case months: EveryNMonths =>
-      date.getYear + "." + date.getMonthOfYear.formatted("%02d")
+  private def periodName(start: DateTime): String = {
+    val roundedStart = DateMath.roundDate(start)
+    restartPeriod match {
+      case days: EveryNDays =>
+        roundedStart.getYear + " " + roundedStart.getDayOfYear.formatted("%03d") + " day"
+      case weeks: EveryNWeeks =>
+        roundedStart.getWeekyear + " " + roundedStart.getWeekOfWeekyear.formatted("%02d") + " week"
+      case months: EveryNMonths =>
+        roundedStart.getYear + " " + roundedStart.getMonthOfYear.formatted("%02d") + " month"
+    }
   }
 
 }
