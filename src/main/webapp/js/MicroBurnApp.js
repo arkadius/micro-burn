@@ -106,10 +106,12 @@ ctrlDeclaration.push(function ($scope, $timeout, historySvc, scrumSimulatorSvc) 
   function refreshChart() {
     $timeout.cancel(clientFetchPromise);
     if ($scope.selectedSprint) {
-      historySvc.getHistory({sprintId: $scope.selectedSprint.id}).then(function (history) {
-        $scope.history = history;
-      }).finally(function() {
-        clientFetchPromise = $timeout(refreshChart, window.clientFetchIfNoChangesPeriod);
+      wrapServiceCall(function () {
+        return historySvc.getHistory({sprintId: $scope.selectedSprint.id}).then(function (history) {
+          $scope.history = history;
+        }).finally(function () {
+          clientFetchPromise = $timeout(refreshChart, window.clientFetchIfNoChangesPeriod);
+        });
       });
     } else {
       $scope.history = null;
@@ -284,7 +286,7 @@ app.directive('sprintChart', ['$cookies', function ($cookies) {
 
       element.attr("id", "sprint-chart-container");
 
-      var graph = new Rickshaw.Graph({
+      graph = new Rickshaw.Graph({
         element: element.children("#chart")[0],
         height: 600,
         min: "auto",
