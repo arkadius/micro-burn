@@ -342,6 +342,10 @@ app.directive('sprintChart', ['$cookies', function ($cookies) {
         }
       });
 
+      var lineAnnotate = new LineAnnotate({
+        graph: graph
+      });
+
       scope.$watch("history", function(history) {
         while (series.length) {
           series.pop();

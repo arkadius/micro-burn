@@ -114,3 +114,7 @@ input:disabled {
 #sprint-chart-container > #legend .label {
     white-space: normal;
 }
+
+#sprint-chart-container .detail .item.active {
+    opacity: 0;
+}
