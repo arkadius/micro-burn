@@ -3,10 +3,6 @@ LineAnnotate = Rickshaw.Class.create({
   initialize: function(args) {
     var graph = this.graph = args.graph;
 
-    this.yFormatter = args.yFormatter || function(y) {
-      return y === null ? y : y.toFixed(2);
-    };
-
     var element = this.element = document.createElement('div');
     element.className = 'detail';
 
@@ -23,8 +19,8 @@ LineAnnotate = Rickshaw.Class.create({
     this.formatter = args.formatter || this.formatter;
   },
 
-  formatter: function(series, x, y, formattedY, d) {
-    return series.name + ':&nbsp;' + formattedY;
+  formatter: function(series, point) {
+    return series.name + ':&nbsp;' + point.y;
   },
 
   update: function() {
@@ -44,11 +40,8 @@ LineAnnotate = Rickshaw.Class.create({
         if (index == 0)
           return;
 
-        var yFormatter = series.yFormatter || this.yFormatter;
-
         var point = {
           prev: prev,
-          formattedYValue: yFormatter(series.scale ? series.scale.invert(value.y) : value.y),
           series: series,
           value: value
         };
@@ -87,14 +80,11 @@ LineAnnotate = Rickshaw.Class.create({
     var alignables = [];
     this.element.innerHTML = '';
     points.forEach(function(point){
-      if (point.value.y === null || point.prev.y == null) return;
-
-      var formattedYValue = point.formattedYValue;
+      if (point.value.details == null || point.value.y === null || point.prev.y == null) return;
 
       var outer = document.createElement('div');
       outer.className = 'line_annotation_outer';
       outer.style.left = graph.x(point.value.x) + 'px';
-      console.log(graph.y(point.value.y0 + (point.value.y + point.prev.y) / 2), graph.y(point.value.y0 + point.value.y));
       outer.style.top = graph.y(point.value.y0 + (point.value.y + point.prev.y) / 2) + 'px';
 
       var item = document.createElement('div');
@@ -104,7 +94,7 @@ LineAnnotate = Rickshaw.Class.create({
       var series = point.series;
       var actualY = series.scale ? series.scale.invert(point.value.y) : point.value.y;
 
-      item.innerHTML = this.formatter(series, point.value.x, actualY, formattedYValue, point);
+      item.innerHTML = this.formatter(series, point.value);
 
       outer.appendChild(item);
       this.element.appendChild(outer);

@@ -336,14 +336,14 @@ app.directive('sprintChart', ['$cookies', function ($cookies) {
         xFormatter: function(x) {
           var d = new Date(x);
           return d.dateFormat(window.dateFormat);
-        },
-        yFormatter: function(y) {
-          return y;
         }
       });
 
       var lineAnnotate = new LineAnnotate({
-        graph: graph
+        graph: graph,
+        formatter: function(series, point) {
+          return series.name + ':&nbsp;' + point.y + '&nbsp;' + point.details;
+        }
       });
 
       scope.$watch("history", function(history) {
@@ -370,6 +370,8 @@ app.directive('sprintChart', ['$cookies', function ($cookies) {
             column.data.forEach(function (probe) {
               minX = Math.min(minX, probe.x);
               maxX = Math.max(maxX, probe.x);
+              if (column.doneColumn)
+                probe.details = 'FIXME';
             });
             series.push(column);
           });
