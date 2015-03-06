@@ -342,6 +342,7 @@ app.directive('sprintChart', ['$cookies', function ($cookies) {
       var lineAnnotate = new LineAnnotate({
         graph: graph,
         formatter: function(series, point) {
+          console.log(point.details);
           return series.name + ':&nbsp;' + point.y + '&nbsp;' + point.details;
         }
       });
@@ -370,8 +371,8 @@ app.directive('sprintChart', ['$cookies', function ($cookies) {
             column.data.forEach(function (probe) {
               minX = Math.min(minX, probe.x);
               maxX = Math.max(maxX, probe.x);
-              if (column.doneColumn)
-                probe.details = 'FIXME';
+              if (!column.doneColumn)
+                delete probe.details;
             });
             series.push(column);
           });

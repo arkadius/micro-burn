@@ -77,8 +77,9 @@ case class BoardState(userStories: Seq[UserStory], date: Date) extends HavingNes
 
   private def withUpdatedParentUserStory(event: TaskEvent)
                                         (updateParent: UserStory => UserStory): BoardState = {
-    val parent = nestedTask(event.parentUserStoryId).getOrElse {
-      throw new IllegalArgumentException(s"User story missing: ${event.parentUserStoryId}")
+    val parentUserStoryId = event.optionalParentUserStoryId.getOrElse(event.taskId)
+    val parent = nestedTask(parentUserStoryId).getOrElse {
+      throw new IllegalArgumentException(s"User story missing: $parentUserStoryId")
     }
     val updated = updateParent(parent)
     withUpdateNestedTask(updated).copy(date = event.date)
@@ -86,22 +87,22 @@ case class BoardState(userStories: Seq[UserStory], date: Date) extends HavingNes
 
   override protected def updateNestedTasks(newNestedTasks: Seq[UserStory]): Self = copy(userStories = newNestedTasks)
 
-  def columnsState(implicit config: ProjectConfig, knowledge: SprintHistoricalKnowledge): DateWithColumnsState = {
+  def tasksOnRightFromColumns(implicit config: ProjectConfig, knowledge: SprintHistoricalKnowledge): DateWithTasksOnRightFromColumns = {
     val indexOnSum = config.nonBacklogColumns.map(_.index).map { boardColumnIndex =>
-      boardColumnIndex -> storyPointsOnRightFromColumn(boardColumnIndex)
+      boardColumnIndex -> tasksOnRightFromColumn(boardColumnIndex)
     }.toMap
-    DateWithColumnsState(date, indexOnSum)
+    DateWithTasksOnRightFromColumns(date, indexOnSum)
   }
 
-  private def storyPointsOnRightFromColumn(columnIndex: Int)
-                                          (implicit config: ProjectConfig, knowledge: SprintHistoricalKnowledge) =
-    (for {
+  private def tasksOnRightFromColumn(columnIndex: Int)
+                                    (implicit config: ProjectConfig, knowledge: SprintHistoricalKnowledge): Seq[Task] =
+    for {
       userStory <- notBacklogUserStories
       task <- userStory.flattenTasks
       if knowledge.shouldBeUsedInCalculations(task)
       configuredTasksBoardColumn <- task.boardColumn
       if configuredTasksBoardColumn.index >= columnIndex
-    } yield task.storyPointsWithoutSubTasks).sum
+    } yield task
 
   private def notBacklogUserStories(implicit config: ProjectConfig): Seq[UserStory] =
     userStories.filter(userStory => userStory.boardColumn.isDefined)

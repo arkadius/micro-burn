@@ -25,14 +25,14 @@ object TaskEventsGenerator {
   private val addedEventGenerator: Gen[TaskAdded] = {
     for {
       taskId <- Gen.identifier
-      parentUserStoryId <- Gen.identifier
       isTechnicalTask <- Gen.oneOf(true, false)
+      parentUserStoryId <- if (isTechnicalTask) Gen.identifier.map(Some(_)) else Gen.const(None)
       taskName <- Gen.identifier
       optionalStoryPoints <- StoryPointsGenerator.optionalSpGenerator
       status <- TaskStatusGenerator.generator
       date <- Gen.posNum[Long].map(new Date(_))
     } yield TaskAdded(
-      taskId = taskId, parentUserStoryId = parentUserStoryId, isTechnicalTask = isTechnicalTask,
+      taskId = taskId, optionalParentUserStoryId = parentUserStoryId, isTechnicalTask = isTechnicalTask,
       taskName = taskName, optionalStoryPoints = optionalStoryPoints, status = status, date = date
     )
   }
@@ -40,14 +40,14 @@ object TaskEventsGenerator {
   private val updatedEventGenerator: Gen[TaskUpdated] = {
     for {
       taskId <- Gen.identifier
-      parentUserStoryId <- Gen.identifier
       isTechnicalTask <- Gen.oneOf(true, false)
+      parentUserStoryId <- if (isTechnicalTask) Gen.identifier.map(Some(_)) else Gen.const(None)
       taskName <- Gen.identifier
       optionalStoryPoints <- StoryPointsGenerator.optionalSpGenerator
       status <- TaskStatusGenerator.generator
       date <- Gen.posNum[Long].map(new Date(_))
     } yield TaskUpdated(
-      taskId = taskId, parentUserStoryId = parentUserStoryId, isTechnicalTask = isTechnicalTask,
+      taskId = taskId, optionalParentUserStoryId = parentUserStoryId, isTechnicalTask = isTechnicalTask,
       taskName = taskName, optionalStoryPoints = optionalStoryPoints, status = status, date = date
     )
   }
@@ -55,11 +55,11 @@ object TaskEventsGenerator {
   private val removedEventGenerator: Gen[TaskRemoved] = {
     for {
       taskId <- Gen.identifier
-      parentUserStoryId <- Gen.identifier
       isTechnicalTask <- Gen.oneOf(true, false)
+      parentUserStoryId <- if (isTechnicalTask) Gen.identifier.map(Some(_)) else Gen.const(None)
       date <- Gen.posNum[Long].map(new Date(_))
     } yield TaskRemoved(
-      taskId = taskId, parentUserStoryId = parentUserStoryId, isTechnicalTask = isTechnicalTask, date = date
+      taskId = taskId, optionalParentUserStoryId = parentUserStoryId, isTechnicalTask = isTechnicalTask, date = date
     )
   }
 

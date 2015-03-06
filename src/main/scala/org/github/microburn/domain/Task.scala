@@ -23,7 +23,7 @@ import Scalaz._
 
 sealed trait Task { self =>
   def taskId: String
-  def parentUserStoryId: String
+  def optionalParentUserStory: Option[UserStory]
   def isTechnicalTask: Boolean
 
   def taskName: String
@@ -54,7 +54,7 @@ case class UserStory(taskId: String,
 
   protected val nestedTasks: Seq[TechnicalTaskWithParent] = technicalTasksWithoutParentId.map(TechnicalTaskWithParent(_, this))
 
-  override def parentUserStoryId: String = taskId
+  override def optionalParentUserStory: Option[UserStory] = None
 
   override def isTechnicalTask: Boolean = false
 
@@ -129,8 +129,8 @@ case class UserStory(taskId: String,
 case class TechnicalTaskWithParent(technical: TechnicalTask,
                                    parent: UserStory)
   extends Task with ComparableWith[TechnicalTaskWithParent] with Openable[TechnicalTaskWithParent] {
-  
-  override def parentUserStoryId = parent.taskId
+
+  override def optionalParentUserStory: Option[UserStory] = Some(parent)
 
   override def taskId: String = technical.taskId
   override def taskName: String = technical.taskName
@@ -183,7 +183,6 @@ case class TechnicalTask(taskId: String,
 object UserStory {
   def apply(added: TaskAdded): UserStory = {
     require(!added.isTechnicalTask, s"Invalid event $added")
-    require(added.parentUserStoryId == added.taskId, s"Invalid event $added")
     UserStory(
       taskId = added.taskId,
       taskName = added.taskName,

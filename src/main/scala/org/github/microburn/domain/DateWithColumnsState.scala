@@ -19,22 +19,73 @@ import java.util.Date
 import scalaz._
 import Scalaz._
 
-case class DateWithColumnsState(date: Date, indexOnSum: Map[Int, BigDecimal]) {
-  def plus(otherIndexOnSum: Map[Int, BigDecimal]): DateWithColumnsState = {
-    copy(indexOnSum = indexOnSum |+| otherIndexOnSum)
+case class DateWithColumnsState(date: Date, indexOnColumnState: Map[Int, ColumnState]) {
+  def plus(const: BigDecimal): DateWithColumnsState = {
+    copy(indexOnColumnState = indexOnColumnState.mapValues(_ + const))
   }
 
   def multiply(const: BigDecimal): DateWithColumnsState = {
-    copy(indexOnSum = indexOnSum.mapValues(_ * const))
+    copy(indexOnColumnState = indexOnColumnState.mapValues(_ * const))
   }
 
-  def storyPointsForColumn(boardColumnIndex: Int): BigDecimal = indexOnSum.getOrElse(boardColumnIndex, 0)
+  def storyPointsForColumn(boardColumnIndex: Int): BigDecimal = indexOnColumnState.get(boardColumnIndex).map(_.storyPointsSum).getOrElse(0)
 
-  def nonEmpty: Boolean = indexOnSum.values.exists(_ != 0)
+  def addedForColumn(boardColumnIndex: Int): Seq[TaskDetails] = indexOnColumnState.get(boardColumnIndex).map(_.added).getOrElse(Nil)
+
+  def removedForColumn(boardColumnIndex: Int): Seq[TaskDetails] = indexOnColumnState.get(boardColumnIndex).map(_.removed).getOrElse(Nil)
 }
 
 object DateWithColumnsState {
-  def zero(date: Date)(implicit config: ProjectConfig): DateWithColumnsState = DateWithColumnsState(date, constIndexOnSum(0))
-
-  def constIndexOnSum(c: BigDecimal)(implicit config: ProjectConfig): Map[Int, BigDecimal] = config.nonBacklogColumns.map(_.index -> c).toMap
+  def apply(withTasksOnRightFromColumns: DateWithTasksOnRightFromColumns)(implicit config: ProjectConfig): DateWithColumnsState = {
+    val columnStates = withTasksOnRightFromColumns.tasksOnsRight.mapValues(ColumnState(_))
+    DateWithColumnsState(withTasksOnRightFromColumns.date, columnStates)
+  }
 }
+
+case class ColumnState(storyPointsSum: BigDecimal, added: Seq[TaskDetails], removed: Seq[TaskDetails]) {
+  def +(const: BigDecimal): ColumnState = {
+    copy(storyPointsSum = storyPointsSum + const)
+  }
+
+  def *(const: BigDecimal): ColumnState = {
+    copy(storyPointsSum = storyPointsSum * const)
+  }  
+}
+
+case class TaskDetails(name: String, parentName: Option[String], storyPoints: BigDecimal)
+
+object TaskDetails {
+  def apply(task: Task)(implicit config: ProjectConfig): TaskDetails = {
+    TaskDetails(task.taskName, task.optionalParentUserStory.map(_.taskName), task.storyPointsWithoutSubTasks)
+  }
+}
+
+object ColumnState {
+  def apply(all: Seq[Task])(implicit config: ProjectConfig): ColumnState = {
+    ColumnState(all, Nil, Nil)
+  }
+
+  def apply(all: Seq[Task], added: Seq[Task], removed: Seq[Task])(implicit config: ProjectConfig): ColumnState = {
+    val storyPointsSum = all.map(_.storyPointsWithoutSubTasks).sum
+    ColumnState(storyPointsSum, added.map(TaskDetails(_)), removed.map(TaskDetails(_)))
+  }
+}
+
+case class DateWithTasksOnRightFromColumns(date: Date, tasksOnsRight: Map[Int, Seq[Task]]) {
+  def diff(other: DateWithTasksOnRightFromColumns)(implicit config: ProjectConfig): DateWithColumnsState = {
+    val columnStates = tasksOnsRight.map {
+      case (columnIndex, tasks) =>
+        val otherTasks = other.tasksOnsRight(columnIndex)
+        val added = filterNotExistingInBase(otherTasks, tasks)
+        val removed = filterNotExistingInBase(tasks, otherTasks)
+        columnIndex -> ColumnState(tasks, added, removed)
+    }
+    DateWithColumnsState(date, columnStates)
+  }
+
+  private def filterNotExistingInBase(base: Seq[Task], tasks: Seq[Task]): Seq[Task] = {
+    val baseIds = base.map(_.taskId).toSet
+    tasks.filterNot { task => baseIds.contains(task.taskId) }
+  }
+}
+

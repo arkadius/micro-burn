@@ -21,7 +21,7 @@ import net.liftmodules.ng.Angular.NgModel
 import net.liftweb.actor.LAFuture
 import net.liftweb.common.Box
 import org.github.microburn.domain.actors.{GetStoryPointsHistory, ProjectActor}
-import org.github.microburn.domain.{DateWithColumnsState, ProjectConfig, SprintHistory}
+import org.github.microburn.domain._
 import org.joda.time.DateTime
 
 import scalaz.Scalaz._
@@ -41,8 +41,7 @@ class SprintColumnsHistoryProvider(projectActor: ProjectActor)
     val toAppend = computeToAppend(history).toSeq
     val fullHistory = history.columnStates ++ toAppend
 
-    val baseIndexOnSum = DateWithColumnsState.constIndexOnSum(history.sprintBase)
-    val withBaseAdded = fullHistory.map(_.multiply(-1).plus(baseIndexOnSum))
+    val withBaseAdded = fullHistory.map(_.multiply(-1).plus(history.sprintBase))
 
     val columnsHistory = unzipByColumn(withBaseAdded)
     val startDate = new DateTime(history.sprintDetails.start)
@@ -67,7 +66,9 @@ class SprintColumnsHistoryProvider(projectActor: ProjectActor)
     config.nonBacklogColumns.map { column =>
       val storyPointsForColumn = zipped.map { allColumnsInfo =>
         val storyPoints = allColumnsInfo.storyPointsForColumn(column.index)
-        HistoryProbe(allColumnsInfo.date, storyPoints)
+        val addded = allColumnsInfo.addedForColumn(column.index)
+        val removed = allColumnsInfo.removedForColumn(column.index)
+        HistoryProbe(allColumnsInfo.date, storyPoints, ProbeDetails(addded, removed))
       }
       ColumnHistory(column.name, column.isDoneColumn, storyPointsForColumn)
     }
@@ -75,7 +76,7 @@ class SprintColumnsHistoryProvider(projectActor: ProjectActor)
 
   private def computeEstimate(start: DateTime, end: DateTime, storyPointsSum: BigDecimal): ColumnHistory = {
     val estimates = EstimateComputer.estimatesBetween(start, end, storyPointsSum).map { probe =>
-      HistoryProbe(probe.date.toDate, probe.sp)
+      HistoryProbe(probe.date.toDate, probe.sp, ProbeDetails.zero)
     }
     ColumnHistory("Estimate", doneColumn = false, estimates)
   }
@@ -87,10 +88,16 @@ case class ColumnsHistory(startDate: Long, series: Seq[ColumnHistory])
 
 case class ColumnHistory(name: String, doneColumn: Boolean, data: Seq[HistoryProbe])
 
-case class HistoryProbe private(x: Long, y: Double)
+case class HistoryProbe private(x: Long, y: Double, details: ProbeDetails)
+
+case class ProbeDetails(added: Seq[TaskDetails], removed: Seq[TaskDetails])
+
+object ProbeDetails {
+  def zero: ProbeDetails = ProbeDetails(Nil, Nil)
+}
 
 object HistoryProbe {
-  def apply(x: Date, y: BigDecimal): HistoryProbe = {
-    new HistoryProbe(x.getTime, y.toString().toDouble)
+  def apply(x: Date, y: BigDecimal, details: ProbeDetails): HistoryProbe = {
+    new HistoryProbe(x.getTime, y.toString().toDouble, details)
   }
 }

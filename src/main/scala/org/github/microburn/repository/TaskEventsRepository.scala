@@ -60,28 +60,28 @@ class TaskEventsCsvRepository(taskEventsFile: File) extends TaskEventsRepository
                               "optionalStoryPoints", "statusType", "statusValue",       "date")
 
   private def toFields(event: TaskEvent): Seq[Any] = event match {
-    case e:TaskAdded   => Seq(ADDED,                 e.taskId,     e.parentUserStoryId, e.isTechnicalTask, e.taskName,
+    case e:TaskAdded   => Seq(ADDED,                 e.taskId,     e.optionalParentUserStoryId, e.isTechnicalTask, e.taskName,
                               e.optionalStoryPoints, t(e.status),  v(e.status),         e.date)
-    case e:TaskUpdated => Seq(UPDATED,               e.taskId,     e.parentUserStoryId, e.isTechnicalTask, e.taskName,
+    case e:TaskUpdated => Seq(UPDATED,               e.taskId,     e.optionalParentUserStoryId, e.isTechnicalTask, e.taskName,
                               e.optionalStoryPoints, t(e.status),  v(e.status),         e.date)
-    case e:TaskRemoved => Seq(REMOVED,               e.taskId,     e.parentUserStoryId, e.isTechnicalTask, "",
+    case e:TaskRemoved => Seq(REMOVED,               e.taskId,     e.optionalParentUserStoryId, e.isTechnicalTask, "",
                               "",                    "",           "",                  e.date)
   }
 
   private def parseFields(fields: IndexedSeq[String]): TaskEvent = {
     val taskId              = fields(1)
-    val parentUserStoryId   = fields(2)
+    val parentUserStoryId   = parseOptionalString(fields(2))
     val isTechnicalTask     = fields(3).toBoolean
     def taskName            = fields(4)
     def optionalStoryPoints = parseOptionalDecimal(fields(5))
     def status              = parseStatus(fields(6), fields(7))
     val date                = DateTimeFormats.utcDateTimeFormat.parse(fields(8))
     fields(0) match {
-      case ADDED   => TaskAdded(taskId = taskId, parentUserStoryId = parentUserStoryId, isTechnicalTask = isTechnicalTask,
+      case ADDED   => TaskAdded(taskId = taskId, optionalParentUserStoryId = parentUserStoryId, isTechnicalTask = isTechnicalTask,
         taskName = taskName, optionalStoryPoints = optionalStoryPoints, status = status, date = date)
-      case UPDATED => TaskUpdated(taskId = taskId, parentUserStoryId = parentUserStoryId, isTechnicalTask = isTechnicalTask,
+      case UPDATED => TaskUpdated(taskId = taskId, optionalParentUserStoryId = parentUserStoryId, isTechnicalTask = isTechnicalTask,
         taskName = taskName, optionalStoryPoints = optionalStoryPoints, status = status, date = date)
-      case REMOVED => TaskRemoved(taskId = taskId, parentUserStoryId = parentUserStoryId, isTechnicalTask = isTechnicalTask, date = date)
+      case REMOVED => TaskRemoved(taskId = taskId, optionalParentUserStoryId = parentUserStoryId, isTechnicalTask = isTechnicalTask, date = date)
       case otherType => throw new ParseException(s"Invalid event type: $otherType", -1)
     }
   }
@@ -104,6 +104,7 @@ class TaskEventsCsvRepository(taskEventsFile: File) extends TaskEventsRepository
     case otherStatusType => throw new ParseException(s"Invalid status type: $otherStatusType", -1)
   }
 
+  private def parseOptionalString(str: String): Option[String] = str.nonEmpty.option(str)
 
   private def parseOptionalDecimal(str: String): Option[BigDecimal] =  try {
     str.nonEmpty.option(BigDecimal(str))

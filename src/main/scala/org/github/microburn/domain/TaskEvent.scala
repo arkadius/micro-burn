@@ -19,13 +19,13 @@ import java.util.Date
 
 sealed trait TaskEvent {
   def taskId: String
-  def parentUserStoryId: String
+  def optionalParentUserStoryId: Option[String]
   def isTechnicalTask: Boolean
   def date: Date
 }
 
 case class TaskAdded(taskId: String,
-                     parentUserStoryId: String,
+                     optionalParentUserStoryId: Option[String],
                      isTechnicalTask: Boolean,
                      taskName: String,
                      optionalStoryPoints: Option[BigDecimal],
@@ -33,12 +33,12 @@ case class TaskAdded(taskId: String,
                      date: Date) extends TaskEvent
 
 case class TaskRemoved(taskId: String,
-                       parentUserStoryId: String,
+                       optionalParentUserStoryId: Option[String],
                        isTechnicalTask: Boolean,
                        date: Date) extends TaskEvent
 
 case class TaskUpdated(taskId: String,
-                       parentUserStoryId: String,
+                       optionalParentUserStoryId: Option[String],
                        isTechnicalTask: Boolean,
                        taskName: String,
                        optionalStoryPoints: Option[BigDecimal],
@@ -48,7 +48,7 @@ case class TaskUpdated(taskId: String,
 object TaskAdded {
   def apply(task: Task)(implicit timestamp: Date): TaskAdded = TaskAdded(
     taskId = task.taskId,
-    parentUserStoryId = task.parentUserStoryId,
+    optionalParentUserStoryId = task.optionalParentUserStory.map(_.taskId),
     isTechnicalTask = task.isTechnicalTask,
     taskName = task.taskName,
     optionalStoryPoints = task.optionalStoryPoints,
@@ -59,7 +59,7 @@ object TaskAdded {
 object TaskRemoved {
   def apply(task: Task)(implicit timestamp: Date): TaskRemoved = TaskRemoved(
     taskId = task.taskId,
-    parentUserStoryId = task.parentUserStoryId,
+    optionalParentUserStoryId = task.optionalParentUserStory.map(_.taskId),
     isTechnicalTask = task.isTechnicalTask,
     date = timestamp)
 }
@@ -67,7 +67,7 @@ object TaskRemoved {
 object TaskUpdated {
   def apply(task: Task)(implicit timestamp: Date): TaskUpdated = TaskUpdated(
     taskId = task.taskId,
-    parentUserStoryId = task.parentUserStoryId,
+    optionalParentUserStoryId = task.optionalParentUserStory.map(_.taskId),
     isTechnicalTask = task.isTechnicalTask,
     taskName = task.taskName,
     optionalStoryPoints = task.optionalStoryPoints,
