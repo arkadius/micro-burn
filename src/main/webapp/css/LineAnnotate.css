@@ -14,7 +14,7 @@
     z-index: 20;
     font-size: 12px;
     padding: 2px 2px 2px;
-    top: -16px;
+    top: -11px;
 }
 
 .rickshaw_graph .line_annotation.left {
@@ -33,7 +33,7 @@
     width: 0;
     z-index: 0;
     margin-top: -4px;
-    top: 75%;
+    top: 50%;
 }
 
 .rickshaw_graph .line_annotation.left:before {
@@ -50,7 +50,7 @@
     width: 0;
     z-index: 1;
     margin-top: -4px;
-    top: 75%;
+    top: 50%;
 }
 
 .rickshaw_graph .line_annotation.left:after {

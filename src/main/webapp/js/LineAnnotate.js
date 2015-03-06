@@ -36,19 +36,25 @@ LineAnnotate = Rickshaw.Class.create({
     this.graph.series.active().forEach(function(series) {
       var data = graph.stackedData[j++];
 
-      data.forEach(function(value){
+      if (data.length < 2)
+        return;
+
+      var prev = data[0];
+      data.forEach(function(value, index){
+        if (index == 0)
+          return;
+
         var yFormatter = series.yFormatter || this.yFormatter;
 
         var point = {
+          prev: prev,
           formattedYValue: yFormatter(series.scale ? series.scale.invert(value.y) : value.y),
           series: series,
-          value: value,
-          distance: 0,
-          order: j,
-          name: series.name
+          value: value
         };
 
         points.push(point);
+        prev = value;
       }, this);
     }, this);
 
@@ -81,14 +87,15 @@ LineAnnotate = Rickshaw.Class.create({
     var alignables = [];
     this.element.innerHTML = '';
     points.forEach(function(point){
-      if (point.value.y === null) return;
+      if (point.value.y === null || point.prev.y == null) return;
 
       var formattedYValue = point.formattedYValue;
 
       var outer = document.createElement('div');
       outer.className = 'line_annotation_outer';
       outer.style.left = graph.x(point.value.x) + 'px';
-      outer.style.top = graph.y(point.value.y0 + point.value.y) + 'px';
+      console.log(graph.y(point.value.y0 + (point.value.y + point.prev.y) / 2), graph.y(point.value.y0 + point.value.y));
+      outer.style.top = graph.y(point.value.y0 + (point.value.y + point.prev.y) / 2) + 'px';
 
       var item = document.createElement('div');
       item.className = 'line_annotation';
