@@ -68,7 +68,7 @@ class SprintColumnsHistoryProvider(projectActor: ProjectActor)
       val storyPointsForColumn = zipped.map { allColumnsInfo =>
         val storyPoints = allColumnsInfo.storyPointsForColumn(column.index)
         HistoryProbe(allColumnsInfo.date, storyPoints)
-      }.toList
+      }
       ColumnHistory(column.name, column.isDoneColumn, storyPointsForColumn)
     }
   }
@@ -83,9 +83,9 @@ class SprintColumnsHistoryProvider(projectActor: ProjectActor)
 
 case class GetColumnsHistory(sprintId: Int) extends NgModel
 
-case class ColumnsHistory(startDate: Long, series: List[ColumnHistory])
+case class ColumnsHistory(startDate: Long, series: Seq[ColumnHistory])
 
-case class ColumnHistory(name: String, doneColumn: Boolean, data: List[HistoryProbe])
+case class ColumnHistory(name: String, doneColumn: Boolean, data: Seq[HistoryProbe])
 
 case class HistoryProbe private(x: Long, y: Double)
 

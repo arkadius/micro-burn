@@ -19,7 +19,6 @@ import org.github.microburn.domain.ProjectConfig
 import org.github.microburn.util.date.DateMath
 import org.joda.time._
 
-import scala.collection.immutable.Seq
 import scala.math.BigDecimal.RoundingMode
 import scalaz.Scalaz._
 
@@ -28,37 +27,39 @@ object EstimateComputer {
   private final val COMPARING_SCALE = 1
 
   def estimatesBetween(start: DateTime, end: DateTime, storyPointsSum: BigDecimal)
-                      (implicit config: ProjectConfig): List[Probe] = {
-    if (storyPointsSum == BigDecimal(0)) {
-      List(
-        Probe(start, BigDecimal(0)),
-        Probe(end, BigDecimal(0))
-      )
+                      (implicit config: ProjectConfig): Seq[Probe] = {
+    val init = if (storyPointsSum == BigDecimal(0)) {
+      IndexedSeq(Probe(start, BigDecimal(0)))
     } else {
       estimatesForNonZeroStoryPointsSum(start, end, storyPointsSum)
     }
+    appendEndIfLastEstimateBeforeThem(init, end)
+  }
+
+  private def appendEndIfLastEstimateBeforeThem(init: IndexedSeq[Probe], end: DateTime): Seq[Probe] = {
+    if (init.last.date != end)
+      init :+ Probe(end, BigDecimal(0))
+    else
+      init
   }
 
   private def estimatesForNonZeroStoryPointsSum(start: DateTime, end: DateTime, storyPointsSum: BigDecimal)
-                                               (implicit config: ProjectConfig): List[Probe] = {
+                                               (implicit config: ProjectConfig): IndexedSeq[Probe] = {
     val intervalsAndSums = intervalAndSumMillisAfterThem(daysIntervals(start, end))
     val weightedSumOfIntervalsMillis = intervalsAndSums.lastOption.map(_.weightedSumAfter).getOrElse(BigDecimal(0))
     val steps = computeSteps(storyPointsSum)
-    val computeWeightedMillis = millisForStoryPoints(storyPointsSum, weightedSumOfIntervalsMillis) _
+    val computeWeightedMillis = millisForStoryPoints(weightedSumOfIntervalsMillis, storyPointsSum) _
     steps.map { storyPoints =>
       val date = momentInIntervals(intervalsAndSums, computeWeightedMillis(storyPoints))
       Probe(date, storyPoints)
-    }.toList
+    }.toIndexedSeq
   }
 
-  private def computeSteps(storyPointsSum: BigDecimal): scala.Seq[BigDecimal] = {
-    val additionalStepForNonWhole = (!storyPointsSum.isWhole()).option(storyPointsSum)
-    additionalStepForNonWhole.toSeq ++ storyPointsSum.setScale(0, RoundingMode.FLOOR).to(0, step = -1)
-  }
-
-  private def millisForStoryPoints(storyPointsSum: BigDecimal, weightedSumOfIntervalsMillis: BigDecimal)
-                                  (storyPoints: BigDecimal): BigDecimal = {
-    weightedSumOfIntervalsMillis * (1 - storyPoints / storyPointsSum)
+  private def intervalAndSumMillisAfterThem(intervals: List[Interval])
+                                           (implicit config: ProjectConfig): Seq[IntervalAndSumMillis] = {
+    intervals.tail.scanLeft(IntervalAndSumMillis(intervals.head, 0)) { (sum, nextInterval) =>
+      IntervalAndSumMillis(nextInterval, sum.weightedSumAfter)
+    }
   }
 
   private def daysIntervals(start: DateTime, end: DateTime): List[Interval] = {
@@ -72,11 +73,14 @@ object EstimateComputer {
     positiveIntervalsStream.takeWhile(_.isDefined).map(_.get).toList
   }
 
-  private def intervalAndSumMillisAfterThem(intervals: List[Interval])
-                                           (implicit config: ProjectConfig): Seq[IntervalAndSumMillis] = {
-    intervals.tail.scanLeft(IntervalAndSumMillis(intervals.head, 0)) { (sum, nextInterval) =>
-      IntervalAndSumMillis(nextInterval, sum.weightedSumAfter)
-    }
+  private def computeSteps(storyPointsSum: BigDecimal): Seq[BigDecimal] = {
+    val additionalStepForNonWhole = (!storyPointsSum.isWhole()).option(storyPointsSum)
+    additionalStepForNonWhole.toSeq ++ storyPointsSum.setScale(0, RoundingMode.FLOOR).to(0, step = -1)
+  }
+
+  private def millisForStoryPoints(weightedSumOfIntervalsMillis: BigDecimal, storyPointsSum: BigDecimal)
+                                  (storyPoints: BigDecimal): BigDecimal = {
+    weightedSumOfIntervalsMillis * (1 - storyPoints / storyPointsSum)
   }
 
   private def momentInIntervals(intervalsAndSums: Seq[IntervalAndSumMillis], weightedMillis: BigDecimal)

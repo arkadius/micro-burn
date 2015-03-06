@@ -32,7 +32,19 @@ class EstimateComputerTest extends FlatSpec with Matchers {
     )
   }
 
-  it should "calculate estimates for zero story points" in {
+  it should "calculate estimates for positive whole story points when end is in the weekend" in {
+    val start = new DateTime(2014, 12, 19, 0, 0)
+    val firstZeroEstimate = new DateTime(2014, 12, 20, 0, 0)
+    val end = new DateTime(2014, 12, 21, 0, 0)
+    val result = EstimateComputer.estimatesBetween(start, end, 1)
+    result shouldEqual List(
+      Probe(start, 1),
+      Probe(firstZeroEstimate, 0),
+      Probe(end, 0)
+    )
+  }
+
+  it should "calculate estimates for postivie non whole story points" in {
     val start = new DateTime(2014, 12, 18, 0, 0)
     val middle = new DateTime(2014, 12, 18, 8, 0)
     val end = new DateTime(2014, 12, 19, 0, 0)
@@ -44,7 +56,7 @@ class EstimateComputerTest extends FlatSpec with Matchers {
     )
   }
 
-  it should "calculate estimates for postivie non whole story points" in {
+  it should "calculate estimates for zero story points" in {
     val start = new DateTime(2014, 12, 18, 0, 0)
     val end = new DateTime(2014, 12, 19, 0, 0)
     val result = EstimateComputer.estimatesBetween(start, end, 0)
