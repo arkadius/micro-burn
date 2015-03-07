@@ -3,6 +3,7 @@ LineAnnotate = Rickshaw.Class.create({
   initialize: function(args) {
     var graph = this.graph = args.graph;
     var element = this.element = document.createElement('div');
+    element.className = 'line_annotation_parent';
 
     this.visible = true;
     graph.element.appendChild(element);
@@ -91,15 +92,15 @@ LineAnnotate = Rickshaw.Class.create({
       item.className = 'line_annotation';
       function displayShort() {
         item.innerHTML = shortFormatted;
-        item.classList.remove('detailed');
+        outer.classList.remove('detailed');
       }
       function displayDetailed() {
         item.innerHTML = detailedFormatted;
-        item.classList.add('detailed');
+        outer.classList.add('detailed');
       }
       displayShort();
-      item.addEventListener('mouseover', displayDetailed);
-      item.addEventListener('mouseout', displayShort);
+      item.addEventListener('mouseenter', displayDetailed);
+      item.addEventListener('mouseleave', displayShort);
 
       outer.appendChild(item);
       this.element.appendChild(outer);

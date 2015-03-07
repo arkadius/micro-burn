@@ -1,3 +1,7 @@
+/** {*/
+    /*outline: 1px red solid;*/
+/*}*/
+
 #cover {
     position: fixed;
     top: 0;
@@ -117,4 +121,23 @@ input:disabled {
 
 #sprint-chart-container .detail .item.active {
     opacity: 0;
+}
+
+.rickshaw_graph .line_annotation_outer.detailed .pointsAdded {
+    float: right;
+    color: green;
+}
+
+.rickshaw_graph .line_annotation_outer.detailed .pointsRemoved {
+    float: right;
+    color: red;
+}
+
+.rickshaw_graph .line_annotation_outer.detailed p {
+    margin: 0;
+    text-indent: 0;
+}
+
+.rickshaw_graph .line_annotation_outer.detailed p.storyPointsSum {
+    margin-top: 5px;
 }

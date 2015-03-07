@@ -348,8 +348,7 @@ app.directive('sprintChart', ['$cookies', function ($cookies) {
         shortFormatter: function(series, point) {
           if (!series.doneColumn) return null;
 
-          //var diff = Number((scope.selectedSprint.baseStoryPoints - point.y).toFixed(3));
-          var first = point.details.added[0];
+          var first = point.details.added[0] || point.details.removed[0];
           if (first && first.parentName) {
             return "<i>" + first.name.trunc(30) + "</i>"
           } else if (first) {
@@ -362,10 +361,14 @@ app.directive('sprintChart', ['$cookies', function ($cookies) {
           function format(added) {
             return function (task) {
               var name = task.parentName ? "<i>" + task.name + "</i> (" + task.parentName + ")" : task.name;
-              return name + (added ? " +" : " -") + task.storyPoints;
+              var addRemClass = added ? "pointsAdded" : "pointsRemoved";
+              return name + "&nbsp;<span class='" + addRemClass + "'>" + (task.storyPoints == 0 ? "" : added ? "+" : "-") + task.storyPoints + "</span>";
             }
           }
-          return point.details.added.map(format(true)).reduce(function(fst,snd) {return fst + "<br>" + snd;});
+          var joined = point.details.added.map(format(true)).concat(point.details.removed.map(format(false)));
+          var tasks = joined.reduce(function(fst,snd) {return fst + "<br>" + snd;});
+          var storyPointsSum = Number((scope.selectedSprint.baseStoryPoints - point.y).toFixed(3));
+          return "<p>" + tasks + "</p><p class='storyPointsSum'><u>" + series.name + ": " + storyPointsSum + "</u></p>";
         }
       });
 
