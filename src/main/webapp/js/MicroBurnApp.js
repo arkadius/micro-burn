@@ -358,14 +358,34 @@ app.directive('sprintChart', ['$cookies', function ($cookies) {
           }
         },
         detailedFormatter: function(series, point) {
-          function format(added) {
-            return function (task) {
-              var name = task.parentName ? "<i>" + task.name + "</i> (" + task.parentName + ")" : task.name;
-              var addRemClass = added ? "pointsAdded" : "pointsRemoved";
-              return name + "&nbsp;<span class='" + addRemClass + "'>" + (task.storyPoints == 0 ? "" : added ? "+" : "-") + task.storyPoints + "</span>";
-            }
+          function format(task, nested, added) {
+            var name = null;
+            if (nested)
+              name = "&rarr; " + task.name;
+            else if (task.parentName)
+              name = "<i>" + task.name + "</i> (" + task.parentName + ")";
+            else
+              name = task.name;
+            var addRemClass = added ? "pointsAdded" : "pointsRemoved";
+            return name + "&nbsp;<span class='" + addRemClass + "'>" + (task.storyPoints == 0 ? "" : added ? "+" : "-") + task.storyPoints + "</span>";
           }
-          var joined = point.details.added.map(format(true)).concat(point.details.removed.map(format(false)));
+          function formatList(list, added) {
+            var prev = !list[0] || list[0].parentId ? null : list[0];
+            return list.map(function(el, index) {
+              var result = null;
+              if (prev) {
+                console.log(el.parentId, prev.id, el.parentId == prev.id);
+                result = format(el, el.parentId == prev.id, added);
+              } else {
+                result = format(el, false, added);
+              }
+              if (!el.parentId) {
+                prev = el;
+              }
+              return result;
+            });
+          }
+          var joined = formatList(point.details.added, true).concat(formatList(point.details.removed, false));
           var tasks = joined.reduce(function(fst,snd) {return fst + "<br>" + snd;});
           var storyPointsSum = Number((scope.selectedSprint.baseStoryPoints - point.y).toFixed(3));
           return "<p>" + tasks + "</p><p class='storyPointsSum'><u>" + series.name + ": " + storyPointsSum + "</u></p>";

@@ -58,11 +58,16 @@ case class ColumnState(storyPointsSum: BigDecimal, added: Seq[TaskDetails], remo
   }  
 }
 
-case class TaskDetails(name: String, parentName: Option[String], storyPoints: Double)
+case class TaskDetails(id: String, name: String, parentId: Option[String], parentName: Option[String], storyPoints: Double)
 
 object TaskDetails {
   def apply(task: Task)(implicit config: ProjectConfig): TaskDetails = {
-    TaskDetails(task.taskName, task.optionalParentUserStory.map(_.taskName), task.storyPointsWithoutSubTasks.toString().toDouble)
+    TaskDetails(
+      id = task.taskId,
+      name = task.taskName,
+      parentId = task.optionalParentUserStory.map(_.taskId),
+      parentName = task.optionalParentUserStory.map(_.taskName),
+      storyPoints = task.storyPointsWithoutSubTasks.toString().toDouble)
   }
 }
 
