@@ -58,7 +58,7 @@ class SprintColumnsHistoryProvider(projectActor: ProjectActor)
     val last = history.columnStates.last
     val lastAvailableBeforeNow = last.date.before(nowOrSprintsEndForFinished)
     lastAvailableBeforeNow.option {
-      last.copy(date = nowOrSprintsEndForFinished)
+      last.copy(date = nowOrSprintsEndForFinished).withoutTaskChanges
     }
   }
 

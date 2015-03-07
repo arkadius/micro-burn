@@ -80,7 +80,11 @@ LineAnnotate = Rickshaw.Class.create({
     var alignables = [];
     this.element.innerHTML = '';
     points.forEach(function(point){
-      if (point.value.details == null || point.value.y === null || point.prev.y == null) return;
+      if (point.value.y === null || point.prev.y === null) return;
+
+      var series = point.series;
+      var formatted = this.formatter(series, point.value);
+      if (formatted === null) return;
 
       var outer = document.createElement('div');
       outer.className = 'line_annotation_outer';
@@ -89,12 +93,7 @@ LineAnnotate = Rickshaw.Class.create({
 
       var item = document.createElement('div');
       item.className = 'line_annotation';
-
-      // invert the scale if this series displays using a scale
-      var series = point.series;
-      var actualY = series.scale ? series.scale.invert(point.value.y) : point.value.y;
-
-      item.innerHTML = this.formatter(series, point.value);
+      item.innerHTML = formatted;
 
       outer.appendChild(item);
       this.element.appendChild(outer);

@@ -1,5 +1,10 @@
 window.dateFormat = 'Y-m-d H:i';
 
+String.prototype.trunc = String.prototype.trunc ||
+  function (n) {
+    return this.length> n ? this.substr(0,n-1)+'&hellip;' : this;
+  };
+
 function wrapServiceCall(call) {
   $("#cover").show();
   var callResult = call();
@@ -300,7 +305,6 @@ app.directive('sprintChart', ['$cookies', function ($cookies) {
         interpolation: "step-after",
         series: series
       });
-      window.graph = graph;
 
       function toDays(millis) {
         return Math.round((millis - startDate) / (1000 * 60 * 60 * 24))
@@ -342,8 +346,13 @@ app.directive('sprintChart', ['$cookies', function ($cookies) {
       var lineAnnotate = new LineAnnotate({
         graph: graph,
         formatter: function(series, point) {
+          if (!series.doneColumn) return null;
+
           console.log(point.details);
-          return series.name + ':&nbsp;' + point.y + '&nbsp;' + point.details;
+          //var diff = Number((scope.selectedSprint.baseStoryPoints - point.y).toFixed(3));
+          var first = point.details.added[0];
+          var firstName = first ? first.name.trunc(30) : null;
+          return firstName;
         }
       });
 
@@ -371,8 +380,6 @@ app.directive('sprintChart', ['$cookies', function ($cookies) {
             column.data.forEach(function (probe) {
               minX = Math.min(minX, probe.x);
               maxX = Math.max(maxX, probe.x);
-              if (!column.doneColumn)
-                delete probe.details;
             });
             series.push(column);
           });

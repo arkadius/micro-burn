@@ -28,6 +28,12 @@ case class DateWithColumnsState(date: Date, indexOnColumnState: Map[Int, ColumnS
     copy(indexOnColumnState = indexOnColumnState.mapValues(_ * const))
   }
 
+  def withoutTaskChanges: DateWithColumnsState = {
+    copy(indexOnColumnState = indexOnColumnState.mapValues { state =>
+      state.copy(added = Nil, removed = Nil)
+    })
+  }
+
   def storyPointsForColumn(boardColumnIndex: Int): BigDecimal = indexOnColumnState.get(boardColumnIndex).map(_.storyPointsSum).getOrElse(0)
 
   def addedForColumn(boardColumnIndex: Int): Seq[TaskDetails] = indexOnColumnState.get(boardColumnIndex).map(_.added).getOrElse(Nil)
