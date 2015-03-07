@@ -343,44 +343,49 @@ app.directive('sprintChart', ['$cookies', function ($cookies) {
         }
       });
 
+      function titleForTask(task) {
+        if (task.parentName) {
+          return "<i>" + task.name + "</i> (" + task.parentName + ")"
+        } else if (task) {
+          return task.name
+        }
+      }
+
       var lineAnnotate = new LineAnnotate({
         graph: graph,
         shortFormatter: function(series, point) {
           if (!series.doneColumn) return null;
 
           var first = point.details.added[0] || point.details.removed[0];
-          if (first && first.parentName) {
-            return "<i>" + first.name.trunc(30) + "</i>"
-          } else if (first) {
-            return first.name.trunc(30)
-          } else {
-            return null;
-          }
+          if (!first) return null;
+
+          var title = titleForTask(first).trunc(30);
+          if (first.name.length <= 30 && (point.details.added.length + point.details.removed.length > 1))
+            return title + "&hellip;";
+          else
+            return title;
         },
         detailedFormatter: function(series, point) {
           function format(task, nested, added) {
-            var name = null;
+            var title = null;
             if (nested)
-              name = "&rarr; " + task.name;
-            else if (task.parentName)
-              name = "<i>" + task.name + "</i> (" + task.parentName + ")";
+              title = "&rarr; <i>" + task.name + "</i>";
             else
-              name = task.name;
+              title = titleForTask(task);
             var addRemClass = added ? "pointsAdded" : "pointsRemoved";
-            return name + "&nbsp;<span class='" + addRemClass + "'>" + (task.storyPoints == 0 ? "" : added ? "+" : "-") + task.storyPoints + "</span>";
+            return title + "&nbsp;<span class='" + addRemClass + "'>" + (task.storyPoints == 0 ? "" : added ? "+" : "-") + task.storyPoints + "</span>";
           }
           function formatList(list, added) {
-            var prev = !list[0] || list[0].parentId ? null : list[0];
-            return list.map(function(el, index) {
+            var prev = list.length == 0 || list[0].parentId ? null : list[0];
+            return list.map(function(task, index) {
               var result = null;
               if (prev) {
-                console.log(el.parentId, prev.id, el.parentId == prev.id);
-                result = format(el, el.parentId == prev.id, added);
+                result = format(task, task.parentId == prev.id, added);
               } else {
-                result = format(el, false, added);
+                result = format(task, false, added);
               }
-              if (!el.parentId) {
-                prev = el;
+              if (!task.parentId) {
+                prev = task;
               }
               return result;
             });
