@@ -85,7 +85,8 @@ LineAnnotate = Rickshaw.Class.create({
 
       var outer = document.createElement('div');
       outer.className = 'line_annotation_outer';
-      outer.style.left = graph.x(point.value.x) + 'px';
+      var x = graph.x(point.value.x);
+      outer.style.left = x + 'px';
       outer.style.top = graph.y(point.value.y0 + (point.value.y + point.prev.y) / 2) + 'px';
 
       var item = document.createElement('div');
@@ -109,27 +110,33 @@ LineAnnotate = Rickshaw.Class.create({
 
       // Assume left alignment until the element has been displayed and
       // bounding box calculations are possible.
-      alignables.push(item);
+      alignables.push({
+        orignalX: x,
+        outer: outer,
+        inner: item
+      });
     }, this);
 
     alignables.forEach(function(el) {
-      el.classList.add('left');
+      el.outer.classList.add('fromleft');
     }, false);
 
     this.show();
 
     // If left-alignment results in any error, try right-alignment.
     alignables.forEach(function(el) {
-      var leftAlignError = this._calcLayoutError(el);
+      var leftAlignError = this._calcLayoutError(el.inner);
       if (leftAlignError > 0) {
-        el.classList.remove('left');
-        el.classList.add('right');
+        el.outer.style.left = (el.orignalX - 500) + "px";
+        el.outer.classList.remove('fromleft');
+        el.outer.classList.add('fromright');
 
         // If right-alignment is worse than left alignment, switch back.
-        var rightAlignError = this._calcLayoutError(el);
+        var rightAlignError = this._calcLayoutError(el.inner);
         if (rightAlignError > leftAlignError) {
-          el.classList.remove('right');
-          el.classList.add('left');
+          el.outer.style.left = el.orignalX + "px";
+          el.outer.classList.remove('fromright');
+          el.outer.classList.add('fromleft');
         }
       }
     }, this);

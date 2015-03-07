@@ -28,15 +28,17 @@
     opacity: 1;
 }
 
-.rickshaw_graph .line_annotation.left {
+.rickshaw_graph .line_annotation_outer.fromleft .line_annotation {
+    float: left;
     left: 20px;
 }
-.rickshaw_graph .line_annotation.right {
-    right: 20px;
+.rickshaw_graph .line_annotation_outer.fromright .line_annotation {
+    float: right;
+    right: -480px;
 }
 
-.rickshaw_graph .line_annotation_outer.detailed .line_annotation.right {
-    right: 520px;
+.rickshaw_graph .line_annotation_outer.fromright.detailed .line_annotation {
+    right: 20px;
 }
 
 .rickshaw_graph .line_annotation:before {
@@ -51,11 +53,6 @@
     top: 9px;
 }
 
-.rickshaw_graph .line_annotation.left:before {
-    border-width: 4px 20px 4px 0;
-    left: -21px;
-}
-
 .rickshaw_graph .line_annotation:after {
     content: '';
     position: absolute;
@@ -68,17 +65,22 @@
     top: 9px;
 }
 
-.rickshaw_graph .line_annotation.left:after {
+.rickshaw_graph .line_annotation_outer.fromleft .line_annotation:before {
+    border-width: 4px 20px 4px 0;
+    left: -21px;
+}
+
+.rickshaw_graph .line_annotation_outer.fromleft .line_annotation:after {
     border-width: 4px 20px 4px 0;
     left: -20px;
 }
 
-.rickshaw_graph .line_annotation.right:before {
+.rickshaw_graph .line_annotation_outer.fromright .line_annotation:before {
     border-width: 4px 0 4px 20px;
     right: -21px;
 }
 
-.rickshaw_graph .line_annotation.right:after {
+.rickshaw_graph .line_annotation_outer.fromright .line_annotation:after {
     border-width: 4px 0 4px 20px;
     right: -20px;
 }
