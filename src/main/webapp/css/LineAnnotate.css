@@ -1,10 +1,10 @@
 .rickshaw_graph .line_annotation_outer {
     position: absolute;
-    white-space: nowrap;
     width: 1px;
 }
 
 .rickshaw_graph .line_annotation {
+    cursor: default;
     background: white;
     color: black;
     opacity: 0.9;
@@ -12,9 +12,14 @@
     border-radius: 3px;
     position: relative;
     z-index: 20;
-    font-size: 12px;
-    padding: 2px 2px 2px;
-    top: -11px;
+    font-size: 11px;
+    padding: 1px 3px 1px;
+    top: -9px;
+    white-space: nowrap;
+    width: auto;
+}
+
+.rickshaw_graph .line_annotation.detailed {
 }
 
 .rickshaw_graph .line_annotation.left {
@@ -33,7 +38,7 @@
     width: 0;
     z-index: 0;
     margin-top: -4px;
-    top: 50%;
+    top: 9px;
 }
 
 .rickshaw_graph .line_annotation.left:before {
@@ -50,7 +55,7 @@
     width: 0;
     z-index: 1;
     margin-top: -4px;
-    top: 50%;
+    top: 9px;
 }
 
 .rickshaw_graph .line_annotation.left:after {

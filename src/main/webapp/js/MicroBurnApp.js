@@ -345,14 +345,27 @@ app.directive('sprintChart', ['$cookies', function ($cookies) {
 
       var lineAnnotate = new LineAnnotate({
         graph: graph,
-        formatter: function(series, point) {
+        shortFormatter: function(series, point) {
           if (!series.doneColumn) return null;
 
-          console.log(point.details);
           //var diff = Number((scope.selectedSprint.baseStoryPoints - point.y).toFixed(3));
           var first = point.details.added[0];
-          var firstName = first ? first.name.trunc(30) : null;
-          return firstName;
+          if (first && first.parentName) {
+            return "<i>" + first.name.trunc(30) + "</i>"
+          } else if (first) {
+            return first.name.trunc(30)
+          } else {
+            return null;
+          }
+        },
+        detailedFormatter: function(series, point) {
+          function format(added) {
+            return function (task) {
+              var name = task.parentName ? "<i>" + task.name + "</i> (" + task.parentName + ")" : task.name;
+              return name + (added ? " +" : " -") + task.storyPoints;
+            }
+          }
+          return point.details.added.map(format(true)).reduce(function(fst,snd) {return fst + "<br>" + snd;});
         }
       });
 

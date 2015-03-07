@@ -97,7 +97,7 @@ case class BoardState(userStories: Seq[UserStory], date: Date) extends HavingNes
   private def tasksOnRightFromColumn(columnIndex: Int)
                                     (implicit config: ProjectConfig, knowledge: SprintHistoricalKnowledge): Seq[Task] =
     for {
-      userStory <- notBacklogUserStories
+      userStory <- notBacklogUserStories.sortBy(_.storyPointsSum).reverse
       task <- userStory.flattenTasks
       if knowledge.shouldBeUsedInCalculations(task)
       configuredTasksBoardColumn <- task.boardColumn

@@ -2,9 +2,7 @@ LineAnnotate = Rickshaw.Class.create({
 
   initialize: function(args) {
     var graph = this.graph = args.graph;
-
     var element = this.element = document.createElement('div');
-    element.className = 'detail';
 
     this.visible = true;
     graph.element.appendChild(element);
@@ -16,11 +14,8 @@ LineAnnotate = Rickshaw.Class.create({
     this.onHide = args.onHide;
     this.onRender = args.onRender;
 
-    this.formatter = args.formatter || this.formatter;
-  },
-
-  formatter: function(series, point) {
-    return series.name + ':&nbsp;' + point.y;
+    this.shortFormatter = args.shortFormatter;
+    this.detailedFormatter = args.detailedFormatter;
   },
 
   update: function() {
@@ -83,8 +78,9 @@ LineAnnotate = Rickshaw.Class.create({
       if (point.value.y === null || point.prev.y === null) return;
 
       var series = point.series;
-      var formatted = this.formatter(series, point.value);
-      if (formatted === null) return;
+      var shortFormatted = this.shortFormatter(series, point.value);
+      if (shortFormatted === null) return;
+      var detailedFormatted = this.detailedFormatter(series, point.value);
 
       var outer = document.createElement('div');
       outer.className = 'line_annotation_outer';
@@ -93,7 +89,17 @@ LineAnnotate = Rickshaw.Class.create({
 
       var item = document.createElement('div');
       item.className = 'line_annotation';
-      item.innerHTML = formatted;
+      function displayShort() {
+        item.innerHTML = shortFormatted;
+        item.classList.remove('detailed');
+      }
+      function displayDetailed() {
+        item.innerHTML = detailedFormatted;
+        item.classList.add('detailed');
+      }
+      displayShort();
+      item.addEventListener('mouseover', displayDetailed);
+      item.addEventListener('mouseout', displayShort);
 
       outer.appendChild(item);
       this.element.appendChild(outer);
@@ -107,7 +113,7 @@ LineAnnotate = Rickshaw.Class.create({
 
     alignables.forEach(function(el) {
       el.classList.add('left');
-    });
+    }, false);
 
     this.show();
 
