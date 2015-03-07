@@ -21,6 +21,7 @@ input:disabled {
 #sprint-select {
     position: absolute;
     width: 170px;
+    border: 1px solid #BBB;
 }
 
 #name-input {
@@ -28,27 +29,27 @@ input:disabled {
 }
 
 .date-input {
-    width: 110px;
+    width: 115px;
+    vertical-align: middle;
 }
 
 .number-input {
     width: 40px;
+    vertical-align: middle;
 }
 
 .ok-button {
-    position: relative;
-    top: 4px;
-    width: 21px;
-    height: 21px;
+    width: 20px;
+    height: 20px;
+    vertical-align: middle;
     background-image: url(../images/ok.png);
     background-repeat: no-repeat;
 }
 
 .cancel-button {
-    position: relative;
-    top: 4px;
-    width: 21px;
-    height: 21px;
+    width: 20px;
+    height: 20px;
+    vertical-align: middle;
     background-image: url(../images/cancel.png);
     background-repeat: no-repeat;
 }
@@ -56,14 +57,12 @@ input:disabled {
 .sprint-details {
     position: relative;
     left: 200px;
-    line-height: 20px;
 }
 
 #actions-group-panel {
     position: absolute;;
     left: 440px;
-    top: -3px;
-    line-height: 20px;
+    margin-top: 5px;
     width: 250px;
 }
 

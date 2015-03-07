@@ -45,12 +45,11 @@
     content: '';
     position: absolute;
     border-style: solid;
-    border-color: transparent #7F7F7F;
+    border-color: transparent #BFBFBF;
     display: block;
     width: 0;
     z-index: 0;
-    margin-top: -4px;
-    top: 9px;
+    top: 5px;
 }
 
 .rickshaw_graph .line_annotation:after {
@@ -61,26 +60,25 @@
     display: block;
     width: 0;
     z-index: 1;
-    margin-top: -4px;
-    top: 9px;
+    top: 6px;
 }
 
 .rickshaw_graph .line_annotation_outer.fromleft .line_annotation:before {
-    border-width: 4px 20px 4px 0;
+    border-width: 5px 21px 5px 0;
     left: -21px;
 }
 
 .rickshaw_graph .line_annotation_outer.fromleft .line_annotation:after {
     border-width: 4px 20px 4px 0;
-    left: -20px;
+    left: -18px;
 }
 
 .rickshaw_graph .line_annotation_outer.fromright .line_annotation:before {
-    border-width: 4px 0 4px 20px;
+    border-width: 5px 0 5px 21px;
     right: -21px;
 }
 
 .rickshaw_graph .line_annotation_outer.fromright .line_annotation:after {
     border-width: 4px 0 4px 20px;
-    right: -20px;
+    right: -18px;
 }
