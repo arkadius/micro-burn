@@ -100,7 +100,10 @@ object EstimateComputer {
 
     def dateAfter(weightedMillis: BigDecimal)
                  (implicit config: ProjectConfig): DateTime = {
-      interval.getStart.plusMillis((weightedMillis / weight).toInt)
+      if (weightedMillis == BigDecimal(0)) // protect against 0 / 0 situation
+        interval.getStart
+      else
+        interval.getStart.plusMillis((weightedMillis / weight).toInt)
     }
     
     private def weight(implicit config: ProjectConfig): BigDecimal = {
