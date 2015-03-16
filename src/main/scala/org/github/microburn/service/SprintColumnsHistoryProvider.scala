@@ -66,9 +66,9 @@ class SprintColumnsHistoryProvider(projectActor: ProjectActor)
     config.nonBacklogColumns.map { column =>
       val storyPointsForColumn = zipped.map { allColumnsInfo =>
         val storyPoints = allColumnsInfo.storyPointsForColumn(column.index)
-        val addded = allColumnsInfo.addedForColumn(column.index)
+        val added = allColumnsInfo.addedForColumn(column.index)
         val removed = allColumnsInfo.removedForColumn(column.index)
-        HistoryProbe(allColumnsInfo.date, storyPoints, ProbeDetails(addded, removed))
+        HistoryProbe(allColumnsInfo.date, storyPoints, ProbeDetails(added, removed))
       }
       ColumnHistory(column.name, column.isDoneColumn, storyPointsForColumn)
     }
