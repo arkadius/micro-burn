@@ -40,6 +40,7 @@ class LastSprintRestartTxtRepository(projectRoot: File) extends LastSprintRestar
   }
 
   override def saveLastSprintRestart(dateTime: DateTime): Unit = {
+    projectRoot.mkdirs()
     val file = new File(projectRoot, "lastSprintRestart.txt")
     val writer = new FileWriter(file)
     try {
