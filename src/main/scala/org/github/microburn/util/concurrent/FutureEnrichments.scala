@@ -57,17 +57,9 @@ object FutureEnrichments {
       laFuture
     }
 
-    def ifMet(expr: => Boolean): LAFuture[Unit] = {
-      if (expr)
-        laFuture.map(_ => Unit)
-      else
-        LAFuture(() => Unit)
-    }
-
     def boxed: LAFuture[Box[T]] = {
       laFuture.map(Full(_))
     }
-
   }
 
   implicit class OptionOfFuture[T](opt: Option[LAFuture[T]]) {

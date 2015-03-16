@@ -97,7 +97,7 @@ case class Sprint(id: Int,
   case class BoardStatesWithKnowledgeCumulative(boardStatesCumulative: List[BoardStateWithHistoricalKnowledge]) {
     def sprintHistory(implicit config: ProjectConfig) = {
       val tasksOnRightFromColumns = boardStatesCumulative.map(_.tasksOnRightFromColumns)
-      val initial = DateWithColumnsState(tasksOnRightFromColumns.head)
+      val initial = DateWithColumnsChanges(tasksOnRightFromColumns.head)
       val columnStates = initial :: (tasksOnRightFromColumns zip tasksOnRightFromColumns.tail).map {
         case (prevTasksOnRight, currentTasksOnRight) =>
           currentTasksOnRight.diff(prevTasksOnRight)
@@ -145,5 +145,5 @@ object Sprint {
 }
 
 case class SprintHistory(sprintBase: BigDecimal,
-                         columnStates: Seq[DateWithColumnsState],
+                         columnStates: Seq[DateWithColumnsChanges],
                          sprintDetails: SprintDetails)

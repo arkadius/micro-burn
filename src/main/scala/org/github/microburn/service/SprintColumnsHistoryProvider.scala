@@ -53,7 +53,7 @@ class SprintColumnsHistoryProvider(projectActor: ProjectActor)
     ColumnsHistory(startDate.getMillis, columns)
   }
 
-  private def computeToAppend(history: SprintHistory): Option[DateWithColumnsState] = {
+  private def computeToAppend(history: SprintHistory): Option[DateWithColumnsChanges] = {
     val nowOrSprintsEndForFinished = history.sprintDetails.isFinished.option(history.sprintDetails.end).getOrElse(new Date)
     val last = history.columnStates.last
     val lastAvailableBeforeNow = last.date.before(nowOrSprintsEndForFinished)
@@ -62,7 +62,7 @@ class SprintColumnsHistoryProvider(projectActor: ProjectActor)
     }
   }
 
-  private def unzipByColumn(zipped: Seq[DateWithColumnsState]): List[ColumnHistory] = {
+  private def unzipByColumn(zipped: Seq[DateWithColumnsChanges]): List[ColumnHistory] = {
     config.nonBacklogColumns.map { column =>
       val storyPointsForColumn = zipped.map { allColumnsInfo =>
         val storyPoints = allColumnsInfo.storyPointsForColumn(column.index)
@@ -90,7 +90,7 @@ case class ColumnHistory(name: String, doneColumn: Boolean, data: Seq[HistoryPro
 
 case class HistoryProbe private(x: Long, y: Double, details: ProbeDetails)
 
-case class ProbeDetails(added: Seq[TaskDetails], removed: Seq[TaskDetails])
+case class ProbeDetails(added: Seq[TaskChange], removed: Seq[TaskChange])
 
 object ProbeDetails {
   def zero: ProbeDetails = ProbeDetails(Nil, Nil)

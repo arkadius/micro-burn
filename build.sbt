@@ -45,7 +45,7 @@ unmanagedResourceDirectories in Compile += { baseDirectory.value / "src/main/web
 seq(net.virtualvoid.sbt.graph.Plugin.graphSettings : _*)
 
 libraryDependencies ++= {
-  val liftV = "3.0-M3"
+  val liftV = "3.0-M4"
   val liftEdition = liftV.substring(0,3)
   val jettyV = "9.2.7.v20150116"
   Seq(
