@@ -16,11 +16,12 @@
 package org.github.microburn.repository
 
 import java.io.{File, PrintWriter}
-import java.text.{ParseException, SimpleDateFormat}
+import java.text.ParseException
 import java.util.Date
 
 import org.github.microburn.domain._
-import org.github.microburn.util.json.{CaseObjectSerializer, BigDecimalSerializer, IndexedSeqSerializer}
+import org.github.microburn.util.date.DateTimeFormats
+import org.github.microburn.util.json.{BigDecimalSerializer, CaseObjectSerializer, IndexedSeqSerializer}
 
 import scala.io.Source
 import scala.util.control.Exception._
@@ -61,7 +62,7 @@ class BoardStateFSRepository(sprintRoot: File) extends BoardStateRepository {
     }
   }
 
-  private def jsonFileName(date: Date) = dateFormat.format(date) + ".json"
+  private def jsonFileName(date: Date) = DateTimeFormats.utcUnderscoredDateTimeFormat.format(date) + ".json"
 
   override def loadInitialUserStories: Option[BoardState] = {
     sortedJsonFiles.headOption.map(loadUserStories _ tupled)
@@ -97,9 +98,7 @@ class BoardStateFSRepository(sprintRoot: File) extends BoardStateRepository {
 
   private def parseFileName(file: File): Option[Date] = {
     catching(classOf[ParseException]) opt {
-      dateFormat.parse(file.getName.replaceAll(".json", ""))
+      DateTimeFormats.utcUnderscoredDateTimeFormat.parse(file.getName.replaceAll(".json", ""))
     }
   }
-
-  private def dateFormat = new SimpleDateFormat("yyyy_MM_dd_HH_mm_ss")
 }

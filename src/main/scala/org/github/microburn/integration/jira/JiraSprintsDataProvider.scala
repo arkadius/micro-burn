@@ -48,9 +48,9 @@ class JiraSprintsDataProvider(config: JiraConfig, locale: java.util.Locale = Loc
       val JBool(closed) = jv \ "sprint" \ "closed"
       val JString(startDate) = jv \ "sprint" \ "startDate"
       val JString(endDate) = jv \ "sprint" \ "endDate"
-      MajorSprintDetails(name, dateFormat.parse(startDate), dateFormat.parse(endDate), !closed)
+      MajorSprintDetails(name, localDateFormat.parse(startDate), localDateFormat.parse(endDate), !closed)
     }
   }
 
-  private def dateFormat = new SimpleDateFormat("dd/MMM/yy HH:mm", locale)
+  private def localDateFormat = new SimpleDateFormat("dd/MMM/yy HH:mm", locale)
 }

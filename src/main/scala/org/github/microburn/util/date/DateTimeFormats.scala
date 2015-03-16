@@ -20,14 +20,19 @@ import java.util.TimeZone
 
 object DateTimeFormats {
 
-  def utcDateTimeFormat = {
+  def utcFullDateTimeFormat = {
     val f = new SimpleDateFormat("yyyy-MM-dd'T'HH:mm:ss.SSS'Z'")
     f.setTimeZone(TimeZone.getTimeZone("UTC"))
     f
   }
-
-  def dateFormat = {
-    new SimpleDateFormat("yyyy-MM-dd")
+  
+  def utcUnderscoredDateTimeFormat = {
+    val f = new SimpleDateFormat("yyyy_MM_dd_HH_mm_ss'Z'")
+    f.setTimeZone(TimeZone.getTimeZone("UTC"))
+    f
   }
 
+  def localDateFormat = {
+    new SimpleDateFormat("yyyy-MM-dd")
+  }
 }

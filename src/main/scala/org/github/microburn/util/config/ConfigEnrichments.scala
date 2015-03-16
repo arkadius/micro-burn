@@ -69,7 +69,7 @@ object ConfigEnrichments {
     def getDate(path: String): DateTime = {
       val str = config.getString(path)
       try {
-        new DateTime(DateTimeFormats.dateFormat.parse(str))
+        new DateTime(DateTimeFormats.localDateFormat.parse(str))
       } catch {
         case ex: ParseException =>
           throw new ConfigException.BadValue(path, s"Invalid date: $str. Should be in format: yyyy-MM-dd", ex)

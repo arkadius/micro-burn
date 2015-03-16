@@ -35,7 +35,7 @@ class LastSprintRestartTxtRepository(projectRoot: File) extends LastSprintRestar
   override def loadLastSprintRestart: Option[DateTime] = {
     val file = new File(projectRoot, "lastSprintRestart.txt")
     file.exists().option {
-      new DateTime(DateTimeFormats.utcDateTimeFormat.parse(Source.fromFile(file).mkString.trim))
+      new DateTime(DateTimeFormats.utcFullDateTimeFormat.parse(Source.fromFile(file).mkString.trim))
     }
   }
 
@@ -44,7 +44,7 @@ class LastSprintRestartTxtRepository(projectRoot: File) extends LastSprintRestar
     val file = new File(projectRoot, "lastSprintRestart.txt")
     val writer = new FileWriter(file)
     try {
-      writer.write(DateTimeFormats.utcDateTimeFormat.format(dateTime.toDate) + "\n")
+      writer.write(DateTimeFormats.utcFullDateTimeFormat.format(dateTime.toDate) + "\n")
     } finally {
       writer.close()
     }
