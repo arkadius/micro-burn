@@ -23,16 +23,15 @@ class ProjectConfigTest extends FlatSpec with Matchers {
   it should "create project config from conf having columns with statuses" in {
     val config = ProjectConfigUtils.defaultConfig
 
-    config.boardColumns should have length 5
+    config.nonBacklogColumns should have length 5
   }
 
   it should "create project config from conf having columns with ids" in {
     val config = ProjectConfig(TestConfig.trelloConfigWithDefaultsFallback().getConfig("project"))
 
-    config.boardColumns should have length 3
-    config.boardColumns(0).isBacklogColumn shouldBe true
-    config.boardColumns(1).isDoneColumn shouldBe false
-    config.boardColumns(2).isDoneColumn shouldBe true
+    config.nonBacklogColumns should have length 2
+    config.nonBacklogColumns(0).isDoneColumn shouldBe false
+    config.nonBacklogColumns(1).isDoneColumn shouldBe true
   }
 
 }

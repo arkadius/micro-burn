@@ -93,7 +93,7 @@ case class BoardState(userStories: Seq[UserStory], date: Date) extends HavingNes
   }
 
   def tasksOnRightFromColumns(implicit config: ProjectConfig, knowledge: SprintHistoricalKnowledge): DateWithTasksOnRightFromColumns = {
-    val indexOnSum = config.boardColumns.map(_.index).map { boardColumnIndex =>
+    val indexOnSum = config.nonBacklogColumns.map(_.index).map { boardColumnIndex =>
       boardColumnIndex -> tasksOnRightFromColumn(boardColumnIndex)
     }.toMap
     DateWithTasksOnRightFromColumns(date, indexOnSum)

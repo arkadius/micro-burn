@@ -22,7 +22,7 @@ import com.typesafe.config.Config
 
 import scala.concurrent.duration._
 
-case class ProjectConfig(boardColumns: List[BoardColumn],
+case class ProjectConfig(private val boardColumns: List[BoardColumn],
                          dataRoot: File,
                          defaultStoryPointsForUserStories: Option[BigDecimal],
                          splitSpBetweenTechnicalTasks: Boolean,
@@ -37,6 +37,8 @@ case class ProjectConfig(boardColumns: List[BoardColumn],
   } yield status -> column).toMap
 
   def boardColumn(status: String): Option[BoardColumn] = statuses.get(status)
+
+  def nonBacklogColumns: List[BoardColumn] = boardColumns.filterNot(_.isBacklogColumn)
 
   def firstNotDoneSprintColumn: BoardColumn = {
     val notDoneColumns = boardColumns.filterNot(col => col.isBacklogColumn || col.isDoneColumn)
