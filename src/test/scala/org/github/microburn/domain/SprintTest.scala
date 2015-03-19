@@ -33,7 +33,7 @@ class SprintTest extends FlatSpec with Matchers with Inside {
     sprintBeforeUpdate.baseStoryPoints shouldEqual BigDecimal(1)
 
     val sprintAfterFirstFinish = sprintBeforeUpdate.updateTasks(taskInitiallyOpened.close, taskInitiallyCompleted)
-    sprintAfterFirstFinish.doneStoryPoints shouldEqual Seq(0, 1) // baza 0 bo pomijamy bo tasksDoneOnStartVisibleForHistory
+    sprintAfterFirstFinish.doneStoryPoints shouldEqual Seq(0, 1) // first 0 because base is in AutomaticOnSprintStartMode
 
     val sprintAfterSecReopen = sprintAfterFirstFinish.updateTasks(taskInitiallyOpened.close, taskInitiallyCompleted.reopen)
     sprintAfterSecReopen.doneStoryPoints shouldEqual Seq(0, 1, 1)

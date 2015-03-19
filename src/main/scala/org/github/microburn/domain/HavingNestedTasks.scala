@@ -58,9 +58,12 @@ trait HavingNestedTasks[NestedTaskType <: Task with ComparableWith[NestedTaskTyp
     }
   }
 
-  def openNested: Self = {
+  def openNestedInSprint(implicit config: ProjectConfig, knowledge: KnowledgeAboutLastState): Self = {
     val openedNested = nestedTasks.map { nested =>
-      nested.open
+      if (nested.isInSprint)
+        nested.open
+      else
+        nested
     }
     updateNestedTasks(openedNested)
   }

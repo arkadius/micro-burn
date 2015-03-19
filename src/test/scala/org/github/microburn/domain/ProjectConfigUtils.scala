@@ -18,7 +18,7 @@ package org.github.microburn.domain
 import org.github.microburn.TestConfig
 
 object ProjectConfigUtils {
-  def firstNotDoneStatus(implicit config: ProjectConfig): String = config.firstNotDoneColumn.statusIds.head
+  def firstNotDoneStatus(implicit config: ProjectConfig): String = config.firstNotDoneSprintColumn.statusIds.head
 
   def defaultConfig = ProjectConfig(TestConfig.withDefaultsFallback().getConfig("project"))
 }

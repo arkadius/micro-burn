@@ -15,13 +15,32 @@
  */
 package org.github.microburn.domain
 
-case class SprintHistoricalKnowledge(private val tasksDoneAndNotReopenedInPrevStatesIds: Set[String]) {
-  def shouldBeUsedInCalculations(task: Task)(implicit config: ProjectConfig): Boolean = {
-    !tasksDoneAndNotReopenedInPrevStatesIds.contains(task.taskId) || isReopened(task)
+class SprintHistoricalKnowledge private (tasksDoneAndNotReopenedInPrevStates: Set[String])
+                                        (implicit val aboutLastState: KnowledgeAboutLastState) {
+
+  def shouldBeUsedInCalculations(task: Task)(implicit config: ProjectConfig): Boolean =
+    task.isInSprint && (!tasksDoneAndNotReopenedInPrevStates.contains(task.taskId) || isNotDone(task))
+
+  private def isNotDone(task: Task)(implicit config: ProjectConfig): Boolean =
+    !task.boardColumn.exists(_.isDoneColumn)
+
+  def withNextStateDoneTaskIds(nextStateDoneTaskIds: Set[String]): SprintHistoricalKnowledge = {
+    val newTasksDoneAndNotReopenedInPrevStates = tasksDoneAndNotReopenedInPrevStates intersect nextStateDoneTaskIds
+    val newKnowledgeAboutLastState = new KnowledgeAboutLastState(nextStateDoneTaskIds)
+    new SprintHistoricalKnowledge(newTasksDoneAndNotReopenedInPrevStates)(newKnowledgeAboutLastState)
   }
+}
 
-  private def isReopened(task: Task)(implicit config: ProjectConfig): Boolean = !task.boardColumn.exists(_.isDoneColumn)
+class KnowledgeAboutLastState(tasksRecentlyDone: Set[String]) {
+  def recentlyWasDone(task: Task): Boolean = tasksRecentlyDone.contains(task.taskId)
+}
 
-  def withNextStateDoneTaskIds(nextStateDoneTaskIds: Set[String]): SprintHistoricalKnowledge =
-    copy(tasksDoneAndNotReopenedInPrevStatesIds = tasksDoneAndNotReopenedInPrevStatesIds intersect nextStateDoneTaskIds)
+object SprintHistoricalKnowledge {
+  def assumingAllDoneTasksWereNotReopened(doneTaskIds: Set[String]): SprintHistoricalKnowledge =
+    new SprintHistoricalKnowledge(doneTaskIds)(new KnowledgeAboutLastState(doneTaskIds))
+}
+
+object KnowledgeAboutLastState {
+  def assumingNoneDoneTask: KnowledgeAboutLastState =
+    new KnowledgeAboutLastState(Set.empty)
 }

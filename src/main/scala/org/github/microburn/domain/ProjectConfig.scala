@@ -22,7 +22,7 @@ import com.typesafe.config.Config
 
 import scala.concurrent.duration._
 
-case class ProjectConfig(nonBacklogColumns: List[BoardColumn],
+case class ProjectConfig(boardColumns: List[BoardColumn],
                          dataRoot: File,
                          defaultStoryPointsForUserStories: Option[BigDecimal],
                          splitSpBetweenTechnicalTasks: Boolean,
@@ -32,24 +32,24 @@ case class ProjectConfig(nonBacklogColumns: List[BoardColumn],
                          sprintBaseDetermineMode: SprintBaseDetermineMode) {
 
   private val statuses = (for {
-    column <- nonBacklogColumns
+    column <- boardColumns
     status <- column.statusIds
   } yield status -> column).toMap
 
   def boardColumn(status: String): Option[BoardColumn] = statuses.get(status)
 
-  def firstNotDoneColumn: BoardColumn = {
-    val notDoneColumns = nonBacklogColumns.filterNot(_.isDoneColumn)
+  def firstNotDoneSprintColumn: BoardColumn = {
+    val notDoneColumns = boardColumns.filterNot(col => col.isBacklogColumn || col.isDoneColumn)
     notDoneColumns.head
   }
 
   def lastDoneColumn: BoardColumn = {
-    val doneColumns = nonBacklogColumns.filter(_.isDoneColumn)
+    val doneColumns = boardColumns.filter(_.isDoneColumn)
     doneColumns.last
   }
 }
 
-case class BoardColumn(index: Int, name: String, statusIds: List[String], isDoneColumn: Boolean)
+case class BoardColumn(index: Int, name: String, statusIds: List[String], isBacklogColumn: Boolean, isDoneColumn: Boolean)
 
 object ProjectConfig {
   import org.github.microburn.util.config.ConfigEnrichments._
@@ -57,9 +57,8 @@ object ProjectConfig {
   import scala.collection.convert.wrapAll._
 
   def apply(config: Config): ProjectConfig = {
-    val nonBacklogColumns = parseNonBacklogColumns(config)
-    require(nonBacklogColumns.size >= 2, "You must define at least two column")
-    val nonBacklogColumnsWithAtLeastOneDone = makeAtLeastOneColumnDone(nonBacklogColumns)
+    val columns = parseColumns(config)
+    val columnsWithAtLeastOneDone = makeAtLeastOneColumnDone(columns)
     val defaultStoryPointsForUserStories = config.optional(_.getBigDecimal, "defaultStoryPointsForUserStories")
     val splitSpBetweenTechnicalTasks = config.getBoolean("splitSpBetweenTechnicalTasks")
     val initialFetchAfterSprintStartAcceptableDelay = config.getDuration("initialFetchAfterSprintStartAcceptableDelay", TimeUnit.MILLISECONDS).millis
@@ -71,7 +70,7 @@ object ProjectConfig {
     })
 
     ProjectConfig(
-      nonBacklogColumns = nonBacklogColumnsWithAtLeastOneDone,
+      boardColumns = columnsWithAtLeastOneDone,
       dataRoot = dataRoot,
       defaultStoryPointsForUserStories = defaultStoryPointsForUserStories,
       splitSpBetweenTechnicalTasks = splitSpBetweenTechnicalTasks,
@@ -89,7 +88,7 @@ object ProjectConfig {
       columns
   }
 
-  private def parseNonBacklogColumns(config: Config): List[BoardColumn] = {
+  private def parseColumns(config: Config): List[BoardColumn] = {
     (for {
       (columnConfig, index) <- config.getConfigList("boardColumns").zipWithIndex
       name = columnConfig.getString("name")
@@ -97,12 +96,12 @@ object ProjectConfig {
         throw new scala.IllegalArgumentException("Missing field: statusIds or id")
       }
       isBacklogColumn = columnConfig.getDefinedBoolean("backlogColumn")
-      if !isBacklogColumn
       isDoneColumn = columnConfig.getDefinedBoolean("doneColumn")
     } yield BoardColumn(
       index = index,
       name = name,
       statusIds = statusIds,
+      isBacklogColumn = isBacklogColumn,
       isDoneColumn = isDoneColumn
     )).toList
   }

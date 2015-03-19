@@ -55,7 +55,7 @@ class UserStoryTest extends FlatSpec with Matchers {
 
   private def knowledgeWithDoneTasks(doneTasks: TechnicalTask*) = {
     val doneTaskIds = doneTasks.map(_.taskId).toSet
-    SprintHistoricalKnowledge(doneTaskIds)
+    SprintHistoricalKnowledge.assumingAllDoneTasksWereNotReopened(doneTaskIds)
   }
 
 }

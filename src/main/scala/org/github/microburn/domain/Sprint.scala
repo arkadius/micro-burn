@@ -67,7 +67,8 @@ case class Sprint(id: Int,
       .map { case (date, group) => group}
 
     val optionalSimulatedBoardStateOnStart = initialAfterStartPlusAcceptableDelay.option {
-      initialBoard.openNested.copy(date = details.start)
+      implicit val implicitKnowledge = KnowledgeAboutLastState.assumingNoneDoneTask
+      initialBoard.openNestedInSprint.copy(date = details.start)
     }
 
     val boardStates = optionalSimulatedBoardStateOnStart.toList ::: eventsSortedAndGrouped.scanLeft(initialBoard) { (cumulativeBoard, currEventsGroup) =>
@@ -77,11 +78,13 @@ case class Sprint(id: Int,
     }.toList
 
     val (startBoardState :: tailBoardStates) = boardStates
-    val startStateWithKnowledge = BoardStateWithHistoricalKnowledge(startBoardState, SprintHistoricalKnowledge(startBoardState.doneTasksIds))
+    val startDoneTasksIds = startBoardState.doneTasksIds(KnowledgeAboutLastState.assumingNoneDoneTask)
+    val startKnowledge = SprintHistoricalKnowledge.assumingAllDoneTasksWereNotReopened(startDoneTasksIds)
+    val startStateWithKnowledge = BoardStateWithHistoricalKnowledge(startBoardState, startKnowledge)
 
     val boardStatesCumulative = tailBoardStates.scanLeft(startStateWithKnowledge) {
       case (BoardStateWithHistoricalKnowledge(_, prevKnowledge), nextState) =>
-        val cumulativeKnowledge = prevKnowledge.withNextStateDoneTaskIds(nextState.doneTasksIds)
+        val cumulativeKnowledge = prevKnowledge.withNextStateDoneTaskIds(nextState.doneTasksIds(prevKnowledge.aboutLastState))
         BoardStateWithHistoricalKnowledge(nextState, cumulativeKnowledge)
     }
     BoardStatesWithKnowledgeCumulative(boardStatesCumulative)

@@ -22,20 +22,6 @@ case class BoardState(userStories: Seq[UserStory], date: Date) extends HavingNes
 
   override protected def nestedTasks: Seq[UserStory] = userStories
 
-  def doneTasksIds(implicit config: ProjectConfig): Set[String] =
-    (for {
-      userStory <- notBacklogUserStories
-      task <- userStory.flattenTasks
-      configuredTasksBoardColumn <- task.boardColumn
-      if configuredTasksBoardColumn.isDoneColumn
-    } yield task.taskId).toSet
-
-  def userStoriesStoryPointsSum(implicit config: ProjectConfig, knowledge: SprintHistoricalKnowledge): BigDecimal =
-    (for {
-      userStory <- notBacklogUserStories
-      if knowledge.shouldBeUsedInCalculations(userStory)
-    } yield userStory.storyPointsSum).sum
-
   def diff(other: BoardState): Seq[TaskEvent] = nestedDiff(other)(other.date)
 
   def plus(event: TaskEvent): BoardState = event match {
@@ -87,25 +73,44 @@ case class BoardState(userStories: Seq[UserStory], date: Date) extends HavingNes
 
   override protected def updateNestedTasks(newNestedTasks: Seq[UserStory]): Self = copy(userStories = newNestedTasks)
 
+  def userStoriesStoryPointsSum(implicit config: ProjectConfig, knowledge: SprintHistoricalKnowledge): BigDecimal = {
+    (for {
+      userStory <- userStories
+      if knowledge.shouldBeUsedInCalculations(userStory)
+    } yield userStory.storyPointsSum).sum
+  }
+
+  def doneTasksIds(knowledge: KnowledgeAboutLastState)(implicit config: ProjectConfig): Set[String] = {
+    implicit val knowledgeImplicit = knowledge
+    (for {
+      userStory <- userStories
+      if userStory.isInSprint
+      task <- userStory.flattenTasks
+      if task.isInSprint
+      configuredTasksBoardColumn <- task.boardColumn
+      if configuredTasksBoardColumn.isDoneColumn
+    } yield task.taskId).toSet
+  }
+
   def tasksOnRightFromColumns(implicit config: ProjectConfig, knowledge: SprintHistoricalKnowledge): DateWithTasksOnRightFromColumns = {
-    val indexOnSum = config.nonBacklogColumns.map(_.index).map { boardColumnIndex =>
+    val indexOnSum = config.boardColumns.map(_.index).map { boardColumnIndex =>
       boardColumnIndex -> tasksOnRightFromColumn(boardColumnIndex)
     }.toMap
     DateWithTasksOnRightFromColumns(date, indexOnSum)
   }
 
   private def tasksOnRightFromColumn(columnIndex: Int)
-                                    (implicit config: ProjectConfig, knowledge: SprintHistoricalKnowledge): Seq[Task] =
+                                    (implicit config: ProjectConfig, knowledge: SprintHistoricalKnowledge): Seq[Task] = {
+    import knowledge.aboutLastState
     for {
-      userStory <- notBacklogUserStories.sortBy { us => (us.storyPointsSum, us.taskName) }.reverse
+      userStory <- userStories.sortBy(_.storyPointsSum).reverse
+      if knowledge.shouldBeUsedInCalculations(userStory)
       task <- userStory.flattenTasks
       if knowledge.shouldBeUsedInCalculations(task)
       configuredTasksBoardColumn <- task.boardColumn
       if configuredTasksBoardColumn.index >= columnIndex
     } yield task
-
-  private def notBacklogUserStories(implicit config: ProjectConfig): Seq[UserStory] =
-    userStories.filter(userStory => userStory.boardColumn.isDefined)
+  }
 
   override def toString: String = {
     userStories.toSeq.sortBy(_.taskId).map(_.toString).mkString(",\n")

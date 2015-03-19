@@ -3,6 +3,7 @@
     "id": "closedCardId",
     "name": "Closed card name",
     "idList": "doneId",
+    "closed": false,
     "checklists": [
       {
         "checkItems": [
@@ -19,6 +20,7 @@
     "id": "openedCardWithMultipleChecklistsId",
     "name": "(1.5) Opened card with multiple checklists name",
     "idList": "todoId",
+    "closed": false,
     "checklists": [
       {
         "checkItems": [
@@ -49,6 +51,7 @@
     "id": "openedCardWithoutChecklists",
     "name": "Opened card with checklist name",
     "idList": "backlogId",
+    "closed": false,
     "checklists": []
   }
 ]

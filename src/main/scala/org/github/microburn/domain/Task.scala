@@ -34,10 +34,42 @@ sealed trait Task { self =>
 
   def storyPointsWithoutSubTasks(implicit config: ProjectConfig): BigDecimal
 
-  def boardColumn(implicit config: ProjectConfig): Option[BoardColumn] = status match {
-    case SpecifiedStatus(status) => config.boardColumn(status)
-    case TaskCompletedStatus => Some(config.lastDoneColumn)
-    case TaskOpenedStatus => Some(config.firstNotDoneColumn)
+  def isInSprint(implicit config: ProjectConfig, knowledge: KnowledgeAboutLastState) = boardColumn.exists(!_.isBacklogColumn)
+
+  def boardColumn(implicit config: ProjectConfig, knowledge: KnowledgeAboutLastState): Option[BoardColumn] =
+    status match {
+      case TaskCompletedStatus =>
+        Some(config.lastDoneColumn)
+      case TaskOpenedStatus =>
+        Some(config.firstNotDoneSprintColumn)
+      case SpecifiedStatus(name) =>
+        config.boardColumn(name).orElse {
+          knowledge.recentlyWasDone(this).option(config.lastDoneColumn) // done column for recently done task in not configured column
+        }
+      case ArchivedStatus(nestedStatus) if knowledge.recentlyWasDone(this) =>
+        columnForArchivedStatusAndRecentlyDoneTask(nestedStatus)
+      case ArchivedStatus(_) =>
+        None // archived but not recently done is treated as in not configured column
+    }
+
+  private def columnForArchivedStatusAndRecentlyDoneTask(nestedStatus: TaskStatus)
+                                                        (implicit config: ProjectConfig): Option[BoardColumn] = {
+    nestedStatus match {
+      case TaskCompletedStatus =>
+        Some(config.lastDoneColumn)
+      case SpecifiedStatus(name) =>
+        val columnForNested = config.boardColumn(name)
+        if (columnForNested.exists(_.isDoneColumn))
+          columnForNested // the same column as was before task archive
+        else if (columnForNested.isEmpty)
+          Some(config.lastDoneColumn) // done column for recently archived done task in not configured column
+        else
+          None // archived but in sprint not done column - possible removed
+      case TaskOpenedStatus =>
+        throw new IllegalStateException("Archived opened status shouldn't be here")
+      case ArchivedStatus(_) =>
+        throw new IllegalStateException("Recursively archived status shouldn't be here")
+    }
   }
 }
 
@@ -114,7 +146,7 @@ case class UserStory(taskId: String,
     }
   }
 
-  override def open: Self = openSelf.openNested
+  override def open(implicit config: ProjectConfig, knowledge: KnowledgeAboutLastState): Self = openSelf.openNestedInSprint
 
   override protected def updateStatus(status: TaskStatus): UserStory = copy(status = status)
 
@@ -148,7 +180,7 @@ case class TechnicalTaskWithParent(technical: TechnicalTask,
     selfDiff(other)
   }
 
-  override def open: TechnicalTaskWithParent = openSelf
+  override def open(implicit config: ProjectConfig, knowledge: KnowledgeAboutLastState): TechnicalTaskWithParent = openSelf
 
   override protected def updateStatus(status: TaskStatus): TechnicalTaskWithParent = copy(technical = technical.copy(status = status))
 }
@@ -164,7 +196,7 @@ trait ComparableWith[OtherTaskType <: Task with ComparableWith[OtherTaskType]] {
 }
 
 trait Openable[Self <: Task with Openable[Self]] { self: Task =>
-  def open: Self
+  def open(implicit config: ProjectConfig, knowledge: KnowledgeAboutLastState): Self
 
   protected def openSelf: Self = updateStatus(TaskOpenedStatus)
 

@@ -18,6 +18,7 @@ package org.github.microburn.domain
 sealed trait TaskStatus
 
 case class SpecifiedStatus(status: String) extends TaskStatus
+case class ArchivedStatus(status: TaskStatus) extends TaskStatus
 case object TaskCompletedStatus extends TaskStatus
 
 // used only for purpose of simulating of board start state
