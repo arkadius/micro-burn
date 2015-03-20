@@ -26,13 +26,13 @@ class TrelloCardsProvider(config: TrelloConfig) {
   import scala.concurrent.ExecutionContext.Implicits.global
 
   def cards: LAFuture[Seq[Card]] = {
-    fetchCardsWithChecklistItems(_ / "board" / config.boardId / "cards" / "all")
+    fetchCardsWithChecklistItems(_ / "board" / config.boardId / "cards")
   }
 
   private def fetchCardsWithChecklistItems(urlFromApi: Req => Req): LAFuture[Seq[Card]] = {
     val url = config.prepareUrl { apiUrl =>
       urlFromApi(apiUrl) <<? Map(
-        "fields" -> "id,name,idList,closed",
+        "fields" -> "id,name,idList",
         "checklists" -> "all"
       )
     }
@@ -46,13 +46,11 @@ class TrelloCardsProvider(config: TrelloConfig) {
         val JString(name) = item \ "name"
         val JString(columnId) = item \ "idList"
         val checkListItems = ChecklistExtractor.extract(item \ "checklists")
-        val JBool(closed) = item \ "closed"
         Card(
           id = id,
           name = name,
           columnId = columnId,
-          checklistItems = checkListItems,
-          closed = closed
+          checklistItems = checkListItems
         )
       }
     }
@@ -62,5 +60,4 @@ class TrelloCardsProvider(config: TrelloConfig) {
 case class Card(id: String,
                 protected val name: String,
                 columnId: String,
-                checklistItems: Seq[ChecklistItem],
-                closed: Boolean) extends TrelloTask
+                checklistItems: Seq[ChecklistItem]) extends TrelloTask

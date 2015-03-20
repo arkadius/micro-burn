@@ -15,11 +15,9 @@
  */
 package org.github.microburn.domain.generator
 
-import org.github.microburn.domain.{ArchivedStatus, TaskCompletedStatus, SpecifiedStatus}
+import org.github.microburn.domain.{SpecifiedStatus, TaskCompletedStatus}
 import org.scalacheck.Gen
 
 object TaskStatusGenerator {
-  def notArchivedStatusGenerator = Gen.oneOf(Gen.choose(1, 5).map(i => SpecifiedStatus(i.toString)), Gen.const(TaskCompletedStatus))
-
-  val generator = Gen.oneOf(notArchivedStatusGenerator, notArchivedStatusGenerator.map(ArchivedStatus(_)))
+  val generator = Gen.oneOf(Gen.choose(1, 5).map(i => SpecifiedStatus(i.toString)), Gen.const(TaskCompletedStatus))
 }

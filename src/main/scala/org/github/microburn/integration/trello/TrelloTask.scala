@@ -19,7 +19,6 @@ import org.github.microburn.integration.support.kanban.StoryPointsFromName
 
 trait TrelloTask {
   protected val name: String
-  def closed: Boolean
 
   val StoryPointsFromName(optionalSp, extractedName) = name
 }

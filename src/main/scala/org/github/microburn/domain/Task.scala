@@ -18,8 +18,8 @@ package org.github.microburn.domain
 import java.util.Date
 
 import scala.math.BigDecimal.RoundingMode
+import scalaz.Scalaz._
 import scalaz._
-import Scalaz._
 
 sealed trait Task { self =>
   def taskId: String
@@ -46,31 +46,7 @@ sealed trait Task { self =>
         config.boardColumn(name).orElse {
           knowledge.recentlyWasDone(this).option(config.lastDoneColumn) // done column for recently done task in not configured column
         }
-      case ArchivedStatus(nestedStatus) if knowledge.recentlyWasDone(this) =>
-        columnForArchivedStatusAndRecentlyDoneTask(nestedStatus)
-      case ArchivedStatus(_) =>
-        None // archived but not recently done is treated as in not configured column
     }
-
-  private def columnForArchivedStatusAndRecentlyDoneTask(nestedStatus: TaskStatus)
-                                                        (implicit config: ProjectConfig): Option[BoardColumn] = {
-    nestedStatus match {
-      case TaskCompletedStatus =>
-        Some(config.lastDoneColumn)
-      case SpecifiedStatus(name) =>
-        val columnForNested = config.boardColumn(name)
-        if (columnForNested.exists(_.isDoneColumn))
-          columnForNested // the same column as was before task archive
-        else if (columnForNested.isEmpty)
-          Some(config.lastDoneColumn) // done column for recently archived done task in not configured column
-        else
-          None // archived but in sprint not done column - possible removed
-      case TaskOpenedStatus =>
-        throw new IllegalStateException("Archived opened status shouldn't be here")
-      case ArchivedStatus(_) =>
-        throw new IllegalStateException("Recursively archived status shouldn't be here")
-    }
-  }
 }
 
 case class UserStory(taskId: String,

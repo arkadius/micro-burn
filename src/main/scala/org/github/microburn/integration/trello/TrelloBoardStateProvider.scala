@@ -19,10 +19,6 @@ import net.liftweb.actor.LAFuture
 import org.github.microburn.domain._
 import org.github.microburn.integration.support.kanban.BoardStateProvider
 
-import scala.math.BigDecimal.RoundingMode
-import scalaz._
-import Scalaz._
-
 class TrelloBoardStateProvider(config: TrelloConfig) extends BoardStateProvider {
   private val cardsProvider = new TrelloCardsProvider(config)
 
@@ -31,11 +27,10 @@ class TrelloBoardStateProvider(config: TrelloConfig) extends BoardStateProvider 
   }
 
   def toUserStory(card: Card): UserStory = {
-    def wrapInClosedIfNeed(status: TaskStatus) = if (card.closed) ArchivedStatus(status) else status
     val technicalTasks = card.checklistItems.map { item =>
-      TechnicalTask(item.id, item.extractedName, item.optionalSp, wrapInClosedIfNeed(statusForTaskInColumn(card.columnId, item)))
+      TechnicalTask(item.id, item.extractedName, item.optionalSp, statusForTaskInColumn(card.columnId, item))
     }.toIndexedSeq
-    UserStory(card.id, card.extractedName, card.optionalSp, technicalTasks, wrapInClosedIfNeed(SpecifiedStatus(card.columnId)))
+    UserStory(card.id, card.extractedName, card.optionalSp, technicalTasks, SpecifiedStatus(card.columnId))
   }
 
   private def statusForTaskInColumn(columnId: String, task: ChecklistItem) = {

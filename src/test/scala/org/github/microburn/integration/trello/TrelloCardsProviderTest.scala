@@ -41,8 +41,7 @@ class TrelloCardsProviderTest extends FlatSpec with RestIntegrationTest with Mat
       columnId = "doneId",
       checklistItems = List(
         ChecklistItem("completeItemId", "Complete item name", closed = true)
-      ),
-      closed = false
+      )
     )
     result(1) shouldEqual Card(
       id = "openedCardWithMultipleChecklistsId",
@@ -52,15 +51,13 @@ class TrelloCardsProviderTest extends FlatSpec with RestIntegrationTest with Mat
         ChecklistItem("incompleteItemId", "(0.5) Incomplete item name", closed = false),
         ChecklistItem("incompleteItem2Id", "Incomplete item 2 name", closed = false),
         ChecklistItem("incompleteItemWithNonAsciiCharsId", "Incomplete item with ąż name", closed = false)
-      ),
-      closed = false
+      )
     )
     result(2) shouldEqual Card(
       id = "openedCardWithoutChecklists",
       name = "Opened card with checklist name",
       columnId = "backlogId",
-      checklistItems = Nil,
-      closed = false
+      checklistItems = Nil
     )
   }
 }
@@ -68,7 +65,7 @@ class TrelloCardsProviderTest extends FlatSpec with RestIntegrationTest with Mat
 object TrelloCardsProviderTest extends Directives {
   def route(implicit system: ActorSystem, routeSettings: RoutingSettings): Route = {
     val trelloUrl = "trello" / "1"
-    path(trelloUrl / "board" / Segment / "cards" / "all") { boardId =>
+    path(trelloUrl / "board" / Segment / "cards") { boardId =>
       get {
         getFromFile("src/test/resources/trello/cards.json")
       }

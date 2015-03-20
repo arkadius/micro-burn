@@ -44,8 +44,6 @@ class TaskEventsCsvRepository(taskEventsFile: File) extends TaskEventsRepository
   private final val UPDATED = "updated"
   private final val REMOVED = "removed"
 
-  private final val ARCHIVED_SPECIFIED_STATUS = "archived-specified"
-  private final val ARCHIVED_COMPLETED_STATUS = "archived-completed"
   private final val SPECIFIED_STATUS = "specified"
   private final val COMPLETED_STATUS = "completed"
 
@@ -89,27 +87,21 @@ class TaskEventsCsvRepository(taskEventsFile: File) extends TaskEventsRepository
   }
 
   private def t(status: TaskStatus): String = status match {
-    case ArchivedStatus(SpecifiedStatus(_))   => ARCHIVED_SPECIFIED_STATUS
-    case ArchivedStatus(TaskCompletedStatus)  => ARCHIVED_COMPLETED_STATUS
-    case SpecifiedStatus(_)                   => SPECIFIED_STATUS
-    case TaskCompletedStatus                  => COMPLETED_STATUS
-    case otherStatus                          => throw new IllegalStateException(s"Status: $otherStatus shouldn't be here")
+    case SpecifiedStatus(_)     => SPECIFIED_STATUS
+    case TaskCompletedStatus    => COMPLETED_STATUS
+    case otherStatus            => throw new IllegalStateException(s"Status: $otherStatus shouldn't be here")
   }
 
   private def v(status: TaskStatus): String = status match {
-    case ArchivedStatus(SpecifiedStatus(value)) => value
-    case ArchivedStatus(TaskCompletedStatus)    => ""
-    case SpecifiedStatus(value)                 => value
-    case TaskCompletedStatus                    => ""
-    case otherStatus                            => throw new IllegalStateException(s"Status: $otherStatus shouldn't be here")
+    case SpecifiedStatus(value) => value
+    case TaskCompletedStatus    => ""
+    case otherStatus            => throw new IllegalStateException(s"Status: $otherStatus shouldn't be here")
   }
 
   private def parseStatus(typ: String, value: String): TaskStatus = typ match {
-    case ARCHIVED_SPECIFIED_STATUS  => ArchivedStatus(SpecifiedStatus(value))
-    case ARCHIVED_COMPLETED_STATUS  => ArchivedStatus(TaskCompletedStatus)
-    case SPECIFIED_STATUS           => SpecifiedStatus(value)
-    case COMPLETED_STATUS           => TaskCompletedStatus
-    case otherStatusType            => throw new ParseException(s"Invalid status type: $otherStatusType", -1)
+    case SPECIFIED_STATUS       => SpecifiedStatus(value)
+    case COMPLETED_STATUS       => TaskCompletedStatus
+    case otherStatusType        => throw new ParseException(s"Invalid status type: $otherStatusType", -1)
   }
 
   private def parseOptionalString(str: String): Option[String] = str.nonEmpty.option(str)
