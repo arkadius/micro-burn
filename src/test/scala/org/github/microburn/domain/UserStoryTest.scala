@@ -40,22 +40,4 @@ class UserStoryTest extends FlatSpec with Matchers {
     story.flattenTasks.find(_.taskId == technicalWithoutSp2.taskId).get.storyPointsWithoutSubTasks shouldEqual BigDecimal("0.5")
   }
 
-  it should "omit story points of not visible technical tasks in story points of self computation" in {
-    implicit val config = ProjectConfigUtils.defaultConfig.copy(splitSpBetweenTechnicalTasks = true)
-    val technicalWithSp = SampleTasks.openedTechnicalTask(Some(BigDecimal("1.9")))
-    val closedTechnicalWithoutSp = SampleTasks.closedTechnicalTask(None)
-    val openedTechnicalWithoutSp = SampleTasks.openedTechnicalTask(None)
-    val story = SampleTasks.openedUserStory(3, Seq(technicalWithSp, closedTechnicalWithoutSp, openedTechnicalWithoutSp))
-
-    implicit val context = knowledgeWithDoneTasks(closedTechnicalWithoutSp)
-    story.storyPointsSum shouldEqual BigDecimal("2.5")
-
-    story.storyPointsWithoutSubTasks shouldEqual BigDecimal("0.1")
-  }
-
-  private def knowledgeWithDoneTasks(doneTasks: TechnicalTask*) = {
-    val doneTaskIds = doneTasks.map(_.taskId).toSet
-    SprintHistoricalKnowledge.assumingAllDoneTasksWereNotReopened(doneTaskIds)
-  }
-
 }

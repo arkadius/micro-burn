@@ -78,13 +78,13 @@ case class Sprint(id: Int,
     }.toList
 
     val (startBoardState :: tailBoardStates) = boardStates
-    val startDoneTasksIds = startBoardState.doneTasksIds(KnowledgeAboutLastState.assumingNoneDoneTask)
+    val startDoneTasksIds = startBoardState.doneTasks(KnowledgeAboutLastState.assumingNoneDoneTask)
     val startKnowledge = SprintHistoricalKnowledge.assumingAllDoneTasksWereNotReopened(startDoneTasksIds)
     val startStateWithKnowledge = BoardStateWithHistoricalKnowledge(startBoardState, startKnowledge)
 
     val boardStatesCumulative = tailBoardStates.scanLeft(startStateWithKnowledge) {
       case (BoardStateWithHistoricalKnowledge(_, prevKnowledge), nextState) =>
-        val cumulativeKnowledge = prevKnowledge.withNextStateDoneTaskIds(nextState.doneTasksIds(prevKnowledge.aboutLastState))
+        val cumulativeKnowledge = prevKnowledge.withNextStateDoneTaskIds(nextState.doneTasks(prevKnowledge.aboutLastState))
         BoardStateWithHistoricalKnowledge(nextState, cumulativeKnowledge)
     }
     BoardStatesWithKnowledgeCumulative(boardStatesCumulative)

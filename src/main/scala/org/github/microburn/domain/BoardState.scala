@@ -80,16 +80,16 @@ case class BoardState(userStories: Seq[UserStory], date: Date) extends HavingNes
     } yield userStory.storyPointsSum).sum
   }
 
-  def doneTasksIds(knowledge: KnowledgeAboutLastState)(implicit config: ProjectConfig): Set[String] = {
+  def doneTasks(knowledge: KnowledgeAboutLastState)(implicit config: ProjectConfig): Seq[Task] = {
     implicit val knowledgeImplicit = knowledge
-    (for {
+    for {
       userStory <- userStories
       if userStory.isInSprint
       task <- userStory.flattenTasks
       if task.isInSprint
       configuredTasksBoardColumn <- task.boardColumn
       if configuredTasksBoardColumn.isDoneColumn
-    } yield task.taskId).toSet
+    } yield task
   }
 
   def tasksOnRightFromColumns(implicit config: ProjectConfig, knowledge: SprintHistoricalKnowledge): DateWithTasksOnRightFromColumns = {
