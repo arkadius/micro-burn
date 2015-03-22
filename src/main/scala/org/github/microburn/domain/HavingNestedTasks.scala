@@ -17,6 +17,8 @@ package org.github.microburn.domain
 
 import java.util.Date
 
+import org.github.microburn.domain.history.KnowledgeAboutLastState
+
 trait HavingNestedTasks[NestedTaskType <: Task with ComparableWith[NestedTaskType] with Openable[NestedTaskType]] { self =>
   type Self >: self.type <: HavingNestedTasks[NestedTaskType]
 

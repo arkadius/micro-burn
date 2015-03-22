@@ -17,17 +17,17 @@ package org.github.microburn.domain.actors
 
 import java.util.Date
 
-import net.liftweb.actor.LAFuture
 import net.liftweb.common.Box
 import org.github.microburn.TestConfig
 import org.github.microburn.domain._
+import org.github.microburn.domain.history.SprintHistory
 import org.scalatest.{FlatSpec, Matchers}
 
 import scala.concurrent.duration._
 
 class ProjectActorTest extends FlatSpec with Matchers with ProjectActorHelper {
-  import org.github.microburn.util.concurrent.FutureEnrichments._
   import org.github.microburn.util.concurrent.ActorEnrichments._
+  import org.github.microburn.util.concurrent.FutureEnrichments._
 
   implicit val config = ProjectConfig(TestConfig.withDefaultsFallback().getConfig("project"))
 

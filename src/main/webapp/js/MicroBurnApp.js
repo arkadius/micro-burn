@@ -343,54 +343,38 @@ app.directive('sprintChart', ['$cookies', function ($cookies) {
         }
       });
 
-      function titleForTask(task) {
-        if (task.parentName) {
-          return "<i>" + task.name + "</i> (" + task.parentName + ")"
-        } else if (task) {
-          return task.name
-        }
-      }
-
       var lineAnnotate = new LineAnnotate({
         graph: graph,
         shortFormatter: function(series, point) {
           if (!series.doneColumn) return null;
 
-          var first = point.details.added[0] || point.details.removed[0];
+          var first = point.details.addedPoints[0] || point.details.removedPoints[0];
           if (!first) return null;
 
-          var title = titleForTask(first).trunc(30);
-          if (first.name.length <= 30 && (point.details.added.length + point.details.removed.length > 1))
-            return title + "&hellip;";
+          if (first.name.length > 30 || (point.details.addedPoints.length + point.details.removedPoints.length > 1))
+            return first.name.trunc(30) + "&hellip;";
           else
-            return title;
+            return first.name;
         },
         detailedFormatter: function(series, point) {
-          function format(task, nested, added) {
-            var title = null;
-            if (nested)
-              title = "&rarr; <i>" + task.name + "</i>";
-            else
-              title = titleForTask(task);
-            var addRemClass = added ? "pointsAdded" : "pointsRemoved";
-            return title + "&nbsp;<span class='" + addRemClass + "'>" + (task.storyPoints == 0 ? "" : added ? "+" : "-") + task.storyPoints + "</span>";
-          }
           function formatList(list, added) {
-            var prev = list.length == 0 || list[0].parentId ? null : list[0];
-            return list.map(function(task, index) {
-              var result = null;
-              if (prev) {
-                result = format(task, task.parentId == prev.id, added);
-              } else {
-                result = format(task, false, added);
+            function formatTask(technical) {
+              return function (task) {
+                var addRemClass = added ? "pointsAdded" : "pointsRemoved";
+                var taskTitle = technical ? "&rarr; <i>" + task.name + "</i>" : task.name;
+                if (task.storyPoints && task.storyPoints > 0) {
+                  return taskTitle + "&nbsp;<span class='" + addRemClass + "'>" + (added ? "+" : "-") + task.storyPoints + "</span>"
+                } else {
+                  return taskTitle
+                }
               }
-              if (!task.parentId) {
-                prev = task;
-              }
-              return result;
-            });
+            }
+            function formatUserStory(task) {
+              return [formatTask(false)(task)].concat(task.technical.map(formatTask(true)))
+            }
+            return _.flatten(list.map(formatUserStory));
           }
-          var joined = formatList(point.details.added, true).concat(formatList(point.details.removed, false));
+          var joined = formatList(point.details.addedPoints, true).concat(formatList(point.details.removedPoints, false));
           var tasks = joined.reduce(function(fst,snd) {return fst + "<br>" + snd;});
           var storyPointsSum = Number((scope.selectedSprint.baseStoryPoints - point.y).toFixed(3));
           return "<p>" + tasks + "</p><p class='storyPointsSum'><u>" + series.name + ": " + storyPointsSum + "</u></p>";

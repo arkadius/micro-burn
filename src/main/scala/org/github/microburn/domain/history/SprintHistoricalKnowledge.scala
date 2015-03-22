@@ -13,7 +13,9 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package org.github.microburn.domain
+package org.github.microburn.domain.history
+
+import org.github.microburn.domain.{UserStory, BoardState, ProjectConfig, Task}
 
 class SprintHistoricalKnowledge private (tasksDoneAndNotReopenedInPrevStates: Seq[Task])
                                         (implicit val aboutLastState: KnowledgeAboutLastState) {

@@ -20,8 +20,9 @@ import java.util.Date
 import net.liftmodules.ng.Angular.NgModel
 import net.liftweb.actor.LAFuture
 import net.liftweb.common.Box
-import org.github.microburn.domain.actors.{GetStoryPointsHistory, ProjectActor}
 import org.github.microburn.domain._
+import org.github.microburn.domain.actors.{GetStoryPointsHistory, ProjectActor}
+import org.github.microburn.domain.history.{UserStoryChange, DateWithColumnsChanges, SprintHistory}
 import org.joda.time.DateTime
 
 import scalaz.Scalaz._
@@ -90,7 +91,7 @@ case class ColumnHistory(name: String, doneColumn: Boolean, data: Seq[HistoryPro
 
 case class HistoryProbe private(x: Long, y: Double, details: ProbeDetails)
 
-case class ProbeDetails(added: Seq[TaskChange], removed: Seq[TaskChange])
+case class ProbeDetails(addedPoints: Seq[UserStoryChange], removedPoints: Seq[UserStoryChange])
 
 object ProbeDetails {
   def zero: ProbeDetails = ProbeDetails(Nil, Nil)

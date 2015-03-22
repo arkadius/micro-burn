@@ -17,9 +17,10 @@ package org.github.microburn.domain
 
 import java.util.Date
 
+import org.github.microburn.domain.history.{KnowledgeAboutLastState, SprintHistoricalKnowledge}
+
 import scala.math.BigDecimal.RoundingMode
 import scalaz.Scalaz._
-import scalaz._
 
 sealed trait Task { self =>
   def taskId: String

@@ -17,6 +17,8 @@ package org.github.microburn.domain
 
 import java.util.Date
 
+import org.github.microburn.domain.history.{KnowledgeAboutLastState, SprintHistoricalKnowledge}
+
 case class BoardState(userStories: Seq[UserStory], date: Date) extends HavingNestedTasks[UserStory] {
   override type Self = BoardState
 
