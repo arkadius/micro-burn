@@ -35,9 +35,9 @@ class SprintHistoricalKnowledge private (tasksDoneAndNotReopenedInPrevStates: Se
     aboutLastState.userStoriesPointsSumOutOfBoard(board)
   }
   
-  def withNextStateDoneTaskIds(nextStateDoneTask: Seq[Task]): SprintHistoricalKnowledge = {
-    val newTasksDoneAndNotReopenedInPrevStates = nextStateDoneTask.filter(task => tasksDoneAndNotReopenedInPrevStatesIds.contains(task.taskId))
-    val newKnowledgeAboutLastState = new KnowledgeAboutLastState(nextStateDoneTask)
+  def withNextStateDoneTasks(nextStateDoneTasks: Seq[Task]): SprintHistoricalKnowledge = {
+    val newTasksDoneAndNotReopenedInPrevStates = nextStateDoneTasks.filter(task => tasksDoneAndNotReopenedInPrevStatesIds.contains(task.taskId))
+    val newKnowledgeAboutLastState = new KnowledgeAboutLastState(nextStateDoneTasks)
     new SprintHistoricalKnowledge(newTasksDoneAndNotReopenedInPrevStates)(newKnowledgeAboutLastState)
   }
 }

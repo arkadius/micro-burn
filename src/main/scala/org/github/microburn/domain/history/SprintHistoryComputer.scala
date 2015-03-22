@@ -40,14 +40,14 @@ class SprintHistoryComputer(details: SprintDetails, initialBoard: BoardState, ev
     }.toList
 
     val (startBoardState :: tailBoardStates) = boardStates
-    val startDoneTasksIds = startBoardState.doneTasks(KnowledgeAboutLastState.assumingNoneDoneTask)
-    val startKnowledge = SprintHistoricalKnowledge.assumingAllDoneTasksWereNotReopened(startDoneTasksIds)
+    val startDoneTasks = startBoardState.doneTasks(KnowledgeAboutLastState.assumingNoneDoneTask)
+    val startKnowledge = SprintHistoricalKnowledge.assumingAllDoneTasksWereNotReopened(startDoneTasks)
     val startStateWithKnowledge = BoardStateWithHistoricalKnowledge(startBoardState, startKnowledge)
 
     val boardStatesCumulative = tailBoardStates.scanLeft(startStateWithKnowledge) {
       case (BoardStateWithHistoricalKnowledge(_, prevKnowledge), nextState) =>
         val bothOnBoardAndOutOfBoardDoneTasks = nextState.doneTasks(prevKnowledge.aboutLastState) ++ prevKnowledge.doneTasksOutOfBoard(nextState)
-        val cumulativeKnowledge = prevKnowledge.withNextStateDoneTaskIds(bothOnBoardAndOutOfBoardDoneTasks)
+        val cumulativeKnowledge = prevKnowledge.withNextStateDoneTasks(bothOnBoardAndOutOfBoardDoneTasks)
         BoardStateWithHistoricalKnowledge(nextState, cumulativeKnowledge)
     }
     BoardStatesWithKnowledgeCumulative(boardStatesCumulative)
