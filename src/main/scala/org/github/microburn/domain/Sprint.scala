@@ -84,7 +84,8 @@ case class Sprint(id: Int,
 
     val boardStatesCumulative = tailBoardStates.scanLeft(startStateWithKnowledge) {
       case (BoardStateWithHistoricalKnowledge(_, prevKnowledge), nextState) =>
-        val cumulativeKnowledge = prevKnowledge.withNextStateDoneTaskIds(nextState.doneTasks(prevKnowledge.aboutLastState))
+        val bothOnBoardAndOutOfBoardDoneTasks = nextState.doneTasks(prevKnowledge.aboutLastState) ++ prevKnowledge.doneTasksOutOfBoard(nextState)
+        val cumulativeKnowledge = prevKnowledge.withNextStateDoneTaskIds(bothOnBoardAndOutOfBoardDoneTasks)
         BoardStateWithHistoricalKnowledge(nextState, cumulativeKnowledge)
     }
     BoardStatesWithKnowledgeCumulative(boardStatesCumulative)
@@ -116,21 +117,27 @@ case class Sprint(id: Int,
       val baseDeterminer = new SprintBaseStateDeterminer(config.sprintBaseDetermineMode)
       baseDeterminer.baseForSprint(
         details,
-        boardStatesCumulative.head.userStoriesStoryPointsSum,
-        boardStatesCumulative.last.userStoriesStoryPointsSum
+        boardStatesCumulative.head.userStoriesPointsSum,
+        boardStatesCumulative.last.userStoriesPointsSum
       )
     }
   }
   
   case class BoardStateWithHistoricalKnowledge(board: BoardState, knowledge: SprintHistoricalKnowledge) {
-    def userStoriesStoryPointsSum(implicit config: ProjectConfig): BigDecimal = {
+    def userStoriesPointsSum(implicit config: ProjectConfig): BigDecimal = {
       implicit val implicitKnowledge = knowledge
-      board.userStoriesStoryPointsSum
+      board.userStoriesPointsSum + knowledge.userStoriesPointsSumOutOfBoard(board)
     }
     
     def tasksOnRightFromColumns(implicit config: ProjectConfig): DateWithTasksOnRightFromColumns = {
       implicit val implicitKnowledge = knowledge
-      board.tasksOnRightFromColumns
+      val indexOnSum = config.nonBacklogColumns.map { boardColumn =>
+        val boardColumnIndex = boardColumn.index
+        val tasksOnRightOnBoard = board.tasksOnRightFromColumn(boardColumnIndex)
+        val optionalOutOfBoardTasks = (boardColumn == config.lastDoneColumn).option(knowledge.doneTasksOutOfBoard(board)).toSeq.flatten
+        boardColumnIndex -> (tasksOnRightOnBoard ++ optionalOutOfBoardTasks)
+      }.toMap
+      DateWithTasksOnRightFromColumns(board.date, indexOnSum)
     }
   }
 }

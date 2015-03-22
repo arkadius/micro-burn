@@ -73,7 +73,7 @@ case class BoardState(userStories: Seq[UserStory], date: Date) extends HavingNes
 
   override protected def updateNestedTasks(newNestedTasks: Seq[UserStory]): Self = copy(userStories = newNestedTasks)
 
-  def userStoriesStoryPointsSum(implicit config: ProjectConfig, knowledge: SprintHistoricalKnowledge): BigDecimal = {
+  def userStoriesPointsSum(implicit config: ProjectConfig, knowledge: SprintHistoricalKnowledge): BigDecimal = {
     (for {
       userStory <- userStories
       if knowledge.shouldBeUsedInCalculations(userStory)
@@ -92,18 +92,11 @@ case class BoardState(userStories: Seq[UserStory], date: Date) extends HavingNes
     } yield task
   }
 
-  def tasksOnRightFromColumns(implicit config: ProjectConfig, knowledge: SprintHistoricalKnowledge): DateWithTasksOnRightFromColumns = {
-    val indexOnSum = config.nonBacklogColumns.map(_.index).map { boardColumnIndex =>
-      boardColumnIndex -> tasksOnRightFromColumn(boardColumnIndex)
-    }.toMap
-    DateWithTasksOnRightFromColumns(date, indexOnSum)
-  }
-
-  private def tasksOnRightFromColumn(columnIndex: Int)
-                                    (implicit config: ProjectConfig, knowledge: SprintHistoricalKnowledge): Seq[Task] = {
+  def tasksOnRightFromColumn(columnIndex: Int)
+                            (implicit config: ProjectConfig, knowledge: SprintHistoricalKnowledge): Seq[Task] = {
     import knowledge.aboutLastState
     for {
-      userStory <- userStories.sortBy(_.storyPointsSum).reverse
+      userStory <- userStories
       if knowledge.shouldBeUsedInCalculations(userStory)
       task <- userStory.flattenTasks
       if knowledge.shouldBeUsedInCalculations(task)
