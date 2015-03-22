@@ -37,7 +37,8 @@ class SprintHistoricalKnowledge private (tasksDoneAndNotReopenedInPrevStates: Se
   
   def withNextStateDoneTasks(nextStateDoneTasks: Seq[Task]): SprintHistoricalKnowledge = {
     val newTasksDoneAndNotReopenedInPrevStates = nextStateDoneTasks.filter(task => tasksDoneAndNotReopenedInPrevStatesIds.contains(task.taskId))
-    val newKnowledgeAboutLastState = new KnowledgeAboutLastState(nextStateDoneTasks)
+    val newTasksDoneWithoutNotReopenedInPrevStates = nextStateDoneTasks.filterNot(task => tasksDoneAndNotReopenedInPrevStatesIds.contains(task.taskId))
+    val newKnowledgeAboutLastState = new KnowledgeAboutLastState(newTasksDoneWithoutNotReopenedInPrevStates)
     new SprintHistoricalKnowledge(newTasksDoneAndNotReopenedInPrevStates)(newKnowledgeAboutLastState)
   }
 }
@@ -63,7 +64,7 @@ class KnowledgeAboutLastState(tasksRecentlyDone: Seq[Task]) {
 
 object SprintHistoricalKnowledge {
   def assumingAllDoneTasksWereNotReopened(doneTasks: Seq[Task]): SprintHistoricalKnowledge =
-    new SprintHistoricalKnowledge(doneTasks)(new KnowledgeAboutLastState(doneTasks))
+    new SprintHistoricalKnowledge(doneTasks)(new KnowledgeAboutLastState(Seq.empty))
 }
 
 object KnowledgeAboutLastState {
