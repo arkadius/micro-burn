@@ -42,7 +42,7 @@ class SprintColumnsHistoryProvider(projectActor: ProjectActor)
     val toAppend = computeToAppend(history).toSeq
     val fullHistory = history.columnStates ++ toAppend
 
-    val withBaseAdded = fullHistory.map(_.multiply(-1).plus(history.sprintBase))
+    val withBaseAdded = fullHistory.map(_ * -1 + history.sprintBase)
 
     val columnsHistory = unzipByColumn(withBaseAdded)
     val startDate = new DateTime(history.sprintDetails.start)
@@ -67,12 +67,17 @@ class SprintColumnsHistoryProvider(projectActor: ProjectActor)
     config.nonBacklogColumns.map { column =>
       val storyPointsForColumn = zipped.map { allColumnsInfo =>
         val storyPoints = allColumnsInfo.storyPointsForColumn(column.index)
-        val added = allColumnsInfo.addedForColumn(column.index)
-        val removed = allColumnsInfo.removedForColumn(column.index)
+        val added = sortByPointsOrName(allColumnsInfo.addedForColumn(column.index))
+        val removed = sortByPointsOrName(allColumnsInfo.removedForColumn(column.index))
         HistoryProbe(allColumnsInfo.date, storyPoints, ProbeDetails(added, removed))
       }
       ColumnHistory(column.name, column.isDoneColumn, storyPointsForColumn)
     }
+  }
+
+  private def sortByPointsOrName(changes: Seq[UserStoryChange]): Seq[UserStoryChange] = {
+    val withSortedTechnical = changes.map(_.withSortedTechnicalBy(tech => (-tech.storyPoints, tech.name)))
+    withSortedTechnical.sortBy(change => (-change.storyPointsSum, change.name))
   }
 
   private def computeEstimate(start: DateTime, end: DateTime, storyPointsSum: BigDecimal): ColumnHistory = {

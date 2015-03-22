@@ -36,11 +36,9 @@ case class DateWithTasksOnRightFromColumns(date: Date, tasksOnsRight: Map[Int, S
                                                       (implicit config: ProjectConfig): Seq[UserStoryChange] = {
     val filtered = filterNotExistingOnLeftOrAddedPoints(left, right)
     val (_, grouped) = filtered.groupBy(_.id).unzip
-    val merged = grouped.map { group =>
+    grouped.map { group =>
       group.reduce(_ merge _)
-    }
-    val withSortedTechnical = merged.map(_.withSortedTechnical)
-    withSortedTechnical.toSeq.sortBy(change => (-change.storyPointsSum, change.name))
+    }.toSeq
   }
 
   private def filterNotExistingOnLeftOrAddedPoints(left: Seq[Task], right: Seq[Task])

@@ -20,11 +20,11 @@ import java.util.Date
 import org.github.microburn.domain._
 
 case class DateWithColumnsChanges(date: Date, indexOnColumnState: Map[Int, ColumnChanges]) {
-  def plus(const: BigDecimal): DateWithColumnsChanges = {
+  def +(const: BigDecimal): DateWithColumnsChanges = {
     copy(indexOnColumnState = indexOnColumnState.mapValues(_ + const))
   }
 
-  def multiply(const: BigDecimal): DateWithColumnsChanges = {
+  def *(const: BigDecimal): DateWithColumnsChanges = {
     copy(indexOnColumnState = indexOnColumnState.mapValues(_ * const))
   }
 
@@ -61,7 +61,7 @@ case class UserStoryChange(id: String, name: String, technical: List[TechnicalTa
     copy(technical = other.technical ::: technical, storyPoints = storyPoints.orElse(other.storyPoints))
   }
 
-  def withSortedTechnical: UserStoryChange = copy(technical = technical.sortBy(tech => (-tech.storyPoints, tech.name)))
+  def withSortedTechnicalBy[B: Ordering](f: TechnicalTaskChange => B): UserStoryChange = copy(technical = technical.sortBy(f))
 }
 
 case class TechnicalTaskChange(name: String, storyPoints: Double)
