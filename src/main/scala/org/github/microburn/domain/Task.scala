@@ -94,7 +94,8 @@ case class UserStory(taskId: String,
   def flattenTasks: List[Task] = this :: nestedTasks.toList
 
   def storyPointsSum(implicit config: ProjectConfig, knowledge: SprintHistoricalKnowledge): BigDecimal = {
-    val diff = storyPointsOfSelf - nestedTasks.filterNot(knowledge.shouldBeUsedInCalculations).map(_.storyPointsWithoutSubTasks).sum
+    val tasksNotUsedInCalculations = nestedTasks.filterNot(knowledge.shouldBeUsedInCalculations)
+    val diff = storyPointsOfSelf - tasksNotUsedInCalculations.map(_.storyPointsWithoutSubTasks).sum
     diff.max(BigDecimal(0))
   }
 

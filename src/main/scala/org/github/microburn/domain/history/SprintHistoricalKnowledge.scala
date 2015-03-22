@@ -21,11 +21,11 @@ class SprintHistoricalKnowledge private (tasksDoneAndNotReopenedInPrevStates: Se
                                         (implicit val aboutLastState: KnowledgeAboutLastState) {
   private val tasksDoneAndNotReopenedInPrevStatesIds: Set[String] = tasksDoneAndNotReopenedInPrevStates.map(_.taskId).toSet
 
-  def shouldBeUsedInCalculations(task: Task)(implicit config: ProjectConfig): Boolean =
-    task.isInSprint && (!tasksDoneAndNotReopenedInPrevStatesIds.contains(task.taskId) || isNotDone(task))
-
-  private def isNotDone(task: Task)(implicit config: ProjectConfig): Boolean =
-    !task.boardColumn.exists(_.isDoneColumn)
+  def shouldBeUsedInCalculations(task: Task)(implicit config: ProjectConfig): Boolean = {
+    def isNotDone = !task.boardColumn.exists(_.isDoneColumn)
+    def isDoneAndNotReopenedInPrevStates = !tasksDoneAndNotReopenedInPrevStatesIds.contains(task.taskId)
+    task.isInSprint && (isNotDone || isDoneAndNotReopenedInPrevStates)
+  }
 
   def doneTasksOutOfBoard(board: BoardState): Seq[Task] = aboutLastState.doneTasksOutOfBoard(board)
 
@@ -57,7 +57,6 @@ class KnowledgeAboutLastState(tasksRecentlyDone: Seq[Task]) {
     val boardUserStoryIds = board.userStories.map(_.taskId).toSet
     tasksRecentlyDone.collect {
       case userStory: UserStory if !boardUserStoryIds.contains(userStory.taskId) => userStory.storyPointsSum
-      // suma nie odejmnie tasków technicznych usuniętych z tablicy nie poprzez kolumnę done
     }.sum
   }
 }
