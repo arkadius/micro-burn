@@ -17,7 +17,7 @@ package org.github.microburn.domain
 
 import java.util.Date
 
-import org.github.microburn.domain.history.KnowledgeAboutLastState
+import org.github.microburn.domain.history.KnowledgeAboutRecentlyDoneTasks
 
 import scala.math.BigDecimal.RoundingMode
 import scalaz.Scalaz._
@@ -35,9 +35,9 @@ sealed trait Task { self =>
 
   def storyPointsWithoutSubTasks(implicit config: ProjectConfig): BigDecimal
 
-  def isInSprint(implicit config: ProjectConfig, knowledge: KnowledgeAboutLastState) = boardColumn.exists(!_.isBacklogColumn)
+  def isInSprint(implicit config: ProjectConfig, knowledge: KnowledgeAboutRecentlyDoneTasks) = boardColumn.exists(!_.isBacklogColumn)
 
-  def boardColumn(implicit config: ProjectConfig, knowledge: KnowledgeAboutLastState): Option[BoardColumn] =
+  def boardColumn(implicit config: ProjectConfig, knowledge: KnowledgeAboutRecentlyDoneTasks): Option[BoardColumn] =
     status match {
       case TaskCompletedStatus =>
         Some(config.lastDoneColumn)
@@ -118,7 +118,7 @@ case class UserStory(taskId: String,
     }
   }
 
-  override def open(implicit config: ProjectConfig, knowledge: KnowledgeAboutLastState): Self = openSelf.openNestedInSprint
+  override def open(implicit config: ProjectConfig, knowledge: KnowledgeAboutRecentlyDoneTasks): Self = openSelf.openNestedInSprint
 
   override protected def updateStatus(status: TaskStatus): UserStory = copy(status = status)
 
@@ -152,7 +152,7 @@ case class TechnicalTaskWithParent(technical: TechnicalTask,
     selfDiff(other)
   }
 
-  override def open(implicit config: ProjectConfig, knowledge: KnowledgeAboutLastState): TechnicalTaskWithParent = openSelf
+  override def open(implicit config: ProjectConfig, knowledge: KnowledgeAboutRecentlyDoneTasks): TechnicalTaskWithParent = openSelf
 
   override protected def updateStatus(status: TaskStatus): TechnicalTaskWithParent = copy(technical = technical.copy(status = status))
 }
@@ -168,7 +168,7 @@ trait ComparableWith[OtherTaskType <: Task with ComparableWith[OtherTaskType]] {
 }
 
 trait Openable[Self <: Task with Openable[Self]] { self: Task =>
-  def open(implicit config: ProjectConfig, knowledge: KnowledgeAboutLastState): Self
+  def open(implicit config: ProjectConfig, knowledge: KnowledgeAboutRecentlyDoneTasks): Self
 
   protected def openSelf: Self = updateStatus(TaskOpenedStatus)
 

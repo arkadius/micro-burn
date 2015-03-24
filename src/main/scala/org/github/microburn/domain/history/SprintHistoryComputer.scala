@@ -29,7 +29,7 @@ class SprintHistoryComputer(details: SprintDetails, initialBoard: BoardState, ev
       .map { case (date, group) => group}
 
     val optionalSimulatedBoardStateOnStart = initialAfterStartPlusAcceptableDelay.option {
-      implicit val implicitKnowledge = KnowledgeAboutLastState.assumingNoneDoneTask
+      implicit val implicitKnowledge = KnowledgeAboutRecentlyDoneTasks.assumingNoneDoneTask
       initialBoard.openNestedInSprint.copy(date = details.start)
     }
 
@@ -40,13 +40,13 @@ class SprintHistoryComputer(details: SprintDetails, initialBoard: BoardState, ev
     }.toList
 
     val (startBoardState :: tailBoardStates) = boardStates
-    val startDoneTasks = startBoardState.doneTasks(KnowledgeAboutLastState.assumingNoneDoneTask)
+    val startDoneTasks = startBoardState.doneTasks(KnowledgeAboutRecentlyDoneTasks.assumingNoneDoneTask)
     val startKnowledge = SprintHistoricalKnowledge.assumingAllDoneTasksWereNotReopened(startDoneTasks)
     val startStateWithKnowledge = BoardStateWithHistoricalKnowledge(startBoardState, startKnowledge)
 
     val boardStatesCumulative = tailBoardStates.scanLeft(startStateWithKnowledge) {
       case (BoardStateWithHistoricalKnowledge(_, prevKnowledge), nextState) =>
-        val bothOnBoardAndOutOfBoardDoneTasks = nextState.doneTasks(prevKnowledge.aboutLastState) ++ prevKnowledge.doneTasksOutOfBoard(nextState)
+        val bothOnBoardAndOutOfBoardDoneTasks = nextState.doneTasks(prevKnowledge.aboutRecentlyDone) ++ prevKnowledge.doneTasksOutOfBoard(nextState)
         val cumulativeKnowledge = prevKnowledge.withNextStateDoneTasks(bothOnBoardAndOutOfBoardDoneTasks)
         BoardStateWithHistoricalKnowledge(nextState, cumulativeKnowledge)
     }

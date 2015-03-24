@@ -17,7 +17,7 @@ package org.github.microburn.domain
 
 import java.util.Date
 
-import org.github.microburn.domain.history.KnowledgeAboutLastState
+import org.github.microburn.domain.history.KnowledgeAboutRecentlyDoneTasks
 
 trait HavingNestedTasks[NestedTaskType <: Task with ComparableWith[NestedTaskType] with Openable[NestedTaskType]] { self =>
   type Self >: self.type <: HavingNestedTasks[NestedTaskType]
@@ -60,7 +60,7 @@ trait HavingNestedTasks[NestedTaskType <: Task with ComparableWith[NestedTaskTyp
     }
   }
 
-  def openNestedInSprint(implicit config: ProjectConfig, knowledge: KnowledgeAboutLastState): Self = {
+  def openNestedInSprint(implicit config: ProjectConfig, knowledge: KnowledgeAboutRecentlyDoneTasks): Self = {
     val openedNested = nestedTasks.map { nested =>
       if (nested.isInSprint)
         nested.open

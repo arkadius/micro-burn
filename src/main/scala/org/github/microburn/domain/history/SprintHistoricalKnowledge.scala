@@ -18,7 +18,7 @@ package org.github.microburn.domain.history
 import org.github.microburn.domain.{UserStory, BoardState, ProjectConfig, Task}
 
 class SprintHistoricalKnowledge private (tasksDoneAndNotReopenedInPrevStates: Seq[Task])
-                                        (implicit val aboutLastState: KnowledgeAboutLastState) {
+                                        (implicit val aboutRecentlyDone: KnowledgeAboutRecentlyDoneTasks) {
   private val tasksDoneAndNotReopenedInPrevStatesIds: Set[String] = tasksDoneAndNotReopenedInPrevStates.map(_.taskId).toSet
 
   def shouldBeUsedInCalculations(task: Task)(implicit config: ProjectConfig): Boolean = {
@@ -30,24 +30,24 @@ class SprintHistoricalKnowledge private (tasksDoneAndNotReopenedInPrevStates: Se
   def doneTasksOutOfBoardStoryPointsSum(board: BoardState)
                                        (implicit config: ProjectConfig): BigDecimal = {
     implicit val implicitKnowledge = this
-    aboutLastState.doneTasksOutOfBoard(board).map(_.storyPointsWithoutSubTasks).sum
+    aboutRecentlyDone.doneTasksOutOfBoard(board).map(_.storyPointsWithoutSubTasks).sum
   }
 
   def doneTasksOutOfBoard(board: BoardState)
                          (implicit config: ProjectConfig): Seq[Task] = {
     implicit val implicitKnowledge = this
-    aboutLastState.doneTasksOutOfBoard(board)
+    aboutRecentlyDone.doneTasksOutOfBoard(board)
   }
 
   def withNextStateDoneTasks(nextStateDoneTasks: Seq[Task]): SprintHistoricalKnowledge = {
     val newTasksDoneAndNotReopenedInPrevStates = nextStateDoneTasks.filter(task => tasksDoneAndNotReopenedInPrevStatesIds.contains(task.taskId))
     val newTasksDoneWithoutNotReopenedInPrevStates = nextStateDoneTasks.filterNot(task => tasksDoneAndNotReopenedInPrevStatesIds.contains(task.taskId))
-    val newKnowledgeAboutLastState = new KnowledgeAboutLastState(newTasksDoneWithoutNotReopenedInPrevStates)
+    val newKnowledgeAboutLastState = new KnowledgeAboutRecentlyDoneTasks(newTasksDoneWithoutNotReopenedInPrevStates)
     new SprintHistoricalKnowledge(newTasksDoneAndNotReopenedInPrevStates)(newKnowledgeAboutLastState)
   }
 }
 
-class KnowledgeAboutLastState(tasksRecentlyDone: Seq[Task]) {
+class KnowledgeAboutRecentlyDoneTasks(tasksRecentlyDone: Seq[Task]) {
   private val tasksRecentlyDoneIds: Set[String] =  tasksRecentlyDone.map(_.taskId).toSet
   
   def recentlyWasDone(task: Task): Boolean = tasksRecentlyDoneIds.contains(task.taskId)
@@ -61,10 +61,10 @@ class KnowledgeAboutLastState(tasksRecentlyDone: Seq[Task]) {
 
 object SprintHistoricalKnowledge {
   def assumingAllDoneTasksWereNotReopened(doneTasks: Seq[Task]): SprintHistoricalKnowledge =
-    new SprintHistoricalKnowledge(doneTasks)(new KnowledgeAboutLastState(Seq.empty))
+    new SprintHistoricalKnowledge(doneTasks)(new KnowledgeAboutRecentlyDoneTasks(Seq.empty))
 }
 
-object KnowledgeAboutLastState {
-  def assumingNoneDoneTask: KnowledgeAboutLastState =
-    new KnowledgeAboutLastState(Seq.empty)
+object KnowledgeAboutRecentlyDoneTasks {
+  def assumingNoneDoneTask: KnowledgeAboutRecentlyDoneTasks =
+    new KnowledgeAboutRecentlyDoneTasks(Seq.empty)
 }

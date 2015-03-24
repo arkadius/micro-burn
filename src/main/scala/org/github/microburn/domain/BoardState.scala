@@ -17,7 +17,7 @@ package org.github.microburn.domain
 
 import java.util.Date
 
-import org.github.microburn.domain.history.{KnowledgeAboutLastState, SprintHistoricalKnowledge}
+import org.github.microburn.domain.history.{KnowledgeAboutRecentlyDoneTasks, SprintHistoricalKnowledge}
 
 case class BoardState(userStories: Seq[UserStory], date: Date) extends HavingNestedTasks[UserStory] {
   override type Self = BoardState
@@ -75,7 +75,8 @@ case class BoardState(userStories: Seq[UserStory], date: Date) extends HavingNes
 
   override protected def updateNestedTasks(newNestedTasks: Seq[UserStory]): Self = copy(userStories = newNestedTasks)
 
-  def doneTasks(knowledge: KnowledgeAboutLastState)(implicit config: ProjectConfig): Seq[Task] = {
+  def doneTasks(knowledge: KnowledgeAboutRecentlyDoneTasks)
+               (implicit config: ProjectConfig): Seq[Task] = {
     implicit val knowledgeImplicit = knowledge
     for {
       userStory <- userStories
@@ -99,7 +100,7 @@ case class BoardState(userStories: Seq[UserStory], date: Date) extends HavingNes
 
   private def tasksWithMatchingColumn(columnMatches: BoardColumn => Boolean)
                                      (implicit config: ProjectConfig, knowledge: SprintHistoricalKnowledge): Seq[Task] = {
-    import knowledge.aboutLastState
+    import knowledge.aboutRecentlyDone
     for {
       userStory <- userStories
       if knowledge.shouldBeUsedInCalculations(userStory)
