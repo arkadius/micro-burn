@@ -11,3 +11,4 @@ tags
 *application.conf
 data*
 secret.conf
+.rollOut
