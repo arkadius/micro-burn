@@ -24,6 +24,8 @@ case class BoardState(userStories: Seq[UserStory], date: Date) extends HavingNes
 
   override protected def nestedTasks: Seq[UserStory] = userStories
 
+  override def flattenTasks: Seq[Task] = nestedTasks.flatMap(_.flattenTasks)
+
   def diff(other: BoardState): Seq[TaskEvent] = nestedDiff(other)(other.date)
 
   def plus(event: TaskEvent): BoardState = event match {
@@ -79,9 +81,7 @@ case class BoardState(userStories: Seq[UserStory], date: Date) extends HavingNes
                (implicit config: ProjectConfig): Seq[Task] = {
     implicit val knowledgeImplicit = knowledge
     for {
-      userStory <- userStories
-      if userStory.isInSprint
-      task <- userStory.flattenTasks
+      task <- flattenTasks
       if task.isInSprint
       configuredTasksBoardColumn <- task.boardColumn
       if configuredTasksBoardColumn.isDoneColumn
@@ -102,9 +102,7 @@ case class BoardState(userStories: Seq[UserStory], date: Date) extends HavingNes
                                      (implicit config: ProjectConfig, knowledge: SprintHistoricalKnowledge): Seq[Task] = {
     import knowledge.aboutRecentlyDone
     for {
-      userStory <- userStories
-      if knowledge.shouldBeUsedInCalculations(userStory)
-      task <- userStory.flattenTasks
+      task <- flattenTasks
       if knowledge.shouldBeUsedInCalculations(task)
       configuredTasksBoardColumn <- task.boardColumn
       if columnMatches(configuredTasksBoardColumn)

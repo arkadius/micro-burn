@@ -23,6 +23,8 @@ trait HavingNestedTasks[NestedTaskType <: Task with ComparableWith[NestedTaskTyp
   type Self >: self.type <: HavingNestedTasks[NestedTaskType]
 
   protected def nestedTasks: Seq[NestedTaskType]
+
+  def flattenTasks: Seq[Task]
   
   protected lazy val taskById: Map[String, NestedTaskType] =
     nestedTasks.toSeq.map { task => task.taskId -> task }.toMap
