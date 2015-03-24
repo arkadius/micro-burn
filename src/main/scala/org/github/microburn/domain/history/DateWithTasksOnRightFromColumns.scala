@@ -55,7 +55,7 @@ case class DateWithTasksOnRightFromColumns(date: Date, tasksOnsRight: Map[Int, S
       }
     }
     right.collect {
-      case task if taskAdded(task) =>
+      case task if taskAdded(task) && task.storyPointsWithoutSubTasks > 0 =>
         UserStoryChange(task, task.storyPointsWithoutSubTasks)
       case AddedPoint(change) =>
         change
