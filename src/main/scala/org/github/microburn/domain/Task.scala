@@ -91,7 +91,7 @@ case class UserStory(taskId: String,
     selfDiff(other) ++ nestedDiff(other)
   }
 
-  override def flattenTasks: Seq[Task] = this +: nestedTasks
+  def flattenTasks: List[Task] = this :: nestedTasks.toList
 
   override def storyPointsWithoutSubTasks(implicit config: ProjectConfig): BigDecimal = {
     val diff = storyPointsOfSelf - nestedTasks.map(_.storyPointsWithoutSubTasks).sum
