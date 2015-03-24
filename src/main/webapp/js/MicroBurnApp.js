@@ -102,12 +102,6 @@ ctrlDeclaration.push(function ($scope, $timeout, historySvc, scrumSimulatorSvc) 
     refreshChart();
   });
 
-  $scope.$on("boardStateChanged", function (event, sprintId) {
-    if (sprintId == $scope.selectedSprint.id) {
-      refreshChart();
-    }
-  });
-
   function refreshChart() {
     $timeout.cancel(clientFetchPromise);
     if ($scope.selectedSprint) {

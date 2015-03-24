@@ -66,6 +66,8 @@ case class SprintUpdateResult(updatedSprint: Sprint,
                               importantDetailsChange: Boolean,
                               timestamp: Date) {
   def importantBoardStateChange: Boolean = newAddedEvents.nonEmpty
+
+  def importantChange: Boolean = importantBoardStateChange || importantDetailsChange
 }
 
 object Sprint {

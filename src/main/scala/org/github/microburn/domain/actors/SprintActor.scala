@@ -42,21 +42,16 @@ class SprintActor(var sprint: Sprint)
       reply(sprint.sprintHistory)
   }
 
-
   private def updateSprintAndReply(f: => SprintUpdateResult) = {
     val result = f
     sprint = result.updatedSprint
     repo.saveUpdateResult(result)
-    if (result.importantBoardStateChange)
-      changeNotifyingActor ! BoardStateChanged(sprint.id)
-    else if (result.importantDetailsChange)
+    if (result.importantChange)
       changeNotifyingActor ! SprintDetailsChanged(sprint.id)
     reply(sprint.id)
   }
 
 }
-
-case class BoardStateChanged(sprintId: Int)
 
 case class SprintDetailsChanged(sprintId: Int)
 

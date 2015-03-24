@@ -26,7 +26,6 @@ import org.github.microburn.repository.ProjectRepository
 import org.github.microburn.util.logging.Slf4jLogging
 
 import scala.collection.immutable.TreeMap
-import scala.concurrent.duration.FiniteDuration
 
 class ProjectActor(config: ProjectConfig)
   extends LiftActor with ListenerManager with Slf4jLogging {
@@ -83,8 +82,6 @@ class ProjectActor(config: ProjectConfig)
       reply(future)
     case detailsChanged: SprintDetailsChanged =>
       updateListeners()
-    case boardStateChanged: BoardStateChanged =>
-      sendListenersMessage(boardStateChanged)
   }
 
   override protected def createUpdate: Any = prepareProjectState
