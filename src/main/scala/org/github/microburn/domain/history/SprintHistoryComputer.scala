@@ -88,7 +88,7 @@ class SprintHistoryComputer(details: SprintDetails, initialBoard: BoardState, ev
   case class BoardStateWithHistoricalKnowledge(board: BoardState, knowledge: SprintHistoricalKnowledge) {
     def userStoriesPointsSum(implicit config: ProjectConfig): BigDecimal = {
       implicit val implicitKnowledge = knowledge
-      board.userStoriesPointsSum + knowledge.userStoriesPointsSumOutOfBoard(board)
+      board.storyPointsSum + knowledge.doneTasksOutOfBoardStoryPointsSum(board)
     }
 
     def tasksOnRightFromColumns(implicit config: ProjectConfig): DateWithTasksOnRightFromColumns = {
@@ -96,8 +96,7 @@ class SprintHistoryComputer(details: SprintDetails, initialBoard: BoardState, ev
       val indexOnSum = config.nonBacklogColumns.map { boardColumn =>
         val boardColumnIndex = boardColumn.index
         val tasksOnRightOnBoard = board.tasksOnRightFromColumn(boardColumnIndex)
-        val optionalOutOfBoardTasks = (boardColumn == config.lastDoneColumn).option(knowledge.doneTasksOutOfBoard(board)).toSeq.flatten
-        boardColumnIndex -> (tasksOnRightOnBoard ++ optionalOutOfBoardTasks)
+        boardColumnIndex -> (tasksOnRightOnBoard ++ knowledge.doneTasksOutOfBoard(board))
       }.toMap
       DateWithTasksOnRightFromColumns(board.date, indexOnSum)
     }

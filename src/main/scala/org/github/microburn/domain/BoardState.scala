@@ -75,13 +75,6 @@ case class BoardState(userStories: Seq[UserStory], date: Date) extends HavingNes
 
   override protected def updateNestedTasks(newNestedTasks: Seq[UserStory]): Self = copy(userStories = newNestedTasks)
 
-  def userStoriesPointsSum(implicit config: ProjectConfig, knowledge: SprintHistoricalKnowledge): BigDecimal = {
-    (for {
-      userStory <- userStories
-      if knowledge.shouldBeUsedInCalculations(userStory)
-    } yield userStory.storyPointsSum).sum
-  }
-
   def doneTasks(knowledge: KnowledgeAboutLastState)(implicit config: ProjectConfig): Seq[Task] = {
     implicit val knowledgeImplicit = knowledge
     for {
@@ -94,8 +87,18 @@ case class BoardState(userStories: Seq[UserStory], date: Date) extends HavingNes
     } yield task
   }
 
+  def storyPointsSum(implicit config: ProjectConfig, knowledge: SprintHistoricalKnowledge): BigDecimal =
+    tasks.map(_.storyPointsWithoutSubTasks).sum
+
+  def tasks(implicit config: ProjectConfig, knowledge: SprintHistoricalKnowledge): Seq[Task] =
+    tasksWithMatchingColumn(_ => true)
+
   def tasksOnRightFromColumn(columnIndex: Int)
-                            (implicit config: ProjectConfig, knowledge: SprintHistoricalKnowledge): Seq[Task] = {
+                            (implicit config: ProjectConfig, knowledge: SprintHistoricalKnowledge): Seq[Task] =
+    tasksWithMatchingColumn(_.index >= columnIndex)
+
+  private def tasksWithMatchingColumn(columnMatches: BoardColumn => Boolean)
+                                     (implicit config: ProjectConfig, knowledge: SprintHistoricalKnowledge): Seq[Task] = {
     import knowledge.aboutLastState
     for {
       userStory <- userStories
@@ -103,7 +106,7 @@ case class BoardState(userStories: Seq[UserStory], date: Date) extends HavingNes
       task <- userStory.flattenTasks
       if knowledge.shouldBeUsedInCalculations(task)
       configuredTasksBoardColumn <- task.boardColumn
-      if configuredTasksBoardColumn.index >= columnIndex
+      if columnMatches(configuredTasksBoardColumn)
     } yield task
   }
 

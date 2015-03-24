@@ -27,14 +27,18 @@ class SprintHistoricalKnowledge private (tasksDoneAndNotReopenedInPrevStates: Se
     task.isInSprint && (isNotDone || isDoneAndNotReopenedInPrevStates)
   }
 
-  def doneTasksOutOfBoard(board: BoardState): Seq[Task] = aboutLastState.doneTasksOutOfBoard(board)
-
-  def userStoriesPointsSumOutOfBoard(board: BoardState)
-                                    (implicit config: ProjectConfig): BigDecimal = {
+  def doneTasksOutOfBoardStoryPointsSum(board: BoardState)
+                                       (implicit config: ProjectConfig): BigDecimal = {
     implicit val implicitKnowledge = this
-    aboutLastState.userStoriesPointsSumOutOfBoard(board)
+    aboutLastState.doneTasksOutOfBoard(board).map(_.storyPointsWithoutSubTasks).sum
   }
-  
+
+  def doneTasksOutOfBoard(board: BoardState)
+                         (implicit config: ProjectConfig): Seq[Task] = {
+    implicit val implicitKnowledge = this
+    aboutLastState.doneTasksOutOfBoard(board)
+  }
+
   def withNextStateDoneTasks(nextStateDoneTasks: Seq[Task]): SprintHistoricalKnowledge = {
     val newTasksDoneAndNotReopenedInPrevStates = nextStateDoneTasks.filter(task => tasksDoneAndNotReopenedInPrevStatesIds.contains(task.taskId))
     val newTasksDoneWithoutNotReopenedInPrevStates = nextStateDoneTasks.filterNot(task => tasksDoneAndNotReopenedInPrevStatesIds.contains(task.taskId))
@@ -48,17 +52,10 @@ class KnowledgeAboutLastState(tasksRecentlyDone: Seq[Task]) {
   
   def recentlyWasDone(task: Task): Boolean = tasksRecentlyDoneIds.contains(task.taskId)
 
-  def doneTasksOutOfBoard(board: BoardState): Seq[Task] = {
-    val boardTaskIds = board.userStories.flatMap(_.flattenTasks).map(_.taskId).toSet
+  def doneTasksOutOfBoard(board: BoardState)
+                         (implicit config: ProjectConfig, knowledge: SprintHistoricalKnowledge): Seq[Task] = {
+    val boardTaskIds = board.tasks.map(_.taskId).toSet
     tasksRecentlyDone.filterNot(task => boardTaskIds.contains(task.taskId))
-  }
-  
-  def userStoriesPointsSumOutOfBoard(board: BoardState)
-                                    (implicit config: ProjectConfig, knowledge: SprintHistoricalKnowledge): BigDecimal = {
-    val boardUserStoryIds = board.userStories.map(_.taskId).toSet
-    tasksRecentlyDone.collect {
-      case userStory: UserStory if !boardUserStoryIds.contains(userStory.taskId) => userStory.storyPointsSum
-    }.sum
   }
 }
 

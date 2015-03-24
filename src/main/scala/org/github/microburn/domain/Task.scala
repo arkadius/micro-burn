@@ -17,7 +17,7 @@ package org.github.microburn.domain
 
 import java.util.Date
 
-import org.github.microburn.domain.history.{KnowledgeAboutLastState, SprintHistoricalKnowledge}
+import org.github.microburn.domain.history.KnowledgeAboutLastState
 
 import scala.math.BigDecimal.RoundingMode
 import scalaz.Scalaz._
@@ -92,12 +92,6 @@ case class UserStory(taskId: String,
   }
 
   def flattenTasks: List[Task] = this :: nestedTasks.toList
-
-  def storyPointsSum(implicit config: ProjectConfig, knowledge: SprintHistoricalKnowledge): BigDecimal = {
-    val tasksNotUsedInCalculations = nestedTasks.filterNot(knowledge.shouldBeUsedInCalculations)
-    val diff = storyPointsOfSelf - tasksNotUsedInCalculations.map(_.storyPointsWithoutSubTasks).sum
-    diff.max(BigDecimal(0))
-  }
 
   override def storyPointsWithoutSubTasks(implicit config: ProjectConfig): BigDecimal = {
     val diff = storyPointsOfSelf - nestedTasks.map(_.storyPointsWithoutSubTasks).sum
