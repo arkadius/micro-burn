@@ -40,7 +40,11 @@ sealed trait Task { self =>
   def boardColumn(implicit config: ProjectConfig, knowledge: KnowledgeAboutRecentlyDoneTasks): Option[BoardColumn] =
     status match {
       case TaskCompletedStatus =>
-        Some(config.lastDoneColumn)
+        optionalParentUserStory.map { parent =>
+          parent.isInSprint.option(config.lastDoneColumn) // done column for completed technical with parent in sprint
+        }.getOrElse {
+          Some(config.lastDoneColumn)
+        }
       case TaskOpenedStatus =>
         Some(config.firstNotDoneSprintColumn)
       case SpecifiedStatus(name) =>
