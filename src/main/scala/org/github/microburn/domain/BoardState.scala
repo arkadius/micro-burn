@@ -92,20 +92,16 @@ case class BoardState(userStories: Seq[UserStory], date: Date) extends HavingNes
     tasks.map(_.storyPointsWithoutSubTasks).sum
 
   def tasks(implicit config: ProjectConfig, knowledge: SprintHistoricalKnowledge): Seq[Task] =
-    tasksWithMatchingColumn(_ => true)
+    flattenTasks.filter(knowledge.shouldBeUsedInCalculations)
 
   def tasksOnRightFromColumn(columnIndex: Int)
-                            (implicit config: ProjectConfig, knowledge: SprintHistoricalKnowledge): Seq[Task] =
-    tasksWithMatchingColumn(_.index >= columnIndex)
-
-  private def tasksWithMatchingColumn(columnMatches: BoardColumn => Boolean)
-                                     (implicit config: ProjectConfig, knowledge: SprintHistoricalKnowledge): Seq[Task] = {
+                            (implicit config: ProjectConfig, knowledge: SprintHistoricalKnowledge): Seq[Task] = {
     import knowledge.aboutRecentlyDone
     for {
       task <- flattenTasks
       if knowledge.shouldBeUsedInCalculations(task)
       configuredTasksBoardColumn <- task.boardColumn
-      if columnMatches(configuredTasksBoardColumn)
+      if configuredTasksBoardColumn.index >= columnIndex
     } yield task
   }
 
