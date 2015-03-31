@@ -107,20 +107,29 @@ input:disabled {
     width: 40px;
 }
 
-#sprint-chart-container > #legend {
+#legend-container {
     position: absolute;
     top: 200px;
     left: -200px;
-    width: 220px;
-    background: rgba(0, 0, 0, 0.0);
 }
 
-#sprint-chart-container > #legend .line {
+.rickshaw_legend {
+    width: 220px;
+    background: rgba(0, 0, 0, 0.0);
+    position: static;
+    display: list-item;
+}
+
+#bubbles-mgr {
+    padding-top: 0;
+}
+
+.rickshaw_legend .line {
     white-space: normal;
     color: #333;
 }
 
-#sprint-chart-container > #legend .label {
+.rickshaw_legend .label {
     white-space: normal;
 }
 

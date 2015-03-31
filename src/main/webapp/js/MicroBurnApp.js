@@ -276,16 +276,27 @@ app.controller("ProjectCtrl", ctrlDeclaration);
 
 app.directive('sprintChart', ['$cookies', function ($cookies) {
   return {
-    template: "<div id='y-axis'></div>" +
-              "<div id='chart'></div>" +
-              "<div id='legend'></div>",
+    template: '<div id="y-axis"></div>' +
+              '<div id="chart"></div>' +
+              '<ul id="legend-container">' +
+                '<li id="legend"></li>' +
+                '<li id="bubbles-mgr" class="rickshaw_legend">' +
+                  '<ul>' +
+                    '<li class="line">' +
+                      '<a class="action">✔</a>' +
+                      '<div class="swatch" style="background-color: white;"></div>' +
+                      '<span class="label">Bubbles</span>' +
+                    '</li>' +
+                  '</ul>' +
+                '</div>' +
+              '</div>',
     link: function (scope, element, attrs) {
       var series = [];
       var startDate = null;
 
       element.attr("id", "sprint-chart-container");
 
-      graph = new Rickshaw.Graph({
+      var graph = new Rickshaw.Graph({
         element: element.children("#chart")[0],
         height: 600,
         min: "auto",
@@ -323,9 +334,10 @@ app.directive('sprintChart', ['$cookies', function ($cookies) {
         orientation: "left"
       });
 
+      var legendElement = element.children("#legend-container").children("#legend")[0];
       var legend = new Rickshaw.Graph.Legend({
         graph: graph,
-        element: element.children("#legend")[0],
+        element: legendElement,
         naturalOrder: true
       });
 
@@ -337,10 +349,33 @@ app.directive('sprintChart', ['$cookies', function ($cookies) {
         }
       });
 
+      var storedBubblesEnabled = $cookies["enabled_bubbles"];
+      var bubblesEnabled = true;
+      if (storedBubblesEnabled == "0") {
+        bubblesEnabled = false;
+      }
+      var bubblesElement = element.children("#legend-container").children("#bubbles-mgr")[0].children[0].children[0];
+      function updateBubblesElementState() {
+        if (bubblesEnabled) {
+          bubblesElement.classList.remove('disabled')
+        } else {
+          bubblesElement.classList.add('disabled')
+        }
+      }
+      updateBubblesElementState();
+      bubblesElement.onclick = function () {
+        bubblesEnabled = !bubblesEnabled;
+        scope.$apply(function () {
+          $cookies["enabled_bubbles"] = bubblesEnabled ? '1' : '0';
+        });
+        updateBubblesElementState();
+        graph.render();
+      };
+
       var lineAnnotate = new LineAnnotate({
         graph: graph,
         shortFormatter: function(series, point) {
-          if (!series.doneColumn) return null;
+          if (!bubblesEnabled || !series.doneColumn) return null;
 
           var first = point.details.addedPoints[0] || point.details.removedPoints[0];
           if (!first) return null;
