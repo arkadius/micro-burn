@@ -27,7 +27,7 @@ organization  := "org.github"
 
 name := "micro-burn"
 
-scalaVersion  := "2.11.5"
+scalaVersion  := "2.11.6"
 
 resolvers ++= Seq("snapshots"     at "http://oss.sonatype.org/content/repositories/snapshots",
   "staging"       at "http://oss.sonatype.org/content/repositories/staging",
